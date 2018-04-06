@@ -26,3 +26,9 @@ lot of long-term plans for the future. I want to put this out now
 because I think some of it might be useful as-is, and because I don't
 want to lose it all in a fire or whatever.
 
+
+#### doc
+
+Some documentation is available. More is coming as time permits.
+<https://github.com/justworx/trix/wiki>
+
