@@ -62,13 +62,13 @@ class FormatBase(object):
 class NoFormat(FormatBase):
 	"""Prints or returns "as-is" string."""
 	
-	def __call__(self, data, **k):
+	def format(self, *a, **k):
 		"""Return `data` cast as a string."""
 		return str(a) if a else ''
 	
-	def output(self, data):
+	def output(self, *a):
 		"""Print `data`."""
-		print (self(data))
+		print (self.format(*a))
 		
 
 
