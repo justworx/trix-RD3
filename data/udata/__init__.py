@@ -72,14 +72,20 @@ class udata(object):
 			return cls.__blocks
 		except AttributeError:
 			cls.__blocks = {}
+			cls.__blocknames = []
 			for b in BLOCKS:
+				cls.__blocknames.append(b[1])
 				cls.__blocks[b[1]] = b[0]
 			return cls.__blocks
 
 	@classmethod
 	def blocknames(cls):
 		"""List of all blocknames."""
-		return cls.blocks().keys()
+		try:
+			return cls.__blocknames
+		except AttributeError:
+			cls.blocks() 
+			return cls.__blocknames
 	
 	#
 	# PROPERTIES
