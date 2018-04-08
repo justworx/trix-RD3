@@ -5,19 +5,15 @@
 #
 
 import unicodedata
-
-from ... import *
+from ..udata import *
 from ...util.xiter import *
 
-
-#
-# CHAR-INFO
-#
 class charinfo(xiter):
 	"""Provides extended information for current unicode character."""
 
 	def __init__(self, iterable_text):
 		"""Pass unicode text, iter, or generator."""
+		self.debug_text = iterable_text
 		xiter.__init__(self, iter(iterable_text))
 		self.c = None
 
@@ -26,8 +22,8 @@ class charinfo(xiter):
 			self.c = xiter.__next__(self)
 			return self
 		except TypeError:
-			raise TypeError(ex.args, xdata(
-					itertext=iterable_text, itertype=type(iterable_text)
+			raise TypeError(xdata(
+					itertext=self.debug_text, itertype=type(self.debug_text)
 				))
 
 	def __str__(self):
