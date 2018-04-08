@@ -5,7 +5,7 @@
 #
 
 from .charinfo import *
-
+from ...util.stream.buffer import *
 
 def scanner(iterable_text):
 	"""Return a scanner object."""
@@ -17,7 +17,10 @@ def scanner(iterable_text):
 #
 class Scanner(object):
 	"""Scan unicode text one character at a time."""
-
+	
+	Escape = '\\'
+	BufSize = 2048
+	
 	def __init__(self, iterable_text):
 		"""Pass anything iterable that produces unicode characters."""
 		self.current = charinfo(iter(iterable_text))
@@ -25,17 +28,18 @@ class Scanner(object):
 
 	@property
 	def c(self):
-		"""Return current character data."""
+		"""Return current character info object."""
 		return self.current
 
 	@property
 	def cc(self):
-		"""Move forward one and return the character data."""
+		"""Move forward one and return the character info object."""
 		return self.current.next()
-
+		
+	
 	#
 	# SCAN
-	#  - I'm thining something like this;
+	#  - I'm thinking something like this;
 	#    haven't worked it out yet...
 	#
 	"""
@@ -58,3 +62,26 @@ class Scanner(object):
 				literal.append(c)
 				return ''.join(literal)
 	"""
+	
+	def scanto(self, c, **k):
+		"""Scan to the next occurance of character `c`."""
+		k.setdefault('max_size', self.BufSize)
+		b = Buffer(mode='r', **k)
+		w = b.writer()
+		while self.cc.c != c:
+			if c != self.Escape:
+				# write the character
+				w.write(self.c.c) 
+			else:
+				# skip escape char; write the next char
+				w.escape_char(self.cc.c)
+		
+		return b.read()
+	
+	
+	def escape_char(self, c):
+		#
+		# Encountering escape char should send us here, where escape 
+		# sequences can be overridden by subclasses.
+		#
+		return c
