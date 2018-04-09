@@ -15,7 +15,7 @@ class Cursor(object):
 		"""Pass any kind of `data` plus optional `use` callback kwarg."""
 		
 		# get optional param object
-		self.__param = k.get('param', trix.nvalue("data.param.Param"))
+		self.__param = k.get('param', trix.nvalue("data.param.Param", **k))
 		
 		# get the use method
 		self.__use = k.get('use')
@@ -316,3 +316,19 @@ class Fetch(object):
 			return self.__param
 		except AttributeError:
 			return self.__next()
+	
+	@property
+	def i (self):
+		return self.param.i
+	
+	@property
+	def v (self):
+		return self.param.v
+	
+	@property
+	def iv (self):
+		return self.param.iv
+	
+	@property
+	def vi (self):
+		return self.param.vi
