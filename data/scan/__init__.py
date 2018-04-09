@@ -7,14 +7,7 @@
 from .charinfo import *
 from ...util.stream.buffer import *
 
-def scanner(iterable_text):
-	"""Return a scanner object."""
-	return Scanner(iterable_text)
 
-
-#
-# SCANNER
-#
 class Scanner(object):
 	"""Scan unicode text one character at a time."""
 	
@@ -35,33 +28,6 @@ class Scanner(object):
 	def cc(self):
 		"""Move forward one and return the character info object."""
 		return self.current.next()
-		
-	
-	#
-	# SCAN
-	#  - I'm thinking something like this;
-	#    haven't worked it out yet...
-	#
-	"""
-	def scan(self):
-		literal = []
-		structure = []
-		for c in self.cc:
-			if c.bracket:
-				bracket = c
-				if c.bracket[0] == 'o':
-					r.append(self.scan())
-				elif c.bracket[0] == 'c':
-					return r
-
-			#elif: ...
-			#  do something...
-			#  return it...
-
-			else:
-				literal.append(c)
-				return ''.join(literal)
-	"""
 	
 	def scanto(self, c, **k):
 		"""Scan to the next occurance of character `c`."""
@@ -85,3 +51,5 @@ class Scanner(object):
 		# sequences can be overridden by subclasses.
 		#
 		return c
+
+
