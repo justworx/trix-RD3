@@ -5,13 +5,13 @@
 #
 
 
-from .. import *
+from ..util.enchelp import *
 
 
 class Chain(object):
 	"""Holds a value; provides methods to manipulate that value."""
 	
-	def __init__(self, v=None):
+	def __init__(self, v=None, **k):
 		self.v = v
 	
 	def __call__(self, *a):
@@ -27,6 +27,15 @@ class Chain(object):
 		self.v = fn(*a, **k)
 		return self
 	
+	def call(self, fn, *a, **k):
+		"""
+		Same as `proc`, but does not set self.v; Use this (rather than
+		`proc`) when the `fn` callable does not return a value but rather
+		operates on parameters "in-place".
+		"""
+		fn(*a, **k)
+		return self
+	
 	def pad(self, mlen, val=''):
 		"""
 		Pad a sequence with `val` items to a minimum length of `mlen`.
@@ -35,25 +44,27 @@ class Chain(object):
 		while len(self.v) < mlen:
 			self.v.append(val)
 		return self
-		
+	
 	def set(self, v):
+		"""Set this value directly."""
 		self.v = v
 		return self
 	
 	def setx(self, x, v):
+		"""Set index (or key) `x` with value `v`."""
 		self.v[x] = v
 		return self
 	
 	def split(self, *a, **k):
 		"""
-		Split this value by the string given as the first argument, or
-		by the default, if no arguments are given. Keyword args will be
-		applied to the str.split() method.
+		Split `self.v` by the string given as the first argument, or by
+		the default, if no arguments are given. Keyword args are applied
+		to the `str.split()` method.
 		"""
 		self.v = self.v.split(*a, **k)
 		return self
 	
-	def join(self, c, *a, **k):
+	def join(self, c=' ', *a):
 		"""
 		Join list items by character `c`. If no additional arguments are
 		given, all items in list `self.v` are joined. If additional args
@@ -64,10 +75,11 @@ class Chain(object):
 		"""
 		x = self.v
 		u = unicode
-		vv =  [u(x[i], **k) for i in a] if a else [u(v, **k) for v in x]
+		vv =  [u(x[i]) for i in a] if a else [u(v) for v in x]
 		self.v = u(c, **k).join(vv)
 		return self
 
+	
 
 
 
@@ -97,21 +109,26 @@ class Param(Chain):
 	def __getitem__(self, key):
 		return self.v[key]
 	
+	def __len__(self):
+		return str(self.v)
+	
 	def __str__(self):
 		return str(self.v)
 	
-	def __unicode__(self):
+	def __unicode__(self, **k):
 		try:
-			return unicode(self.v)
+			return unicode(self.v, **k)
 		except:
-			return self.v.decode(DEF_ENCODE)
+			return self.v.decode()
 	
 	@property
 	def iv(self):
+		"""Return (index,value)"""
 		return (self.i, self.v)
 	
 	@property
 	def vi(self):
+		"""Return (value,index)"""
 		return (self.v, self.i)
 	
 	@property
@@ -126,6 +143,7 @@ class Param(Chain):
 	
 	@property
 	def re(self):
+		"""Return the regular expression module `re`."""
 		try:
 			return self.__re
 		except:
@@ -165,7 +183,6 @@ class Param(Chain):
 		return False
 	
 	
-	
 	def fn(self, fn, *a, **k):
 		"""
 		Return the result of the callable argument `fn`. All args and 
@@ -175,9 +192,30 @@ class Param(Chain):
 		return fn(*a, **k)
 	
 	
-	def merge(self, x, b):
+	#
+	# LIST METHODS
+	#
+	def merge(self, *a):
+		"""
+		When a single list is given, it extends `self.v`;
+		When a single value is given, it is appended to `self.v`;
+		
+		When two lists are given, the first is extended by the second.
+		When a list and a value are given, the value is appended to the
+		list given as the first argument.
+		
+		The altered list is returned.
+		"""
+		if len(a) == 1:
+			x = self.v
+			a = a[0]
+		else:
+			x == a[0]
+			a = a[1]
+		
 		try:
-			x.extend(b)
+			x.extend(a)
 		except:
-			x.append(b)
+			x.append(a)
+		
 		return x
