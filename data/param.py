@@ -11,7 +11,7 @@ from ..util.enchelp import *
 class Chain(object):
 	"""Holds a value; provides methods to manipulate that value."""
 	
-	def __init__(self, v=None, **k):
+	def __init__(self, v=None):
 		self.v = v
 	
 	def __call__(self, *a):
@@ -76,7 +76,7 @@ class Chain(object):
 		x = self.v
 		u = unicode
 		vv =  [u(x[i]) for i in a] if a else [u(v) for v in x]
-		self.v = u(c, **k).join(vv)
+		self.v = u(c).join(vv)
 		return self
 
 	
@@ -110,16 +110,7 @@ class Param(Chain):
 		return self.v[key]
 	
 	def __len__(self):
-		return str(self.v)
-	
-	def __str__(self):
-		return str(self.v)
-	
-	def __unicode__(self, **k):
-		try:
-			return unicode(self.v, **k)
-		except:
-			return self.v.decode()
+		return len(self.v)
 	
 	@property
 	def iv(self):
