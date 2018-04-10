@@ -110,10 +110,37 @@ class charinfo(xiter):
 		return udata.bracket(self.c)
 
 	@property
-	def props(self):
+	def properties(self):
 		"""Return properties associated with this character."""
 		return udata.properties(self.c)
-
+	
+	
+	#
+	# ALIASES - for use in scanquery and in lambdas where space is tight
+	#
+	@property
+	def bidi(self):
+		return unicodedata.bidirectional(self.c)
+	
+	@property
+	def cat(self): 
+		return unicodedata.category(self.c)
+	
+	@property
+	def num(self):
+		return self.numeric
+	
+	@property
+	def dec(self):
+		return self.decimal
+	
+	@property
+	def dig(self):
+		return self.digit
+	
+	@property
+	def props(self):
+		return udata.properties(self.c)
 
 	# INFO
 	def info(self):
