@@ -15,7 +15,7 @@ class Cursor(object):
 		"""Pass any kind of `data` plus optional `use` callback kwarg."""
 		
 		# get optional param object
-		self.__param = k.get('param', trix.nvalue("data.param.Param", **k))
+		self.__param = k.get('param', param.Param)
 		
 		# get the use method
 		self.__use = k.get('use')
@@ -23,7 +23,7 @@ class Cursor(object):
 		# use must be callable
 		if self.__use and (not callable(self.__use)):
 			raise Exception('cursor-create-fail', 
-				xdata(reason='callback-not-callable', callback='use')
+				xdata(reason='callback-not-callable', callback=use)
 			)
 		
 		# create the correct generator for the given data
