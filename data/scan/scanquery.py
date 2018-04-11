@@ -6,30 +6,82 @@
 
 from . import *
 
-
 def query(**k):
-	"""Optional kwargs: select, where, and blocks."""
-	ScanQuery(k.get('text'), k.get('blocks')).table(**k)
+	"""
+	This function (in addition to being pretty nifty) is a tool to help 
+	us find the information we need to build efficient scanning methods.
+	
+	The idea is to select character info (eg., category, props, etc...) 
+	matching keyword argument specifications.
+	
+	KWARGS:
+	 * select : A list of `charinfo` properties to select.
+	            Eg, select="char numeric decimal digit" 
+	 * blocks : A list of blocks to query. 
+	            Eg, blocks=['Basic Latin', 'Gothic']
+	 * where  : A callable object that returns True for objects that 
+	            should be selected, else False.
+	            Eg, where=lambda c: c.numeric != None
+	 
+	 * text   : The `text` kwarg may be specified instead of 'blocks'
+	            to query info from a given string (or other iterable).
+	            Eg, text="Text I'm having trouble parsing!" 
+	
+	Either `blocks` or `text` may be specified, not both. If neither is
+	specified, all characters from all blocks are checked for matches.
+	
+	```python3
+	from trix.data.scan.scanquery import *
+	query(
+	    select="block char numeric decimal digit",
+	    blocks=['Basic Latin', 'Gothic'],
+	    where =lambda c: c.num != None 
+	  )
+
+	```
+	
+	The complete list of property names is:
+	[
+		'char', 'c', 'block', 'bidi', 'bidirectional', 'bracket', 'cat', 
+		'category', 'num', 'numeric', 'dec', 'decimal', 'dig', 'digit',
+		'name', 'props', 'properties','bidiname','catname'
+	]
+	
+	Several of these are aliases (a space-saving measure for lambdas):
+	 - bidi = bidirectional
+	 - cat = category
+	 - char = c
+	 - dec = decimal
+	 - dig = digit
+	 - num = numeric
+	 - props = properties
+	
+	"""
+	ScanQuery(**k).table(**k)
+
+
 
 
 class ScanQuery(Scanner):
-	"""Select info (eg., category, props, etc...) for characters."""
-
-	Titles = 'c block bidi bracket cat num dec dig name props'
+	"""Select unicode data properties. See `scanquery.query()` help."""
+	
+	# default fields to query
+	Titles = 'block char bidi bracket cat num dec dig name props'
 	
 	@classmethod
-	def chargen(self, blocknames=None):
-		bnames = blocknames or udata.blocknames()
+	def chargen(self, **k):
+		bnames = k.get('blocks') or udata.blocknames()
 		blocks = udata.blocks()
 		for block in bnames:
 			rng = blocks[block]
+			rng[1] += 1
 			for c in range(*rng):
 				yield (unichr(c))
 	
 	
-	def __init__(self, text=None, blocknames=None):
+	def __init__(self, **k):
 		"""Pass text to query, or None (the contents of each block)."""
-		text = text or self.chargen()
+		text = k.get('text') or self.chargen(**k)
 		Scanner.__init__(self, text)
 	
 	
@@ -39,7 +91,7 @@ class ScanQuery(Scanner):
 		# select clause - a space-separated string listing titles
 		titles = k.get('select', self.Titles).upper()
 		
-		# where clause - a lambda
+		# where clause - a lambda or other callable
 		fn = k.get('where')
 		
 		tt = [] # title list
@@ -55,16 +107,18 @@ class ScanQuery(Scanner):
 					r = []
 					
 					for t in titles:
-						# There must be a better way to handle this...
-						# ...happening every time will cause a slowdown.
-						
+						#
+						# TO DO:
+						#  - There must be a better way to handle this...
+						#    ...happening every time might make it slow :-/
+						#
 						c = self.c.c
-						if t == 'c':
+						if t in ['char','c']:
 							r.append(self.c.c)
 						elif t == 'block':
 							r.append(self.c.block)
 						elif t in ['bidi', 'bidirectional']:
-							r.append(self.c.digit)
+							r.append(self.c.bidirectional)
 						elif t == 'bracket':
 							r.append(self.c.bracket)
 						elif t in ['cat', 'category']:
@@ -79,14 +133,24 @@ class ScanQuery(Scanner):
 							r.append(self.c.name)
 						elif t in ['props', 'properties']:
 							r.append(" ".join(self.c.props))
+						
+						elif t == 'bidiname':
+							r.append(self.c.bidiname)
+						elif t == 'catname':
+							r.append(self.c.catname)
+						
+						# extra, for clarity...
+						elif t == 'ord':
+							r.append(ord(self.c.c).upper())
 					
-					#
-					# if fn returns True, add the char and properties, ordered
-					# by the title
-					#
+					# add the row to results
 					rr.append(r)
+					
 		except StopIteration:
 			return rr
+		
+		except Exception:
+			raise Exception(xdata())
 
 	
 	def table(self, **k):
@@ -96,7 +160,13 @@ class ScanQuery(Scanner):
 	
 	
 
-def test():
+def charloop():
+	"""
+	Loop, display the character properties for given string. Enter an
+	empty string (or use Ctrl-c) to	exit. 
+	
+	NOTE: Results can be long... use single characters or short strings.
+	"""
 	x = input("--> ")
 	while x:
 		s = Scanner(x)
@@ -107,25 +177,9 @@ def test():
 			pass
 		x = input("--> ")
 
+
+
 def char(c):
+	"""Display the properties of a single character."""
 	charinfo(c).next().display()
 
-"""
-
-CHAR    CATEGORY    BIDIRECTIONAL           PROPS
-\n      Cc Control  B  Paragraph_Separator  Pattern_White_Space 
-\r      Cc Control  B  Paragraph_Separator  Pattern_White_Space 
-
-\t      Cc          S  Segment_Separator    Pattern_White_Space
-,       Po          CS Common_Separator     Terminal_Punctuation
-|       Sm          ON Other_Neutral        Pattern_Syntax
-;       Po          ON Other_Neutral        Terminal_Punctuation
-:       Po          CS Common_Separator     Terminal_Punctuation
-
-"       Po          ON Other_Neutral        Quotation_Mark
-'       Po          ON Other_Neutral        Quotation_Mark
-     
-<space> Zs; Space_Separator; WS White_Space; Pattern_White_Space
-
-"""
-	

@@ -18,12 +18,12 @@ class Scanner(object):
 		"""Pass anything iterable that produces unicode characters."""
 		self.current = charinfo(iter(iterable_text))
 		self.__parts = []
-
+	
 	@property
 	def c(self):
 		"""Return current character info object."""
 		return self.current
-
+	
 	@property
 	def cc(self):
 		"""Move forward one and return the character info object."""

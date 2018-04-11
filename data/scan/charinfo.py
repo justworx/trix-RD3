@@ -141,8 +141,26 @@ class charinfo(xiter):
 	@property
 	def props(self):
 		return udata.properties(self.c)
-
+	
+	
+	#
+	# DISPLAY FEATURES
+	#  - Don't use these in code, but they can be useful to lookup the
+	#    meaning of bidi codes, property aliases, etc...
+	#
+	
+	@property
+	def bidiname(self):
+		return udata.propalias().bidi(self.bidi).get(self.bidi)
+	
+	@property
+	def catname(self):
+		return udata.propalias().cat(self.cat).get(self.cat)
+	
+	
+	#
 	# INFO
+	#
 	def info(self):
 		"""Return a dict with all attributes of the current character."""
 		result = dict(
