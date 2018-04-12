@@ -11,7 +11,7 @@ from . import bom, enchelp
 class Encoded(object):
 	"""Represents raw byte strings."""
 	
-	EncodingKeywords = ['charset','encoding','coding']
+	EncodingKeywords = [b'charset',b'encoding',b'coding']
 	
 	def __init__(self, bbytes):
 		"""Pass encoded byte strings."""
@@ -52,6 +52,12 @@ class Encoded(object):
 		Use EncodingHelper validation to find a matching encoding name.
 		If that fails, return the 
 		"""
+		try:
+			enc = enc.decode('utf_8')
+		except:
+			print ('\n#\n# enc: %s\n#\n' % (enc))
+			raise
+			
 		return enchelp.EncodingHelper(encoding=enc).encoding
 	
 	
@@ -111,7 +117,7 @@ class Encoded(object):
 		#  - So... DO THIS! Decode the encoding string.
 		#
 		try:
-			return e.decode('utf-8')
+			return e.decode('utf_8')
 		except:
 			return e
 	
@@ -138,15 +144,13 @@ class Encoded(object):
 		zero    = b"\0"
 		blank   = b''
 		ignore  = b'\t :=\'"'
-		charset = b'charset'
-		encoding= b'encoding'
-		coding  = b'coding'
 		
 		# dump multi-byte zero-padding of ascii characters
 		bb = self.bytes.replace(zero, blank)
 		
 		# look for charset, coding (or encoding)
-		for kw in self.EncodingKeywords: #[charset, encoding, coding]:
+		for kw in self.__ekw:
+			
 			x = bb.find(kw) # start at the keyword kw
 			if not x < 0:          
 				p = x+len(kw) # pass the keyword               
@@ -160,19 +164,6 @@ class Encoded(object):
 				
 				# this is the encoding value first specified in the text
 				return self.pythonize(bytes(r))
-	
-	"""
-	# TEST SPEC
-	def testspec_new(self):
-		pass
-	
-	def __testspecgen(self):
-		r = self.reader()
-		for line in r.lines:
-			for b in line:
-				if b:
-					yield(b.lower())
-	"""
 	
 	
 	# TEST LIST
