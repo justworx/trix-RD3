@@ -27,6 +27,8 @@ bu/
 x/
 *.x.*
 */x/*
+*_x.py
+
 
 #
 # _ directory is ignored, too - I put doc, examples, and such in them
