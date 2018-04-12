@@ -4,7 +4,7 @@
 # of the GNU Affero General Public License.
 #
 
-from .. import * # trix
+from ..util.enchelp import * # trix
 
 # Compensate for renamed symbols in python 3:
 #  - MessageMerge is MM2 in python2, MM3 in python3.
@@ -82,7 +82,6 @@ def head(url):
 
 
 
-
 #
 # URL - DOWNLOAD
 #
@@ -90,28 +89,108 @@ def head(url):
 class UResponse(object):
 	"""Response object for the url.open() function."""
 	
-	PMessage = None
+	MxEncSeek = 16384
 	
 	def __init__(self, *a, **k):
+		"""Arguments are the same as for urllib.urlopen()"""
+		
+		# open the file
 		self.__file = urlreq.urlopen(*a, **k)
+		
+		# buffer type
+		TBuffer = trix.nvalue('util.stream.buffer.Buffer')
+		
+		# buffer... reads bytes
+		self.__buf = TBuffer(self.__file.read())
+		
+		#
+		# Find the encoding, if possible;
+		#
+		
+		# hopefully the charset is in the headers
+		c = self.param('charset')
+		if not c:
+			
+			#
+			# If no charset in params, lock the thread (so no other thread
+			# can manipulate the buffer... not likely, but possible).
+			#
+			with thread.allocate_lock():
+				
+				# just read a few bytes for testbom
+				self.__buf.seek(0)
+				c = trix.ncreate(
+					"util.bom.testbom", self.__buf.reader().read(16)
+				)
+				
+				# At this point, the reader can only do bytes; we need to use
+				# it to find the encoding.
+				if not c:
+					sz = self.MxEncSeek
+					self.__buf.seek(0) # start over; read max 16k
+					bb = trix.ncreate(
+							'util.encoded.Encoded', self.__buf.reader().read(sz)
+						)
+					c = bb.detect() # look for encoding specifier in file
+		
+		# now set self.__charset, even if it's None
+		self.__charset = c
+		
+		#
+		# If an encoding was found, create a new Buffer object complete
+		# with encoding, then read the bytes into it.
+		#
+		if self.__charset:
+			self.__buf.seek(0)
+			self.__buf = TBuffer(self.__buf.read(encoding=self.__charset))
+			self.__buf.seek(0)
 	
-	def __len__(self):
-		return len(self.content) if self.__content else None
+	
+	@property
+	def contenttype(self):
+		"""The content type, as given by 'info'."""
+		return MessageMerge.contenttype(self.info())
+	
+	@property
+	def maintype(self):
+		"""The main type, as given by 'info'."""
+		return MessageMerge.maintype(self.info())
+	
+	@property
+	def subtype(self):
+		"""The sub-type, as given by 'info'."""
+		return MessageMerge.subtype(self.info())
+	
+	@property
+	def charset(self):
+		"""Return the document's encoding."""
+		return self.__charset
 	
 	
+	# READER
+	def reader(self, **k):
+		"""Return a reader from the internal buffer."""
+		if self.__charset:
+			k.setdefault('encoding', self.__charset)
+		return self.__buf.reader(**k)
+	
+	# DISPLAY
 	def display(self):
 		"""Print r.info()"""
 		print (str(self.info()))
-			
-		
+	
+	
+	# GET URL
 	def geturl(self):
 		"""The actual URL of the resource retrieved."""
 		return self.__file.geturl()
 	
+	# GET CODE
 	def getcode(self):
 		"""Response code."""
 		return self.__file.getcode()
 	
+	# INFO
 	def info(self):
 		"""Message objects, as returned by python's urlopen()."""
 		try:
@@ -120,53 +199,9 @@ class UResponse(object):
 			self.__info = self.__file.info()
 			return self.__info
 	
-	# INFO
+	# PARAM
 	def param(self, name):
 		"""Param, as from the info Message object."""
 		return MessageMerge.param(self.info(), name)
-	
-	@property
-	def content(self):
-		"""Reads and holds the content until self is deleted."""
-		try:
-			return self.__content
-		except:
-			self.__content = self.__file.read()
-			return self.__content
-	
-	@property
-	def contenttype(self):
-		"""The content type, as given by 'info'."""
-		return MessageMerge.contenttype(self.info())
-
-	@property
-	def maintype(self):
-		"""The main type, as given by 'info'."""
-		return MessageMerge.maintype(self.info())
-
-	@property
-	def subtype(self):
-		"""The sub-type, as given by 'info'."""
-		return MessageMerge.subtype(self.info())
-	
-	@property
-	def charset(self):
-		"""
-		Returns the specified charset as detected from BOM, in HTTP 
-		headers, or a content specification (eg, meta tag) - in that
-		order.
-		"""
-		try:
-			return self.__charset
-		except:
-			e = trix.ncreate('util.encoded.Encoded', self.content)
-			c = e.testbom()
-			if not c:
-				c = self.param('charset')
-			if not c:
-				bb = trix.ncreate('util.encoded.Encoded', self.content)
-				c = bb.detect()
-			self.__charset = e.pythonize(c)
-			return self.__charset
 
 
