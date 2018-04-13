@@ -16,7 +16,7 @@ class udata(object):
 	
 	Cache = 'util.cache.Cache'
 	CTime = 30
-	CSize = 512
+	CSize = 512*2
 	
 	@classmethod
 	def cache(cls):
@@ -84,7 +84,7 @@ class udata(object):
 		try:
 			return cls.__blocknames
 		except AttributeError:
-			cls.blocks() 
+			cls.blocks() # calling blocks sets self.__blocknames 
 			return cls.__blocknames
 	
 	#
@@ -102,6 +102,15 @@ class udata(object):
 					r.append(k)
 					cls.cache().set(c, r)
 			return r
+		
+		"""
+		r = []
+		for k in PropList.keylist():
+			if PropList(k).match(c):
+				r.append(k)
+				#cls.cache().set(c, r)
+		return r
+		"""
 	
 	# PROP-LIST
 	@classmethod
@@ -123,36 +132,18 @@ class udata(object):
 	@classmethod
 	def propalias(cls):
 		"""Return a propalias object."""
-		#
-		# this should probably be wrapped in with query.py
-		#
 		try:
 			return cls.__propalias
 		except AttributeError:
 			cls.__propalias=trix.nvalue('data.udata.propalias','propalias')
 			return cls.__propalias
-	
-	#
-	# SAFECHR
-	#  - Need to test the removal of this. I think the forced definition
-	#    (or redefinition) of `unichr` in trix fixes the need for it; if
-	#    so, the `unichr(i)`, below is always going to work.
-	#
-	#@classmethod
-	#def safechr(cls, i):
-	#	"""
-	#	A workaround to prevent ValueError on narrow builds when creating
-	#	characters with a codepoint over 0x10000.
-	#	"""
-	#	try:
-	#		return unichr(i)
-	#	except ValueError:
-	#		return struct.pack('i', i).decode('utf-32')
-	#
 
 
 
 
+#
+# PROP-LIST CLASS
+#
 class PropList(object):
 	
 	__KEYS = sorted([k for k in PROPERTIES.keys()])
