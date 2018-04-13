@@ -75,8 +75,12 @@ class ScanQuery(Scanner):
 		for block in bnames:
 			rng = blocks[block]
 			rng[1] += 1
-			for c in range(*rng):
-				yield (unichr(c))
+			try:
+				for c in range(*rng):
+					yield (unichr(c))
+			except ValueError:
+				if c > 0x10FFFF:
+					raise StopIteration()
 	
 	
 	def __init__(self, **k):
@@ -141,7 +145,8 @@ class ScanQuery(Scanner):
 						
 						# extra, for clarity...
 						elif t == 'ord':
-							r.append(ord(self.c.c).upper())
+							s = "%x" % ord(self.c.c)
+							r.append("0x%s" % s.upper())
 					
 					# add the row to results
 					rr.append(r)
