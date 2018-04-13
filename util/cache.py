@@ -136,7 +136,10 @@ class Cache(object):
 			skeys = sorted(self.__counted.keys())
 			ckeys = list(skeys[:rcount])
 			for ckey in ckeys:
-				del(self.__cache[self.__counted[ckey]])
-				del(self.__counted[ckey])
+				try:
+					del(self.__cache[self.__counted[ckey]])
+					del(self.__counted[ckey])
+				except KeyError:
+					pass
 
 
