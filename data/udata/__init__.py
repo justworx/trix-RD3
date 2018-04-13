@@ -91,8 +91,22 @@ class udata(object):
 	# PROPERTIES
 	#
 	@classmethod
+	def propfast(cls):
+		"""Returns an object that looks up properties fast."""
+		try:
+			return cls.__propfast
+		except AttributeError:
+			cls.__propfast = trix.ncreate('data.udata.propfast.propfast')
+			return cls.__propfast
+	
+	
+	@classmethod
 	def properties(cls, c):
 		"""List of all properties of the given char `c`."""
+		return cls.propfast().get(c)
+		
+		
+		"""
 		try:
 			return cls.cache().get(c)
 		except KeyError:
@@ -102,6 +116,7 @@ class udata(object):
 					r.append(k)
 					cls.cache().set(c, r)
 			return r
+		"""
 		
 		"""
 		r = []

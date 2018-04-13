@@ -160,6 +160,9 @@ class ScanQuery(Scanner):
 	
 	def table(self, **k):
 		rr = self.query(**k)
+		hd = k.get('heading', '')
+		if hd != None:
+			print(hd)
 		trix.ncreate('fmt.Grid').output(rr)
 	
 	
