@@ -25,10 +25,21 @@ class EncodingHelper(object):
 		self.__given = enc = config.get('encoding')
 		self.__strict = config.get('strict', self.Strict)
 		
+		# Make sure encoding and errors were given as unicode; any error
+		# still brings the correct result. (I think. I hope.)
+		enc = k.get('encoding')
+		err = k.get('errors')
+		try:
+			enc = enc.decode()
+			err = err.decode()
+		except AttributeError:
+			pass
+		
 		# Make sure `enc` matches (or is alias to) a valid encoding 
 		# defined in encodings.aliases.
 		enc = self.validate(enc)
 		
+		# store the encoding and errors values
 		if enc:
 			self.__ek['encoding'] = enc
 			err = config.get('errors')
@@ -79,9 +90,7 @@ class EncodingHelper(object):
 		ee = trix.kpop(k, 'encoding errors')
 		
 		# calculate the return values
-		enc = ee.get('encoding', self.encoding).decode()
 		if enc:
-			err = ee.get('errors', self.errors).decode()
 			if err:
 				return dict(encoding=enc, errors=err)
 			else:
