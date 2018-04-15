@@ -59,8 +59,8 @@ class Host(object):
 			selflocal = "%s.local" % self.__host
 			self.__local = socket.gethostbyname_ex(selflocal)
 		except Exception as ex:
-			print("self-local error", ex)
-			self.self.__local = None
+			#print("self-local error", ex)
+			self.__local = None
 		
 		"""
 		# <host>.local
