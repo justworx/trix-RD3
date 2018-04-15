@@ -17,19 +17,19 @@ class httpreq(object):
 		
 		# lines received from the request
 		self.bytes = requestBytes
-		self.text = requestBytes.decode('utf-8')
+		self.text = requestBytes.decode('utf_8')
 		
 		# array of request lines
 		self.lines = L = requestBytes.splitlines()
 		
-		# produce a dict of utf8 keys : bytes values
+		# produce a dict of utf8 keys : values
 		self.request = L[0]
 		self.headers = H = {}
 		for l in L[1:]:
 			if not l:
 				break
 			sp = l.split(b":", 1)
-			hk = sp[0].decode("utf-8")
+			hk = sp[0].decode("utf_8")
 			try:
 				try:
 					H[hk] = sp[1].strip()
@@ -64,7 +64,7 @@ class HandleHttp(Handler):
 			req = httpreq(data)
 			
 			# Generate Content before headers (because length!)
-			content = self.reply()
+			content = self.reply(req)
 			clength = len(content)
 			
 			# Generate Headers
@@ -89,19 +89,19 @@ class HandleHttp(Handler):
 			self.socket.send(b"<html><body>\r\n")
 			self.socket.send(b"<h1>500 Internal Server Error</h1>\r\n")
 			self.socket.send(b"<pre>\r\n")
-			self.socket.send(bytes(type(ex).__name__, 'utf8'))
-			self.socket.send(b": %s\r\n" % bytes(str(ex), 'utf8'))
+			self.socket.send(bytes(type(ex).__name__, 'utf_8'))
+			self.socket.send(b": %s\r\n" % bytes(str(ex), 'utf_8'))
 			self.socket.send(b"</pre>\r\n</body></html>\r\n\r\n")
 			raise
 
 	#
 	# REPLY - The response text
 	#
-	def reply(self):
+	def reply(self, req):
 		content = """
 		<html>
 			<title>Default Response</title>
-			<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+			<meta http-equiv="Content-Type" content="text/html; charset=utf_8" />
 		</html>
 		<body>
 			<h1>Default Response</h1>
@@ -120,4 +120,4 @@ class HandleHttp(Handler):
 		</html>
 		""" % (HandleHttp.__module__, HandleHttp.__name__)
 		
-		return content.encode("utf-8")
+		return content.encode("utf_8")

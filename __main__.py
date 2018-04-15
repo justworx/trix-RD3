@@ -41,15 +41,6 @@ if __name__ == '__main__':
 			pass
 		
 		
-		"""
-		#
-		# SCAN (TEST)
-		#  - under construction; testing
-		elif cmd in ['scan']:
-			scan = trix.ncreate('data.scan.scan', *args), 
-			trix.display(scan)
-		"""
-		
 		#
 		# VERSION
 		#
