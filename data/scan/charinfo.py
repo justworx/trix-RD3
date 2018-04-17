@@ -15,11 +15,13 @@ class charinfo(xiter):
 		"""Pass unicode text, iter, or generator."""
 		self.debug_text = iterable_text
 		xiter.__init__(self, iter(iterable_text))
+		self.o = 0
 		self.c = None
 
 	def __next__(self):
 		try:
 			self.c = xiter.__next__(self)
+			self.o += 1
 			return self
 		except TypeError:
 			raise TypeError(xdata(
@@ -27,6 +29,7 @@ class charinfo(xiter):
 				))
 
 	def __str__(self):
+		"""Return the current character as a string."""
 		return self.c
 
 
@@ -39,7 +42,7 @@ class charinfo(xiter):
 		try:
 			return unicodedata.name(self.c)
 		except:
-			return None
+			return ''
 
 	@property
 	def decimal(self):
@@ -68,7 +71,10 @@ class charinfo(xiter):
 	@property
 	def category(self):
 		"""Return unicodedata.category."""
-		return unicodedata.category(self.c)
+		try:
+			return unicodedata.category(self.c)
+		except ValueError:
+			return ''
 
 	@property
 	def bidirectional(self):
@@ -120,27 +126,81 @@ class charinfo(xiter):
 	#
 	@property
 	def bidi(self):
+		"""Alias for unicodedata.bidirectional."""
 		return unicodedata.bidirectional(self.c)
 	
 	@property
 	def cat(self): 
-		return unicodedata.category(self.c)
+		"""Alias for unicodedata.category."""
+		try:
+			return unicodedata.category(self.c)
+		except:
+			return ''
 	
 	@property
 	def num(self):
+		"""Alias for unicodedata.numeric."""
 		return self.numeric
 	
 	@property
 	def dec(self):
+		"""Alias for unicodedata.decimal."""
 		return self.decimal
 	
 	@property
 	def dig(self):
+		"""Alias for unicodedata.digit."""
 		return self.digit
 	
 	@property
 	def props(self):
+		"""Alias for udata.properties."""
 		return udata.properties(self.c)
+	
+	
+	#
+	# UTILITY
+	#  - These might be moved or may disappear in future versions, but
+	#    I'm finding them very useful in lambdas.
+	#
+	@property
+	def ss(self):
+		"""-1 if subscript; 1 if superscript; zero if neither;"""
+		return -1 if self.sub else 1 if self.sup else 0
+	
+	@property
+	def sub(self):
+		"""True if subscript."""
+		return "SUBSCRIPT" in self.name
+	
+	@property
+	def sup(self):
+		"""True if superscript."""
+		return "SUPERSCRIPT" in self.name
+	
+	@property
+	def lend(self):
+		"""True if line-ending character (CR, LF, 0x85)."""
+		#
+		# TO DO
+		#  - This is faster than a real lookup, but might break in future
+		#    udb versions. This probably should be fixed.
+		#
+		return self.c in "\r\n\x85" 
+	
+	@property
+	def quote(self):
+		# do the fast checks (bidi, cat) first, then do self.props
+		return ((self.bidi=='ON') and (self.cat=='Po') and (
+			'Quotation_Mark' in self.props))
+	
+	@property
+	def space(self):
+		"""True if the current codepoint is 'White_Space'."""
+		# do the fast checks (bidi, cat) first, then do self.props
+		return (self.bidi=='WS') and (self.cat=='Zs') and (
+				'White_Space' in self.props
+			)
 	
 	
 	#
@@ -151,10 +211,12 @@ class charinfo(xiter):
 	
 	@property
 	def bidiname(self):
+		"""Full name expanded from `self.bidirectional` code."""
 		return udata.propalias().bidi(self.bidi).get(self.bidi)
 	
 	@property
 	def catname(self):
+		"""Full name expanded from `self.category` code."""
 		return udata.propalias().cat(self.cat).get(self.cat)
 	
 	
@@ -240,5 +302,6 @@ class charinfo(xiter):
 			#
 
 			info['__char__'] = [str(info['c'])]
-
+			
+			# send through trix.display()
 			trix.display(info, **k)
