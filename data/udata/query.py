@@ -4,59 +4,9 @@
 # of the GNU Affero General Public License.
 #
 
-from . import *
+from ..scan import *
 
 def query(**k):
-	"""
-	This function (in addition to being pretty nifty) is a tool to help 
-	us find the information we need to build efficient scanning methods.
-	
-	The idea is to select character info (eg., category, props, etc...) 
-	matching keyword argument specifications.
-	
-	KWARGS:
-	 * select : A list of `charinfo` properties to select.
-	            Eg, select="char numeric decimal digit" 
-	 * blocks : A list of blocks to query. 
-	            Eg, blocks=['Basic Latin', 'Gothic']
-	 * where  : A callable object that returns True for objects that 
-	            should be selected, else False.
-	            Eg, where=lambda c: c.numeric != None
-	 
-	 * text   : The `text` kwarg may be specified instead of 'blocks'
-	            to query info from a given string (or other iterable).
-	            Eg, text="Text I'm having trouble parsing!" 
-	
-	Either `blocks` or `text` may be specified, not both. If neither is
-	specified, all characters from all blocks are checked for matches.
-	
-	```python3
-	from trix.data.scan.scanquery import *
-	query(
-	    select="block char numeric decimal digit",
-	    blocks=['Basic Latin', 'Gothic'],
-	    where =lambda c: c.num != None 
-	  )
-
-	```
-	
-	The complete list of property names is:
-	[
-		'char', 'c', 'block', 'bidi', 'bidirectional', 'bracket', 'cat', 
-		'category', 'num', 'numeric', 'dec', 'decimal', 'dig', 'digit',
-		'name', 'props', 'properties','bidiname','catname'
-	]
-	
-	Several of these are aliases (a space-saving measure for lambdas):
-	 - bidi = bidirectional
-	 - cat = category
-	 - char = c
-	 - dec = decimal
-	 - dig = digit
-	 - num = numeric
-	 - props = properties
-	
-	"""
 	ScanQuery(**k).table(**k)
 
 
@@ -66,7 +16,7 @@ class ScanQuery(Scanner):
 	"""Select unicode data properties. See `scanquery.query()` help."""
 	
 	# default fields to query
-	Titles = 'block char bidi bracket cat num dec dig name props'
+	Titles = 'block ord char bidi bracket cat num name'
 	
 	@classmethod
 	def chargen(self, **k):
@@ -151,10 +101,8 @@ class ScanQuery(Scanner):
 						elif t == 'catname':
 							r.append(self.c.catname)
 						
-						# extra, for clarity...
 						elif t == 'ord':
-							s = "%x" % ord(self.c.c)
-							r.append("0x%s" % s.upper())
+							r.append(self.c.ord)
 					
 					# add the row to results
 					rr.append(r)

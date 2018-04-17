@@ -157,6 +157,11 @@ class charinfo(xiter):
 		"""Alias for udata.properties."""
 		return udata.properties(self.c)
 	
+	@property
+	def lend(self):
+		"""Alias for self.lineend."""
+		return self.lineend
+	
 	
 	#
 	# UTILITY
@@ -164,22 +169,7 @@ class charinfo(xiter):
 	#    I'm finding them very useful in lambdas.
 	#
 	@property
-	def ss(self):
-		"""-1 if subscript; 1 if superscript; zero if neither;"""
-		return -1 if self.sub else 1 if self.sup else 0
-	
-	@property
-	def sub(self):
-		"""True if subscript."""
-		return "SUBSCRIPT" in self.name
-	
-	@property
-	def sup(self):
-		"""True if superscript."""
-		return "SUPERSCRIPT" in self.name
-	
-	@property
-	def lend(self):
+	def lineend(self):
 		"""True if line-ending character (CR, LF, 0x85)."""
 		#
 		# TO DO
@@ -187,6 +177,11 @@ class charinfo(xiter):
 		#    udb versions. This probably should be fixed.
 		#
 		return self.c in "\r\n\x85" 
+	
+	@property
+	def ord(self):
+		s = "%x" % ord(self.c)
+		return "0x%s" % s.upper()
 	
 	@property
 	def quote(self):
@@ -201,6 +196,21 @@ class charinfo(xiter):
 		return (self.bidi=='WS') and (self.cat=='Zs') and (
 				'White_Space' in self.props
 			)
+	
+	@property
+	def ss(self):
+		"""-1 if subscript; 1 if superscript; zero if neither;"""
+		return -1 if self.sub else 1 if self.sup else 0
+	
+	@property
+	def sub(self):
+		"""True if subscript."""
+		return "SUBSCRIPT" in self.name
+	
+	@property
+	def sup(self):
+		"""True if superscript."""
+		return "SUPERSCRIPT" in self.name
 	
 	
 	#

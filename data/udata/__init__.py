@@ -14,19 +14,8 @@ import struct, bisect
 
 class udata(object):
 	
-	Cache = 'util.cache.Cache'
 	CTime = 30
 	CSize = 512*2
-	
-	@classmethod
-	def cache(cls):
-		try:
-			return cls.__CACHE
-		except:
-			cls.__CACHE = trix.ncreate(
-					cls.Cache, timeout=cls.CTime, maxsize=cls.CSize
-				)
-			return cls.__CACHE
 	
 	#
 	# BRACKETS
@@ -99,49 +88,10 @@ class udata(object):
 			cls.__propfast = trix.ncreate('data.udata.propfast.propfast')
 			return cls.__propfast
 	
-	
 	@classmethod
 	def properties(cls, c):
 		"""List of all properties of the given char `c`."""
 		return cls.propfast().get(c)
-		
-		
-		"""
-		try:
-			return cls.cache().get(c)
-		except KeyError:
-			r = []
-			for k in PropList.keylist():
-				if PropList(k).match(c):
-					r.append(k)
-					cls.cache().set(c, r)
-			return r
-		"""
-		
-		"""
-		r = []
-		for k in PropList.keylist():
-			if PropList(k).match(c):
-				r.append(k)
-				#cls.cache().set(c, r)
-		return r
-		"""
-	
-	# PROP-LIST
-	@classmethod
-	def proplist(cls, *a, **k):
-		"""
-		PropList object with the given arguments.
-		
-		EXAMPLES:
-		>>> x = udata.proplist('ASCII_Hex_Digit')
-		>>> x.match('a')
-		True
-		
-		>>> # the PropList.keylist class method lists available properties
-		>>> udata.PropList.keylist()
-		"""
-		return PropList(*a, **k)
 	
 	# PROP-ALIAS
 	@classmethod
@@ -152,89 +102,60 @@ class udata(object):
 		except AttributeError:
 			cls.__propalias=trix.nvalue('data.udata.propalias','propalias')
 			return cls.__propalias
-
-
-
-
-#
-# PROP-LIST CLASS
-#
-class PropList(object):
 	
-	__KEYS = sorted([k for k in PROPERTIES.keys()])
-	__ITEMS = [PROPERTIES[k] for k in __KEYS]
-	
+	# QUERY
 	@classmethod
-	def __item(cls, key):
-		"""Private, to protect __ITEMS from manipulation."""
-		return cls.__ITEMS[bisect.bisect_left(cls.__KEYS, key)]
-	
-	@classmethod
-	def keylist(cls):
-		"""Returns a copy of __KEYS."""
-		return cls.__KEYS[:]
-	
-	@classmethod
-	def indexof(cls, key):
-		"""Find index of given key."""
-		return bisect.bisect_left(cls.__KEYS, key)
-	
-	# INIT
-	def __init__(self, *a, **k):
+	def query(cls, **k):
 		"""
-		Pass a list of key strings, or keyword items, a list of integers.
-		"""
-		ii = k.get('items', [])
-		for pname in a:
-			if not pname in ii:
-				ix = self.indexof(pname)
-				if ix < 0:
-					raise ValueError('udata-propname-invalid', pname)
-				ii.append(ix)
+		The query() function can help us find the information we need to 
+		build efficient scanning methods.
 		
-		self.__items = ii
-		if not self.__items:
-			raise ValueError('udata-proplist-empty') #base.xdata()
-	
-	@property
-	def items(self):
-		"""Return a list (of integers) this object represents."""
-		return self.__items
-	
-	@property
-	def keys(self):
-		"""Return a list (of strings) this object represents."""
-		try:
-			return self.__keys
-		except:
-			kk = []
-			for i in self.__items:
-				kk.append(self.__KEYS[i])
-			self.__keys = kk
-			return self.__keys
-	
-	
-	# MATCH
-	def match(self, c):
-		"""
-		Return True if the given unichr matches one of the properties
-		this object was created to represent.
-		"""
-
-		#
-		# NOTE: This method is sometimes slow depending on the number of
-		#       comparisons required. Use match() with a PropList object
-		#       that has the minimum set of keys that meet your needs.
-		#
-		x = ord(c)
-		isinst = isinstance # 6% faster
+		The idea is to select charinfo properties (eg., category, props, 
+		etc...) that match keyword argument specifications. Results are
+		printed to the terminal as a grid.
 		
-		# loop through each proplist this object was created to represent
-		for listid in self.__items:
-			proplist = self.__ITEMS[listid]
-			for i in proplist:
-				if ((x==i) if isinst(i,int) else x>=i[0] and x<=i[1]): # +1%
-					return True
-		return False
-
+		KWARGS:
+		 * select : A list of `charinfo` properties to select.
+		            Eg, select="char numeric decimal digit" 
+		 * blocks : A list of blocks to query. 
+		            Eg, blocks=['Basic Latin', 'Gothic']
+		 * where  : A callable object that returns True for objects that 
+		            should be selected, else False.
+		            Eg, where=lambda c: c.numeric != None
+		 
+		 * text   : The `text` kwarg may be specified instead of 'blocks'
+		            to query info from a given string (or other iterable).
+		            Eg, text="Text I'm having trouble parsing!" 
+		
+		Either `blocks` or `text` may be specified, not both. If neither 
+		is specified, all codepoints are checked for matches.
+		
+		```python3
+		from trix.data.scan.scanquery import *
+		query(
+		    select="block char numeric decimal digit",
+		    blocks=['Basic Latin', 'Gothic'],
+		    where =lambda c: c.num != None 
+		  )
+	
+		```
+		
+		The complete list of property names is:
+		[
+			'char', 'c', 'block', 'bidi', 'bidirectional', 'bracket', 'cat',
+			'category', 'num', 'numeric', 'dec', 'decimal', 'dig', 'digit',
+			'name', 'props', 'properties', 'bidiname', 'catname', 'ord'
+		]
+		
+		Several of these are aliases (a space-saving measure for lambdas):
+		 - bidi = bidirectional
+		 - cat = category
+		 - char = c
+		 - dec = decimal
+		 - dig = digit
+		 - num = numeric
+		 - props = properties
+		
+		"""
+		return trix.ncreate('data.udata.query.query', **k)
 
