@@ -6,10 +6,10 @@
 
 from ..scan import *
 
+
 def query(**k):
+	"""Display tabulated query results. See help for `udata.query`."""
 	ScanQuery(**k).table(**k)
-
-
 
 
 class ScanQuery(Scanner):

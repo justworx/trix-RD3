@@ -53,12 +53,15 @@ class Scanner(object):
 	
 	# PASS WHITE
 	def passwhite(self):
-		self.ignore(lambda ci: ci.white)
+		"""Pass any existing white space."""
+		self.ignore(lambda ci: ci.space)
 	
 	
 	# PASS LINE-ENDING
 	def passend(self):
-		self.ignore(lambda c: c.lend)
+		"""Pass existing white space, then any endline codepoints."""
+		self.passwhite()
+		self.ignore(lambda c: c.lineend)
 		
 	
 	#

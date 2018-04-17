@@ -2,8 +2,8 @@
 # This file is part of the trix project, distributed under the terms 
 # of the GNU Affero General Public License.
 
-from ...util.runner import *  # trix
-from ..connect import Connect
+from ..util.runner import *  # trix
+from .connect import Connect
 
 """python3
 # sample server (echo)
