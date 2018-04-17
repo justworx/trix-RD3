@@ -11,45 +11,96 @@ from ...util.stream.buffer import *
 class Scanner(object):
 	"""Scan unicode text one character at a time."""
 	
-	Escape = '\\'
+	Escape = "\\"
 	BufSize = 2048
 	
-	def __init__(self, iterable_text):
+	def __init__(self, iterable_text, **k):
 		"""Pass anything iterable that produces unicode characters."""
-		self.current = charinfo(iter(iterable_text))
-		self.__parts = []
+		self.__escape = k.get('escape', self.Escape)
+		self.__bufsz = k.get('bufsz', self.BufSize)
+		self.__cinfo = charinfo(iter(iterable_text))
+		next(self.__cinfo)
 	
 	@property
 	def c(self):
 		"""Return current character info object."""
-		return self.current
+		return self.__cinfo
 	
 	@property
 	def cc(self):
 		"""Move forward one and return the character info object."""
-		return self.current.next()
+		return self.__cinfo.next()
 	
-	def scanto(self, c, **k):
-		"""Scan to the next occurance of character `c`."""
-		k.setdefault('max_size', self.BufSize)
-		b = Buffer(mode='r', **k)
-		w = b.writer()
-		while self.cc.c != c:
-			if c != self.Escape:
-				# write the character
-				w.write(self.c.c) 
-			else:
-				# skip escape char; write the next char
-				w.escape_char(self.cc.c)
+	
+	@property
+	def bufsz(self):
+		return self.__bufsz
+	
+	@property
+	def esc(self):
+		return self.__escape
+	
+	
+	#
+	# CONVENIENCE METHODS
+	#
+	
+	# SCAN TO
+	def scanto(self, c):
+		"""Collect all text to the given codepoint `c`."""
+		return self.collect(lambda ci: ci.c != c)
+	
+	
+	# PASS WHITE
+	def passwhite(self):
+		self.ignore(lambda ci: ci.white)
+	
+	
+	# PASS LINE-ENDING
+	def passend(self):
+		self.ignore(lambda c: c.lend)
 		
+	
+	#
+	# CALLBACK-METHODS
+	#  - The following methods require a callback executable to select
+	#    which characters to ignore or collect.
+	#
+	
+	# IGNORE
+	def ignore(self, fn):
+		"""
+		Pass all characters for which executable `fn` returns True. The
+		iterator is now on the first character following ignored text.
+		
+		NOTE: If the current character doesn't match what `fn` is looking
+		      for, the pointer is not moved.
+		"""
+		try:
+			b = fn(self.c)
+			while b:
+				b = fn(self.cc)
+		except StopIteration:
+			pass
+	
+	
+	# COLLECT
+	def collect(self, fn):
+		"""
+		Collect each character that matches the criteria of `fn`. The 
+		pointer is left directly after the last matching character.
+		"""
+		b = Buffer(mode='r', max_size=self.__bufsz)
+		w = b.writer()
+		try:
+			while fn(self.c):
+				if self.c.c != self.__escape:
+					w.write(self.c.c)
+				else:
+					w.write(self.c.cc)
+				self.cc
+		except StopIteration:
+			pass
+		
+		# read/return the whole buffer
 		return b.read()
-	
-	
-	def escape_char(self, c):
-		#
-		# Encountering escape char should send us here, where escape 
-		# sequences can be overridden by subclasses.
-		#
-		return c
-
-
