@@ -74,13 +74,14 @@ class ScanQuery(Scanner):
 		blocks = udata.blocks()
 		for block in bnames:
 			rng = blocks[block]
-			rng[1] += 1
 			try:
-				for c in range(*rng):
+				for c in range(rng[0], rng[1]+1):
 					yield (unichr(c))
 			except ValueError:
 				if c > 0x10FFFF:
 					raise StopIteration()
+				else:
+					raise
 	
 	
 	def __init__(self, **k):
@@ -118,7 +119,11 @@ class ScanQuery(Scanner):
 						#
 						c = self.c.c
 						if t in ['char','c']:
-							r.append(self.c.c)
+							if (self.c.cat=='Mc'):
+								x = "' " + str(c) + "'"
+							else:
+								x = repr(c)
+							r.append(x)
 						elif t == 'block':
 							r.append(self.c.block)
 						elif t in ['bidi', 'bidirectional']:
@@ -134,7 +139,10 @@ class ScanQuery(Scanner):
 						elif t in ['dig', 'digit']:
 							r.append(self.c.digit)
 						elif t == 'name':
-							r.append(self.c.name)
+							if self.c.name:
+								r.append(self.c.name)
+							else:
+								r.append('')
 						elif t in ['props', 'properties']:
 							r.append(" ".join(self.c.props))
 						
@@ -159,11 +167,14 @@ class ScanQuery(Scanner):
 
 	
 	def table(self, **k):
+		t = time.time()
 		rr = self.query(**k)
+		tt = time.time()-t
 		hd = k.get('heading', '')
 		if hd != None:
 			print(hd)
 		trix.ncreate('fmt.Grid').output(rr)
+		print ('qtime: %f' % tt)
 	
 	
 	
