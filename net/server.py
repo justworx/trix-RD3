@@ -226,8 +226,9 @@ class Server(sockserv, Runner):
 	def removeHandler(self, handler):
 		"""Remove `handler` from the handler list."""
 		#self.messages.append(["handler-remove", handler, handler.addr])
+		addr = handler.addr
 		self.handlers.remove(handler)
-		self.messages.append(["handler-remove", handler, handler.addr])
+		self.messages.append(["handler-remove", handler, addr])
 	
 	
 	#
@@ -321,7 +322,7 @@ class Server(sockserv, Runner):
 					except BaseException as ex:
 						try:
 							self.messages.append([
-								"handler-err", h, type(ex), ex.args
+								"handler-err", h, type(ex), ex.args, xdata()
 							])
 						except Exception as ex:
 							#
@@ -330,15 +331,18 @@ class Server(sockserv, Runner):
 							#    it's working (or until I realize there just can't
 							#    be errors in something this simple).
 							#
-							self.messageError = dict(xtype=type(ex), xargs=ex.args)
+							self.messageError = xdata(xtype=type(ex), xargs=ex.args)
 							pass
 						finally:
 							remove.append(h)
 			
 			# remove handlers marked for removal
 			for r in remove:
-				r.shutdown()
-				self.removeHandler(r)
+				try:
+					self.removeHandler(r)
+				finally:
+					r.shutdown()
+					
 			
 			self.iocount += 1
 			
