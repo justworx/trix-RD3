@@ -40,6 +40,24 @@ if __name__ == '__main__':
 		if False:
 			pass
 		
+		#
+		# Test trix HTTP servers.
+		#
+		if cmd == 'http':
+			k = mak.krgs
+			k.setdefault('port', 8888)
+			k.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
+			s = trix.ncreate('net.server.Server', **k)
+			try:
+				print ("HTTP Server running on port: %i" % s.port) 
+				print ("Use Ctrl-c to stop.")
+				s.run()
+			except KeyboardInterrupt:
+				print ("Server stopped.")
+			
+			if ('-d' in args):
+				s.display()
+		
 		
 		#
 		# VERSION
