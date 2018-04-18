@@ -1,103 +1,158 @@
 #
 # Copyright 2018 justworx
-# This file is part of the trix project, distributed under the terms 
-# of the GNU Affero General Public License.
+# This file is part of the trix project, distributed under 
+# the terms of the GNU Affero General Public License.
 #
 
-from . import *
-from ...fmt import JDisplay
 from time import gmtime, strftime
-
-
-#
-# HTTP (REQUEST PARSER)
-#
-class httpreq(object):
-	def __init__(self, requestBytes):
-		
-		# lines received from the request
-		self.bytes = requestBytes
-		self.text = requestBytes.decode('utf_8')
-		
-		# array of request lines
-		self.lines = L = requestBytes.splitlines()
-		
-		# produce a dict of utf8 keys : values
-		self.request = L[0]
-		self.headers = H = {}
-		for l in L[1:]:
-			if not l:
-				break
-			sp = l.split(b":", 1)
-			hk = sp[0].decode("utf_8")
-			try:
-				try:
-					H[hk] = sp[1].strip()
-				except:
-					H[hk] = b''
-			except:
-				pass
-
-
+from ...util import text
+from  ..httpreq import *
+from   . import *
 
 #
 # HANDLE-HTTP
 #
 class HandleHttp(Handler):
+	"""
+	Replies with the default HTTP content handler - a message about 
+	this class and how to customize it to suit your needs.
+	"""
 	
 	# INIT
 	def __init__(self, sock, **k):
+		
 		k.setdefault('Connection', 'close')
-		k.setdefault('Server', 'Nunayer-Bizwax/0.0.1')
+		k.setdefault('Server', 'trix/%s' % str(VERSION))
 		k.setdefault('Content-Type', 'text/html')
+		k.setdefault('docroot', trix.path().path)
 		
 		self.__options = trix.kcopy(k, 'Connection Server Content-Type')
+		self.__docroot = k.get('docroot')
 		
 		Handler.__init__(self, sock, **k)
-		
 	
+	@property
+	def docroot(self):
+		"""The root directory from which content may be read."""
+		return self.__docroot	
+	
+	@property
+	def options(self):
+		"""Options passed to constructor (with some defaults)."""
+		return self.__options	
+	
+	#
 	# HANDLE DATA
+	#
 	def handledata(self, data):
 		"""Echo request."""
-		try:
-			# parse the http request
-			req = httpreq(data)
+		with thread.allocate_lock():
+			try:
+				head = ""
+				
+				# parse the http request
+				req = httpreq(data)
+				
+				# Generate Content before headers (because length!)
+				content = self.reply(req)
+				clength = len(content)
+				
+				# Generate Headers
+				gmt = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+				head = "\r\n".join([
+					"HTTP/1.1 200 OK", 
+					"Date: %s"           % (gmt),
+					"Connection: %s"     % (self.__options['Connection']),
+					"Server: %s"         % (self.__options['Server']),
+					"Accept-Ranges: bytes",
+					"Content-Type: %s"   % self.__options['Content-Type'],
+					"Content-Length: %i" % (clength),
+					"Last-Modified: %s"  % (gmt)
+				])
+				
+				# Send content reply
+				content = text.Text("%s\r\n\r\n%s" % (head, content))
+				self.socket.send(content.bytes)
 			
-			# Generate Content before headers (because length!)
-			content = self.reply(req)
-			clength = len(content)
-			
-			# Generate Headers
-			gmt = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-			head = "\r\n".join([
-				"HTTP/1.1 200 OK", 
-				"Date: %s"           % (gmt),
-				"Connection: %s"     % (self.__options['Connection']),
-				"Server: %s"         % (self.__options['Server']),
-				"Accept-Ranges: bytes",
-				"Content-Type: %s"   % self.__options['Content-Type'],
-				"Content-Length: %i" % (clength),
-				"Last-Modified: %s"  % (gmt)
-			])
-			head = head.encode('utf8')
-			
-			# Send content reply
-			self.socket.send(b"%s\r\n\r\n%s" % (head, content))
+			except BaseException as ex:
+				#
+				# TO DO:
+				#  - Move this to its own method
+				#  - Use correct error codes
+				#
+				self.socket.send(b"%s\r\n\r\n" % (head.encode()))
+				self.socket.send(b"<html><head>\r\n")
+				self.socket.send(b'<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\r\n')
+				self.socket.send(b"<title>Error</title>\r\n")
+				self.socket.send(b"<head><body>\r\n")
+				self.socket.send(b"<h1>500 Internal Server Error</h1>\r\n")
+				self.socket.send(b"<pre>\r\n")
+				self.socket.send(type(ex).__name__.encode('utf_8'))
+				self.socket.send(trix.formatter(xdata()).encode('utf_8'))
+				self.socket.send(b": %s\r\n" % bytes(str(ex), 'utf_8'))
+				self.socket.send(b"</pre>\r\n</body></html>\r\n\r\n")
+				raise type(ex)(ex.args, xdata())
+	
+	
+	#
+	# FULL PATH
+	#
+	def fullpath(self, req):
+		"""Return the full path to the requested file."""
+		p = trix.path(self.docroot)
+		if p.isfile():
+			#print(self.docroot, 'is a file?')
+			return p
+		elif req.reqpath:
+			#print(self.docroot,"+",self.reqpath,'=',p(self.reqpath).path,'?')
+			p = p(req.reqpath) #merge
+		return p
+	
+	
+	#
+	# FILE BYTES
+	#
+	def filebytes(self, req):
+		"""Return contents of a file from self.docroot, or None."""
+		docroot=self.docroot
+		if not docroot:
+			return None
 		
-		except BaseException as ex:
-			self.socket.send(b"%s\r\n\r\n" % (head))
-			self.socket.send(b"<html><body>\r\n")
-			self.socket.send(b"<h1>500 Internal Server Error</h1>\r\n")
-			self.socket.send(b"<pre>\r\n")
-			self.socket.send(bytes(type(ex).__name__, 'utf_8'))
-			self.socket.send(b": %s\r\n" % bytes(str(ex), 'utf_8'))
-			self.socket.send(b"</pre>\r\n</body></html>\r\n\r\n")
-			raise
-
+		reqpath=req.reqpath
+		try:
+			p = trix.path(docroot)
+			if p.isfile:
+				return None
+			
+			elif reqpath:
+				p = p(reqpath) #merge
+				if p.isdir:
+					indexfiles = ['index.html', 'index.htm']
+					for idx in indexfiles:
+						f = p.merge(idx)
+						if f.exists:
+							return f.reader(mode='rb').read()
+		except Exception:
+			raise Exception(xdata(docroot=docroot, reqpath=reqpath))
+	
+	
 	#
 	# REPLY - The response text
 	#
 	def reply(self, req):
+		b = self.filebytes(req)
+		if b:
+			return tx.Text(b)
+		else:
+			return self.default_reply(req)
+		
+	
+	def default_reply(self, req):
+		
+		# calculate full path (for display, below)
+		p = self.fullpath(req)
+		fullpath = p.path if p else ''
+		
 		content = """
 		<html>
 			<title>Default Response</title>
@@ -110,14 +165,35 @@ class HandleHttp(Handler):
 				class. To generate a real response, create a subclass of the
 				`%s.%s` class and replace the `reply()` method. 
 			</p>
+			
+			<h4>Debug Info:</h4>
 			<p>
-				Look for more information/documentation soon at:
+				Here's some information that might be useful for debugging.
+			</p>
+			<b>Request Headers</b>
+			<pre>%s</pre>
+			
+			<br/>
+			<div><b>Other Request Info:</b></div>
+			<table>
+				<tr><td>Document Root:</td><td><pre>%s</pre></td></tr>
+				<tr><td>Full File Path:</td><td><pre>%s</pre></td></tr>
+			</table>
+			
+			<p>
+				<b>Look for more information/documentation soon at:</b>
 				<br/>
 				<a href="https://github.com/justworx/trix/"
 					>https://github.com/justworx/trix/</a>
 			</p>
 		</body>
 		</html>
-		""" % (HandleHttp.__module__, HandleHttp.__name__)
+		""" % (
+				HandleHttp.__module__, HandleHttp.__name__, 
+				"\r\n".join(req.lines),
+				self.docroot, fullpath
+			)
 		
-		return content.encode("utf_8")
+		return content
+
+
