@@ -17,8 +17,18 @@ class Path(object):
 		Represents `path` given as string, or current working directory. 
 		Pass kwargs as to the expand() method.
 		"""
+		self.sep = os.sep
 		self.__p = self.expand(k.get('path', path or '.'), **k)
-		self.__n = ospath.normpath(self.__p).split(os.sep)[-1]
+		try:
+			self.__n = ospath.normpath(self.__p).split(self.sep)[-1]
+		except TypeError:
+			if isinstance(self.sep, unicode):
+				self.sep = self.sep.encode()
+			else:
+				self.sep = self.sep.decode()
+			self.__n = ospath.normpath(self.__p).split(self.sep)[-1]
+			
+			
 	
 	# CALL
 	def __call__(self, path):
@@ -104,7 +114,7 @@ class Path(object):
 	def setpath(self, path):
 		"""Set this object's path."""
 		self.__p = path
-		self.__n = ospath.normpath(path).split(os.sep)[-1]
+		self.__n = ospath.normpath(path).split(self.sep)[-1]
 	
 	def isfile(self, path=None):
 		"""True if path is a file."""
