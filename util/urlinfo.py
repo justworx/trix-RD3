@@ -97,7 +97,7 @@ class urlinfo(object):
 			dhost = k.get('defhost', self.__defhost)
 			host = self.__dict.get('host', dhost)
 			try:
-				port = int(self.__dict['port'])
+				port = self.__dict['port']
 			except:
 				raise ValueError('err-addrinfo', xdata(
 						reason='port-required', detail='specify-port'
@@ -195,6 +195,8 @@ class urlinfo(object):
 	#
 	def __parse(self):
 		url, k = self.__params
+		if 'port' in k:
+			k['port'] = int(k['port'])
 		
 		# kwargs
 		if not url:
@@ -203,20 +205,24 @@ class urlinfo(object):
 		# dict
 		try:
 			url.update({})
+			if 'port' in url:
+				url['port'] = int(url['port'])
 			return self.__uparsedict(url, k)
-		except Exception as ex:
+		except ValueError:
+			raise
+		except Exception:
 			pass
 		
 		# int
 		try:
-			url + 0
-			return self.__uparsedict(dict(port=url), k)
+			int(url) + 0
+			return self.__uparsedict(dict(port=int(url)), k)
 		except Exception as ex:
 			pass
 		
 		# tuple
 		try:
-			return self.__uparsedict(dict(host=url[0], port=url[1]), k)
+			return self.__uparsedict(dict(host=url[0], port=int(url[1])), k)
 		except:
 			pass
 		
@@ -231,23 +237,26 @@ class urlinfo(object):
 	def __uparsestr(self):
 		url, k = self.__params
 		
-		R = {}
-		
-		# get the meat of the url
-		x = urlparse.urlparse(url)
-		s,n,p,q,f = x.scheme, x.netloc, x.path, x.query, x.fragment
-		
-		# update with urlparse results
-		R.update(dict(scheme=s, netloc=n, path=p, query=q, fragment=f))
-		
-		# separate host, port, user, and password from the netloc
-		R.update(self.__authority(x.netloc))
-		
-		# defaults - update(k), check scheme/port and wrap
-		self.__defaults(R, k)
-		
-		# save result
-		self.__dict = R
+		try:
+			R = {}
+			
+			# get the meat of the url
+			x = urlparse.urlparse(url)
+			s,n,p,q,f = x.scheme, x.netloc, x.path, x.query, x.fragment
+			
+			# update with urlparse results
+			R.update(dict(scheme=s, netloc=n, path=p, query=q, fragment=f))
+			
+			# separate host, port, user, and password from the netloc
+			R.update(self.__authority(x.netloc))
+			
+			# defaults - update(k), check scheme/port and wrap
+			self.__defaults(R, k)
+			
+			# save result
+			self.__dict = R
+		except Exception:
+			raise Exception(xdata())
 	
 	
 	
@@ -316,7 +325,7 @@ class urlinfo(object):
 		R.update(k)
 			
 		# fill in port/scheme if one is empty
-		port = R.get('port')
+		port = int(R.get('port', 0))
 		schm = R.get('scheme')
 		if schm and not port: 
 			try:

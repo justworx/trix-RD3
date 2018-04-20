@@ -30,7 +30,11 @@ class sockserv(sockurl, sockprop):
 		# equally well.
 		# 
 		
-		# sockurl will create the server config dict.
+		#
+		# SERVER CONFIG
+		#  - sockurl will create the server config dict, exposed by 
+		#    sockconf as self.config.
+		#
 		sockurl.__init__(self, config, **k)
 		
 		#
@@ -73,8 +77,6 @@ class sockserv(sockurl, sockprop):
 		
 		c = self.config
 		u = self.url
-		
-		#print ("sockserv.listen", self.config)
 		
 		# Socket Creation Params
 		cfamily = trix.value("socket", c.get('family', 'AF_INET'))

@@ -20,8 +20,15 @@ class Runner(EncodingHelper):
 		self.__csock = None
 		self.__cport = None
 		
-		# NEW
+		#
+		# THIS NEEDS SOME ATTENTION
+		#  - The lineq object should not be created unless there's a 
+		#    cport, right?
+		#  - Think about this...
+		#
 		self.__lineq = trix.ncreate('util.lineq.LineQueue')
+		
+		#trix.display([1, config, k])
 		
 		try:
 			#
@@ -40,6 +47,8 @@ class Runner(EncodingHelper):
 			#
 			config = config or {}
 		
+		#trix.display([2, config, k])
+		
 		#
 		# UPDATE CONFIG WITH `k`
 		#  - Runner can't take a URL parameter unless it's part of a class
@@ -51,6 +60,8 @@ class Runner(EncodingHelper):
 		#         passed here from a base class is given as a dict.
 		#
 		config.update(k)
+		
+		#trix.display([3, config, k])
 		
 		# 
 		# CONFIG - COPY
@@ -65,6 +76,8 @@ class Runner(EncodingHelper):
 		#  - Encoding for decoding bytes received over socket connections.
 		# 
 		EncodingHelper.__init__(self, config)
+		
+		#trix.display([4, config, k])
 		
 		# running and communication
 		self.__sleep = config.get('sleep', DEF_SLEEP)

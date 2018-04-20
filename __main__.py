@@ -1,11 +1,11 @@
 #
 # Copyright 2018 justworx
-# This file is part of the trix project, distributed under the terms 
-# of the GNU Affero General Public License.
+# This file is part of the trix project, distributed under 
+# the terms of the GNU Affero General Public License.
 #
 
-
 from . import * # trix, sys
+from .app.cline import *
 
 
 class MainArgs(object):
@@ -40,24 +40,20 @@ if __name__ == '__main__':
 		if False:
 			pass
 		
+		
+		# ---- new-style command handling -----
+		
 		#
-		# Test trix HTTP servers.
+		# HTTP is the first of the new `cline` plugins. If it works out,
+		# I hope to replace all of the other commands here with cline
+		# plugins of their own.
 		#
 		if cmd == 'http':
-			k = mak.krgs
-			k.setdefault('port', 8888)
-			k.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
-			s = trix.ncreate('net.server.Server', **k)
-			try:
-				print ("HTTP Server running on port: %i" % s.port) 
-				print ("Use Ctrl-c to stop.")
-				s.run()
-			except KeyboardInterrupt:
-				print ("Server stopped.")
-			
-			if ('-d' in args):
-				s.display()
+			cline.handle()
 		
+		
+		
+		# ---- old-style command handling -----
 		
 		#
 		# VERSION

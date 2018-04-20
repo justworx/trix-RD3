@@ -22,8 +22,9 @@ class sockurl(sockconf):
 				# kwargs and create a urlinfo object.
 				#
 				config.update(k)
-				self.__urlinfo = urlinfo(config)
+				self.__urlinfo = urlinfo(**config)
 				sockconf.__init__(self, config)
+			
 			except AttributeError:
 				#
 				# Otherwise, if `config` is not a dict, it had better be 
@@ -33,6 +34,7 @@ class sockurl(sockconf):
 				#
 				self.__urlinfo = urlinfo(config, **k)
 				sockconf.__init__(self, self.__urlinfo.dict, **k)		
+		
 		except Exception as ex:
 			try:
 				ui = self.__urlinfo
