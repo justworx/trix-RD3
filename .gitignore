@@ -5,7 +5,6 @@
 #
 TEST
 TODO
-app/
 data/vector/
 data/vector.py
 data/matrix.py
