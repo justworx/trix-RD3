@@ -30,7 +30,6 @@ class http(cline):
 		
 		# config may be given as a url
 		config = self.args[0] if self.args else {}
-		config.update(self.kwargs)
 		
 		if config:
 			try:
@@ -48,6 +47,9 @@ class http(cline):
 		
 		# for display (Open: link)...
 		config.setdefault('host', 'localhost')
+		if not config['host']:
+			config['host'] = 'localhost'
+		
 		config.setdefault('scheme', 'http')
 		config.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
 		
@@ -59,7 +61,7 @@ class http(cline):
 		config.update(self.kwargs)
 		"""
 		
-		#trix.display([config, ])
+		trix.display(config)
 		
 		# create the server
 		s = trix.ncreate('net.server.Server', config)
