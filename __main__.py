@@ -48,43 +48,12 @@ if __name__ == '__main__':
 		# I hope to replace all of the other commands here with cline
 		# plugins of their own.
 		#
-		if cmd == 'http':
+		elif cmd in ['http', 'version', 'portscan']:
 			cline.handle()
 		
 		
 		
 		# ---- old-style command handling -----
-		
-		#
-		# VERSION
-		#
-		elif cmd in ['-v', 'version']:
-			version = dict(
-				version   = VERSION,
-				copyright = "Copyright (C) 2018 justworx",
-				license   = 'agpl-3.0'
-			)
-			trix.display(version)
-			#print ("trix version: %s" % VERSION) 
-		
-		
-		#
-		# PORTSCAN
-		#
-		elif cmd in ['portscan']:
-			print ("Scanning local ports...")
-			n = trix.ncreate('util.network.Host')
-			r = n.portscan() 
-			trix.display(r)
-		
-		
-		#
-		# TEST - Load all package modules; Test key features.
-		#
-		#if cmd == 'test':
-		#	from trix.dev import test
-		#	test.report(**mak.krgs)
-		#
 		
 		
 		#
