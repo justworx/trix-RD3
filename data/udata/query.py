@@ -17,16 +17,38 @@ class ScanQuery(Scanner):
 	
 	# default fields to query
 	Titles = 'block ord char bidi bracket cat num name'
+	ALimit = 0x3399
 	
 	@classmethod
-	def chargen(self, **k):
-		bnames = k.get('blocks') or udata.blocknames()
+	def chargen(cls, **k):
+		limit = k.get('limit') or 0
 		blocks = udata.blocks()
+		bnames = k.get('blocks') or udata.blocknames()
+		
+		#
+		# CHECK LIMIT
+		#  - Limit is a stop-gap measure to prohibit CJK (0x3400) and 
+		#    beyond.
+		#  - This means the 'blocks' kwarg can be set to '*'
+		#
+		if (bnames=='*'):
+			limit = limit or cls.ALimit
+			bnames = udata.blocknames()
+			#print (limit)
+			
+		# Loop through blocks...
 		for block in bnames:
 			rng = blocks[block]
 			try:
+				# yield all codepoints in the current block...
 				for c in range(rng[0], rng[1]+1):
 					yield (unichr(c))
+				
+				# ...check limit AFTER each block.
+				if limit and (c >= limit):
+					raise StopIteration()
+			
+				
 			except ValueError:
 				if c > 0x10FFFF:
 					raise StopIteration()
