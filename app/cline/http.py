@@ -9,7 +9,7 @@ from ...util.urlinfo import *
 
 class http(cline):
 	"""
-	Launch a web server. Use Ctrl-c to stop.
+	Launch a test web server. Use Ctrl-c to stop.
 	
 	Examples:
 	# The default  will run on port 8888
@@ -52,16 +52,6 @@ class http(cline):
 		
 		config.setdefault('scheme', 'http')
 		config.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
-		
-		"""
-		# config (if it exists) is updated by any given keyword args
-		self.kwargs.setdefault(
-			'handler', 'trix.net.handler.hhttp.HandleHttp'
-		)
-		config.update(self.kwargs)
-		"""
-		
-		trix.display(config)
 		
 		# create the server
 		s = trix.ncreate('net.server.Server', config)
