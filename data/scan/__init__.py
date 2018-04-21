@@ -14,22 +14,33 @@ class Scanner(object):
 	Escape = "\\"
 	BufSize = 2048
 	
+	#
+	# default lambdas
+	#
+	Ident = lambda ci: (ci.cat[0]=='L') or (ci.cat=='Nd') or (ci.cat=='_')
+	
 	def __init__(self, iterable_text, **k):
 		"""Pass anything iterable that produces unicode characters."""
 		self.__escape = k.get('escape', self.Escape)
 		self.__bufsz = k.get('bufsz', self.BufSize)
-		self.__cinfo = charinfo(iter(iterable_text))
-		next(self.__cinfo)
+		self.__itext = iter(iterable_text)
 	
 	@property
 	def c(self):
 		"""Return current character info object."""
-		return self.__cinfo
+		try:
+			return self.__cinfo
+		except AttributeError:
+			return self.cc
 	
 	@property
 	def cc(self):
 		"""Move forward one and return the character info object."""
-		return self.__cinfo.next()
+		try:
+			return self.__cinfo.next()
+		except AttributeError:
+			self.__cinfo = charinfo(self.__itext)
+			return self.__cinfo.next()
 	
 	
 	@property
@@ -50,6 +61,15 @@ class Scanner(object):
 		"""Collect all text to the given codepoint `c`."""
 		return self.collect(lambda ci: ci.c != c)
 	
+	# SCAN ID
+	def scanid(self):
+		"""
+		Collect the next sequence of characters that match the rules for 
+		an "identifier". The default rules are: a letter followed by any
+		number of letters, digits, or underscores (cat=='Pc').
+		"""
+		if not self.c.digit:
+			return self.collect(lambda ci: ci.alphanum or ci.connector)
 	
 	# PASS WHITE
 	def passwhite(self):
@@ -74,7 +94,7 @@ class Scanner(object):
 	def ignore(self, fn):
 		"""
 		Pass all characters for which executable `fn` returns True. The
-		iterator is now on the first character following ignored text.
+		iterator stops on the first character following ignored text.
 		
 		NOTE: If the current character doesn't match what `fn` is looking
 		      for, the pointer is not moved.
@@ -100,10 +120,11 @@ class Scanner(object):
 				if self.c.c != self.__escape:
 					w.write(self.c.c)
 				else:
-					w.write(self.c.cc)
+					w.write(self.c.cc) # it IS an escape char; get next char.
 				self.cc
 		except StopIteration:
 			pass
 		
 		# read/return the whole buffer
 		return b.read()
+

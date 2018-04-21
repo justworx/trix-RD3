@@ -120,6 +120,12 @@ class charinfo(xiter):
 		"""Return properties associated with this character."""
 		return udata.properties(self.c)
 	
+	@property
+	def ord(self):
+		"""Ordinal string."""
+		s = "%x" % ord(self.c)
+		return "0x%s" % s.upper()
+	
 	
 	#
 	# ALIASES - for use in scanquery and in lambdas where space is tight
@@ -164,24 +170,11 @@ class charinfo(xiter):
 	
 	
 	#
-	# UTILITY
-	#  - These might be moved or may disappear in future versions, but
-	#    I'm finding them very useful in lambdas.
+	# USED INTERNALLY
+	#  - Properties in this section are not selectable in udata.query,
+	#    but exist for use by trix classes (Eg., Scanner) and certainly
+	#    may be useful in query "where" lambdas.
 	#
-	@property
-	def lineend(self):
-		"""True if line-ending character (CR, LF, 0x85)."""
-		#
-		# TO DO
-		#  - This is faster than a real lookup, but might break in future
-		#    udb versions. This probably should be fixed.
-		#
-		return self.c in "\r\n\x85" 
-	
-	@property
-	def ord(self):
-		s = "%x" % ord(self.c)
-		return "0x%s" % s.upper()
 	
 	@property
 	def quote(self):
@@ -211,6 +204,31 @@ class charinfo(xiter):
 	def sup(self):
 		"""True if superscript."""
 		return "SUPERSCRIPT" in self.name
+	
+	@property
+	def alpha(self):
+		"""True for letters."""
+		return self.cat in ['Lu','Ll']
+	
+	@property
+	def alphanum(self):
+		"""True for digits and letters."""
+		return self.cat in ['Lu','Ll','Nd']
+	
+	@property
+	def connector(self):
+		"""True for 'underscore' (LOW LINE, TIE) connectors."""
+		return self.cat == 'Pc'
+	
+	@property
+	def lineend(self):
+		"""True if line-ending character (CR, LF, 0x85)."""
+		#
+		# TO DO
+		#  - This is faster than a real lookup, but might break in future
+		#    udb versions. This probably should be fixed.
+		#
+		return self.c in "\r\n\x85" 
 	
 	
 	#
