@@ -43,8 +43,6 @@ class Server(sockserv, Runner):
 		 - cport   : url (or port) for local procserv connection
 		"""
 		
-		#trix.display(["server.1", config, k]) # debug
-		
 		#
 		# The `config` argument may be anything accepted by the urlinfo 
 		# class, with kwargs specifying any details such as sleep time. 
@@ -69,8 +67,6 @@ class Server(sockserv, Runner):
 			k.setdefault('backlog', socket.SOMAXCONN)
 			k.setdefault('reuse', True)
 		
-		#trix.display(["server.2", config, k])
-		
 		#
 		# SOCKSERV INIT
 		#  - Binds and starts listening. This serves as a claim on the
@@ -83,8 +79,6 @@ class Server(sockserv, Runner):
 		#
 		try:
 			sockserv.__init__(self, config, **k)
-			#trix.display(["server.2s", self.config, k])
-			#trix.display(["server.2b", config, k])
 			
 			#
 			# Now sockserv has a config that's potentially been updated with
@@ -102,8 +96,6 @@ class Server(sockserv, Runner):
 			raise Exception(xdata(
 					xerr=str(ex), args=str(ex.args), config=self.config)
 				)
-		
-		#trix.display(["server.3", config, k])
 		
 		#
 		# NOTE
@@ -127,8 +119,6 @@ class Server(sockserv, Runner):
 		#    block under the title "SET CONFIG DEFAULTS".)
 		#
 		self.config.setdefault('handler', SERVER_HANDLER)
-		
-		##trix.display([5, config, k])
 		
 		#
 		# SET MEMBER VARIABLES
@@ -370,5 +360,3 @@ class Server(sockserv, Runner):
 
 
 
-
-	

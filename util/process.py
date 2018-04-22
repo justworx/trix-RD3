@@ -343,11 +343,13 @@ class Process(Runner):
 						
 						# read pid
 						time.sleep(0.01)
-						self.receivedPid = self.readline().strip()
-						if not int(self.receivedPid) == self.pid:
-							raise Exception("err-process-fail", xdata(
-								reason="err-pid-mismatch"
-							))
+						rdata = self.readline()
+						if rdata:
+							self.receivedPid = rdata.strip()
+							if not int(self.receivedPid) == self.pid:
+								raise Exception("err-process-fail", xdata(
+									reason="err-pid-mismatch"
+								))
 						
 						#
 						# 1 - Set self.__write to the real `_write` method.

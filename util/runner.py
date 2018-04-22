@@ -28,8 +28,6 @@ class Runner(EncodingHelper):
 		#
 		self.__lineq = trix.ncreate('util.lineq.LineQueue')
 		
-		#trix.display([1, config, k])
-		
 		try:
 			#
 			# CONFIG
@@ -47,8 +45,6 @@ class Runner(EncodingHelper):
 			#
 			config = config or {}
 		
-		#trix.display([2, config, k])
-		
 		#
 		# UPDATE CONFIG WITH `k`
 		#  - Runner can't take a URL parameter unless it's part of a class
@@ -60,8 +56,6 @@ class Runner(EncodingHelper):
 		#         passed here from a base class is given as a dict.
 		#
 		config.update(k)
-		
-		#trix.display([3, config, k])
 		
 		# 
 		# CONFIG - COPY
@@ -76,8 +70,6 @@ class Runner(EncodingHelper):
 		#  - Encoding for decoding bytes received over socket connections.
 		# 
 		EncodingHelper.__init__(self, config)
-		
-		#trix.display([4, config, k])
 		
 		# running and communication
 		self.__sleep = config.get('sleep', DEF_SLEEP)
@@ -239,17 +231,21 @@ class Runner(EncodingHelper):
 			c = self.csock.read()
 			self.__lineq.feed(c)
 			
-			while True:
-				# read and handle a lines
-				q = self.__lineq.readline()
+			# read and handle lines from controlling process
+			q = self.__lineq.readline()
+			while q:
+				# get query response
 				r = self.query(q)
-
+				
 				# package and send reply
-				if r:
+				if not r:
 					r = dict(query=q, reply=None, error='unknown-query')
-					self.csock.writeline(self.__jformat(r))
-				else:
-					break
+				
+				# write the query back to the caller
+				self.csock.writeline(self.__jformat(r))
+				
+				# read another line (returns None when done)
+				q = self.__lineq.readline()
 
 
 	# QUERY

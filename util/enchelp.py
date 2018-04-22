@@ -90,7 +90,9 @@ class EncodingHelper(object):
 		ee = trix.kpop(k, 'encoding errors')
 		
 		# calculate the return values
+		enc = ee.get('encoding', self.encoding)
 		if enc:
+			err = ee.get('errors', self.errors)
 			if err:
 				return dict(encoding=enc, errors=err)
 			else:
