@@ -26,6 +26,11 @@ class Scanner(object):
 		self.__itext = iter(iterable_text)
 	
 	@property
+	def char(self):
+		"""Return the current character."""
+		return s.c.c
+	
+	@property
 	def c(self):
 		"""Return current character info object."""
 		try:
@@ -41,7 +46,6 @@ class Scanner(object):
 		except AttributeError:
 			self.__cinfo = charinfo(self.__itext)
 			return self.__cinfo.next()
-	
 	
 	@property
 	def bufsz(self):
@@ -61,13 +65,18 @@ class Scanner(object):
 		"""Collect all text to the given codepoint `c`."""
 		return self.collect(lambda ci: ci.c != c)
 	
-	# SCAN ID
+	# SCAN DIGITS
+	def scandig(self):
+		return self.collect(lambda ci: ci.dig)
+	
+	# SCAN IDENTIFIER
 	def scanid(self):
 		"""
 		Collect the next sequence of characters that match the rules for 
 		an "identifier". The default rules are: a letter followed by any
 		number of letters, digits, or underscores (cat=='Pc').
 		"""
+		self.passwhite()
 		if not self.c.digit:
 			return self.collect(lambda ci: ci.alphanum or ci.connector)
 	
