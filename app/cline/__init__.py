@@ -16,13 +16,32 @@ class cline(object):
 		cls.app = sys.argv[0]
 		cls.cmd = sys.argv[1] if len(sys.argv) > 1 else ''
 		if cls.cmd:
-			#
-			# Creating the command actually runs the command.
-			# All plugins must be named the same as their module.
-			#
-			#print ("app.cline.%s.%s" % (cls.cmd, cls.cmd))         # DEBUG!
-			trix.ncreate("app.cline.%s.%s" % (cls.cmd, cls.cmd))
-
+			if cls.cmd == 'help':
+				cls.help()
+			else:
+				#
+				# Creating the command actually runs the command.
+				# All plugins must be named the same as their module.
+				#
+				trix.ncreate("app.cline.%s.%s" % (cls.cmd, cls.cmd))
+	
+	@classmethod
+	def help(cls):
+		"""Print help for subclasses."""
+		if len(sys.argv) > 2:
+			help4 = sys.argv[2]
+			print("Help for:", help4)
+			CLS = trix.nvalue("app.cline.%s.%s" % (help4, help4))
+			print (CLS.__doc__)
+		else:
+			d = path('trix/app/cline').dir()
+			print("Available commands:")
+			for item in d.ls():
+				if (item[:2] == '__') or (item[-2:] != 'py'):
+					pass
+				else:
+					print (" - " + ".".join(item.split('.')[:-1]))
+	
 	
 	def __init__(self):
 		"""Parse and store args, kwargs, and flags."""
@@ -40,14 +59,4 @@ class cline(object):
 			else:
 				self.args.append(a)
 		
-		#trix.display([self.args, self.flags, self.kwargs])       # DEBUG!
 		return
-	
-	def help(self):
-		"""Print help for subclasses."""
-		print (type(self).__doc__)
-	
-	
-	#def display(self):
-	#	trix.display([cls.app, cls.cmd, self.
-

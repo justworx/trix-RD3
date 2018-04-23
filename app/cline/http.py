@@ -11,14 +11,29 @@ class http(cline):
 	"""
 	Launch a test web server. Use Ctrl-c to stop.
 	
-	Examples:
-	# The default  will run on port 8888
+	Using this command will launch a temporary Server object. The 
+	`net.handler.hhttp.HandleHttp` handler is the default, but any
+	object that Handles http requests may be substituted setting the
+	--handler or --nhandler keyword arguments.
+	
+	Example - Using nhandler:
+	python3 -m trix http --nhandler=net.handler.htest.HTest
+	
+	Assuming you're developing a web service handler *outside* the trix
+	package directory structure, you'll probably want to use the handler
+	keyword argument instead.
+	
+	Example - Using 'handler':
+	python3 -m trix http --handler=yourcode.yourclass.YourHandler
+	
+	Other Examples:
+	# By default, the server will run on port 8888:
 	python3 -m trix http
 	
-	# for a web server on a different port:
+	# For a web server on a different port:
 	python3 -m trix http 8080
 	
-	# to see debug messages after, pass the -d flag
+	# To see debug messages after closing the command, pass the -d flag:
 	python3 -m trix http -d
 	"""
 	
@@ -28,7 +43,7 @@ class http(cline):
 		
 		cline.__init__(self)
 		
-		# config may be given as a url
+		# config may be given as a url or port
 		config = self.args[0] if self.args else {}
 		
 		if config:
@@ -36,12 +51,16 @@ class http(cline):
 				# in case config was given as a port, make it an int
 				config = int(config)
 			except:
-				# If it was given as anything that doesn't convert to int,
-				# then config won't be altered.
+				# Otherwise, the argument must be a string url, which will
+				# be parsed below.
 				pass
 			
 			config = urlinfo(config).dict
 		
+		# kwargs must update the config
+		config.update(self.kwargs)
+		
+		# set defaults...
 		if not 'port' in config:
 			config['port'] = self.DefPort
 		
@@ -50,6 +69,8 @@ class http(cline):
 		if not config['host']:
 			config['host'] = 'localhost'
 		
+		# These are here to make the displayed url look (and work) right
+		# even if they were not explicitly specifically given.
 		config.setdefault('scheme', 'http')
 		config.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
 		

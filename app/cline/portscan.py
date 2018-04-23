@@ -9,7 +9,7 @@ from . import *
 
 class portscan(cline):
 	"""
-	Scan local ports.
+	Scan local ports. This may take several seconds.
 	"""
 	def __init__(self):
 		print ("Scanning local ports...")

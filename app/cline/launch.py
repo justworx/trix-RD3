@@ -10,6 +10,11 @@ from . import *
 class launch(cline):
 	"""
 	Launch a trix Runner in a new process.
+	
+	This command is used exclusively by the `trix.process()` method.
+	See `trix.process()` help for information on how to run a trix
+	`Runner` object (or any compatable object) in a new process using
+	the "launch" command.
 	"""
 	def __init__(self):
 		cline.__init__(self)
