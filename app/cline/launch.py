@@ -21,6 +21,12 @@ class launch(cline):
 			methname = methargs = methkrgs = None
 			
 			#
+			# derr - success recorder (lets you see what went right before 
+			# something went wrong).
+			#
+			derr = {}
+			
+			#
 			# COMPACT ARGS
 			# expand the first argument, a compact b64 json (array) string
 			#
@@ -97,7 +103,7 @@ class launch(cline):
 					d_meth=d_meth, d_type=d_type, d_obj=d_obj
 				)
 			xparams = dict(
-					app=app, cmd=cmd, args=self.args, kwargs=self.kwargs, 
+					app=self.app, cmd=self.cmd, args=self.args, kwargs=self.kwargs, 
 				)
 			
 			# package the exception into a dict
