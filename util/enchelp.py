@@ -147,13 +147,23 @@ class EncodingHelper(object):
 	
 	@classmethod
 	def altalias(cls, enc):
+		"""Return a matches without underscore, dash, or dots."""
+		enc = enc.replace('_','').replace('.','').lower()
+		
+		# find aliase in ENCODINGS list
+		for val in ENCODINGS:
+			val = val.replace('_','').replace('.','').lower()
+			if val == enc:
+				return val
+		
+		# find aliase in encodings.aliases.aliases dict
 		EAA = encodings.aliases.aliases
-		test = enc.replace('_','').replace('.','')
 		for a in EAA:
 			val = EAA[a]
-			if ('_' in a) or ('.' in a):
-				if test == a.replace('_','').replace('.',''):
-					return val
+			val = val.replace('_','').replace('.','').lower()
+			if val == enc:
+				return val
+		
 	
 	
 	#
@@ -174,6 +184,8 @@ class EncodingHelper(object):
 			return enc
 		
 		gvn = enc
+		enc = enc.lower()
+		
 		if not self.__strict:
 			enc = enc.replace("-","_").lower()
 			if enc == DEF_ENCODE:
