@@ -12,18 +12,24 @@ class Database(object):
 	"""Wrapper for DB-API 2.0 database access."""
 	
 	def __init__(self, config=None, *a, **k):
-		#
-		# Pass a config dict and/or kwargs with keys:
-		# - module: a db-api-2 module or module name (default: "sqlite3")
-		# - args  : arguments to be passed to the open() method.
-		# - path  : file path to the db file (if applicable); if included,
-		#           this value is prepended to args.
-		# - setup : A conf file containing 'create' and 'op' query dicts.
-		# - auto  : Bool; auto-init blank database if True.
-		# 
-		# Alternately, `config` may be a file-based database's path with
-		# optional kwargs specifying the other params.
-		#
+		"""
+		Pass a config dict and/or kwargs with keys:
+		 - module: a db-api-2 module or module name (default: "sqlite3")
+		 - args  : arguments to be passed to the open() method.
+		 - path  : file path to the db file (if applicable); if included,
+		           this value is prepended to args.
+		 - auto  : Bool; auto-init blank database if True.
+		 - sql   : If auto is True, a config key "sql" must also exist 
+		           with a dict value containing a "create" key with a 
+		           list of sql statements that define the structure of
+		           the database. This dict may also contain an "op" key
+		           with a dict containing named sql queries that will be
+		           triggered by the `Database.opq` and `Database.ops`
+		           methods.
+		
+		Alternately, `config` may be a file-based database's path with
+		optional kwargs specifying the other params.
+		"""
 		
 		# store args for opening database
 		self.__args = a
@@ -157,7 +163,7 @@ class Database(object):
 	# CREATE
 	def create(self):
 		"""
-		Initialize database using "create" category of the sql dict
+		Initialize database using the "create" category of the sql dict
 		defined in config. This category is a list of sql statements
 		intended to define tables and indices, and to populate tables
 		if needed. Also creates a __corectl table with one field whose
