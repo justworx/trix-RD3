@@ -16,14 +16,14 @@ class Writer(Stream):
 		"""Write `data`."""
 		try:
 			self.write = self.stream.write
-			self.write(data)
+			return self.write(data)
 		except:
 			try:
 				self.write = self._writeu
-				self.write(data)
+				return self.write(data)
 			except:
 				self.write = self._writeb
-				self.write(data)
+				return self.write(data)
 	
 	def _writeb(self, data):
 		"""Write byte `data`."""
@@ -38,26 +38,26 @@ class Writer(Stream):
 		"""Write a list of lines, `datalist`."""
 		try:
 			self.writelines = self.stream.writelines
-			self.writelines(datalist)
+			return self.writelines(datalist)
 		except:
 			try:
 				self.writelines = self._writelinesu
-				self.writelines(datalist)
+				return self.writelines(datalist)
 			except:
 				self.writelines = self._writelinesb
-				self.writelines(datalist)
+				return self.writelines(datalist)
 	
 	def _writelinesu(self, datalist):
 		"""Write a list of lines, `datalist`."""
 		for i, v in enumerate(datalist):
 			datalist[i] = v.decode(**self.ek)
-		self.stream.writelines(datalist)
+		return self.stream.writelines(datalist)
 	
 	def _writelinesb(self, datalist):
 		"""Write a list of lines, `datalist`."""
 		for i, v in enumerate(datalist):
 			datalist[i] = v.encode(**self.ek)
-		self.stream.writelines(datalist)
+		return self.stream.writelines(datalist)
 	
 	# FLUSH
 	def flush(self):
