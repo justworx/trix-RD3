@@ -28,7 +28,7 @@ class Scanner(object):
 	@property
 	def char(self):
 		"""Return the current character."""
-		return s.c.c
+		return self.c.c
 	
 	@property
 	def c(self):
