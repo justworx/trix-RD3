@@ -15,7 +15,7 @@ class Chain(object):
 		self.v = v
 	
 	def __call__(self, *a):
-		"""Return a new Chain (or Param) object with given arguments."""
+		"""Return a new Chain (or subclass) with given arguments."""
 		return type(self)(*a)
 	
 	def proc(self, fn, *a, **k):
@@ -34,25 +34,6 @@ class Chain(object):
 		operates on parameters "in-place".
 		"""
 		fn(*a, **k)
-		return self
-	
-	def pad(self, mlen, val=''):
-		"""
-		Pad a sequence with `val` items to a minimum length of `mlen`.
-		""" 
-		val = val if len(str(val)) else ' '
-		while len(self.v) < mlen:
-			self.v.append(val)
-		return self
-	
-	def set(self, v):
-		"""Set this value directly."""
-		self.v = v
-		return self
-	
-	def setx(self, x, v):
-		"""Set index (or key) `x` with value `v`."""
-		self.v[x] = v
 		return self
 	
 	def split(self, *a, **k):
@@ -78,8 +59,35 @@ class Chain(object):
 		vv =  [u(x[i]) for i in a] if a else [u(v) for v in x]
 		self.v = u(c).join(vv)
 		return self
-
 	
+	def pad(self, mlen, val=''):
+		"""
+		Pad a sequence with `val` items to a minimum length of `mlen`.
+		""" 
+		val = val if len(str(val)) else ' '
+		while len(self.v) < mlen:
+			self.v.append(val)
+		return self
+
+	def strip(self, c=None, x=0):
+		"""Strip characters in `c`, or whitespace, if c==None."""
+		if x < 0:
+			self.v = self.v.lstrip(c)
+		elif x > 0:
+			self.v = self.v.rstrip(c)
+		else:
+			self.v = self.v.strip(c)
+		return self
+	
+	def set(self, v):
+		"""Set this value directly."""
+		self.v = v
+		return self
+	
+	def setx(self, x, v):
+		"""Set index (or key) `x` with value `v`."""
+		self.v[x] = v
+		return self
 
 
 
@@ -106,12 +114,23 @@ class Param(Chain):
 		self.v = v
 		self.i = i
 	
+	def __call__(self, *a):
+		"""Return a new Param object with given arguments."""
+		if len(a) < 1:
+			return type(self)(self.v, self.i)
+		elif len(a) < 2:
+			return type(self)(a[0], self.i)
+		else:
+			return type(self)(*a)
+	
 	def __getitem__(self, key):
 		return self.v[key]
 	
 	def __len__(self):
 		return len(self.v)
 	
+	
+	# PARAM INFO
 	@property
 	def iv(self):
 		"""Return (index,value)"""
@@ -122,6 +141,8 @@ class Param(Chain):
 		"""Return (value,index)"""
 		return (self.v, self.i)
 	
+	
+	# VALUE INFO
 	@property
 	def type(self):
 		"""Return the type of the current value."""
@@ -132,6 +153,8 @@ class Param(Chain):
 		"""Return the length of the current value."""
 		return len(self.v)
 	
+	
+	# reg-ex module access
 	@property
 	def re(self):
 		"""Return the regular expression module `re`."""
@@ -141,30 +164,8 @@ class Param(Chain):
 			self.__re = __import__('re')
 			return self.__re
 	
-	# COMPARISON
-	def eq(self, v, *a):
-		"""
-		Comparison: Return True if comparison value `v` == self.v; if an  
-		optional second argument is given, compares to that instead.
-		"""
-		return v == (a[0] if a else self.v)
 	
-	def ge(self, v, *a):
-		"""Comparison: greater than/equal to;"""
-		return v >= (a[0] if a else self.v)
-	
-	def gt(self, v, *a):
-		"""Comparison: greater than;"""
-		return v > (a[0] if a else self.v)
-	
-	def le(self, v, *a):
-		"""Comparison: less than/equal to;"""
-		return v <= (a[0] if a else self.v)
-	
-	def lt(self, v, *a):
-		"""Comparison: less than;"""
-		return v < (a[0] if a else self.v)
-	
+	# EVALUATION
 	@property
 	def true(self):
 		return True
@@ -173,40 +174,39 @@ class Param(Chain):
 	def false(self):
 		return False
 	
-	
-	def fn(self, fn, *a, **k):
+	# SKIP
+	def skip(self, *a):
 		"""
-		Return the result of the callable argument `fn`. All args and 
-		kwargs are passed on to the callable. Use this when you want to 
-		return a function result rather than setting self.v to the result.
+		Skip this item if the first given argument is True.
+		
+		Use this method at the end of a lambda to return True or False 
+		based on the given argument's boolean evaluation.
 		"""
-		return fn(*a, **k)
-	
+		return len(a) and bool(a[0])
 	
 	#
-	# LIST METHODS
+	# COMPARISON
 	#
-	def merge(self, *a):
-		"""
-		When a single list is given, it extends `self.v`;
-		When a single value is given, it is appended to `self.v`;
-		
-		When two lists are given, the first is extended by the second.
-		When a list and a value are given, the value is appended to the
-		list given as the first argument.
-		
-		The altered list is returned.
-		"""
-		if len(a) == 1:
-			x = self.v
-			a = a[0]
-		else:
-			x == a[0]
-			a = a[1]
-		
-		try:
-			x.extend(a)
-		except:
-			x.append(a)
-		
-		return x
+	def eq(self, v):
+		"""Comparison: `v` equal to self.v"""
+		return self.v == v
+	
+	def neq(self, v):
+		"""Comparison: not equal to;"""
+		return self.v != v
+	
+	def ge(self, v):
+		"""Comparison: greater than/equal to;"""
+		return self.v >= v 
+	
+	def le(self, v):
+		"""Comparison: less than/equal to;"""
+		return self.v <= v 
+	
+	def gt(self, v):
+		"""Comparison: greater than;"""
+		return self.v > v
+	
+	def lt(self, v):
+		"""Comparison: less than;"""
+		return self.v < v
