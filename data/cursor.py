@@ -15,7 +15,7 @@ class Cursor(object):
 		"""Pass any kind of `data` plus optional `use` callback kwarg."""
 		
 		# get optional param object
-		self.__param = k.get('param', param.Param)
+		self.__param = k.get('param', Param)
 		
 		# get the use method
 		self.__use = k.get('use')
@@ -80,18 +80,10 @@ class Cursor(object):
 		argument object `x`.
 		"""
 		
-		# DEBUGGING!
-		#print (type(x).__name__)
-		
 		# if it's already a generator, wrap it in a new generator so as to
 		# allow for the stacking of `use` methods.
 		if (type(x).__name__ == 'generator'):
 			return self.gengen
-		
-		#
-		# how about one that handles executable objects?
-		#
-		
 		
 		# text input (via file, url, or string) will probably be the most
 		# common *FIRST* thing to be cursored over, then yielding a list
@@ -132,9 +124,6 @@ class Cursor(object):
 				return self.geniter
 		except Exception:
 			pass
-		
-		# uncomment to debug
-		#return type(x)
 		
 		# if all else fails...
 		return self.genval
@@ -282,7 +271,7 @@ class Fetch(object):
 	#    >>> cursor.param           # returns cursor.fetch.param
 	#
 	def __init__(self, gen):
-		self.__gen = gen
+		self.__gen = iter(gen)
 		
 		# set up the fetch method
 		try:
@@ -312,6 +301,11 @@ class Fetch(object):
 	@property
 	def param (self):
 		"""Return current param object (reading first, if necessary)."""
+		return self.p
+	
+	@property
+	def p (self):
+		"""Return current param object (reading first, if necessary)."""
 		try:
 			return self.__param
 		except AttributeError:
@@ -319,16 +313,23 @@ class Fetch(object):
 	
 	@property
 	def i (self):
+		"""Return index or key of the current item."""
 		return self.param.i
 	
 	@property
 	def v (self):
+		"""Return value of the current item."""
 		return self.param.v
 	
 	@property
 	def iv (self):
+		"""Return index and value of the current item as a tuple."""
 		return self.param.iv
 	
 	@property
 	def vi (self):
+		"""Return value and index of the current item as a tuple."""
 		return self.param.vi
+
+
+
