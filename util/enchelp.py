@@ -261,6 +261,14 @@ ENCODINGS = [
 # Encodings with a byte order mark
 ENCODINGS_W_BOM = [
 		'utf_32', 'utf_32_be', 'utf_32_le','utf_16', 'utf_16_be', 
-		'utf_16_le', 'utf_7', 'gb18030'
+		'utf_16_le'
 	]
+
+
+#
+# I know these have BOMs, but I can't figure out how to check them
+#
+ENCODINGS_W_BOM_I_CAN_NOT_PARSE = [
+	'utf_7', 'gb18030'
+]
 
