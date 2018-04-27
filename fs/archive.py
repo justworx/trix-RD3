@@ -104,8 +104,8 @@ class Archive(FileBase):
 		elif member in self.__readers:
 			b = self.__readers[member]
 		else:
-			mxsz = k.pop('max_size', None)
-			b = Buffer(mxsz, **k)
+			bk = trix.kpop(k, 'max_size mode encoding')
+			b = Buffer(**bk)
 			b.write(self.archread(member, **k))
 			self.__readers[member] = b
 		
