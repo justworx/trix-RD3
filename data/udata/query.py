@@ -118,8 +118,8 @@ class ScanQuery(Scanner):
 						elif t in ['props', 'properties']:
 							r.append(" ".join(self.c.props))
 						
-						elif t in ['bp', 'breakprops']:
-							r.append(" ".join(self.c.bp))
+						elif t in ['br', 'linebreak']:
+							r.append(" ".join(self.c.br))
 						
 						elif t == 'bidiname':
 							r.append(self.c.bidiname)

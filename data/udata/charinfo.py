@@ -248,6 +248,24 @@ class charinfo(xiter):
 		return udata.propalias().cat(self.cat).get(self.cat)
 	
 	
+	
+	#
+	# NEW/EXPERIMENTAL
+	#
+	@property
+	def linebreak(self):
+		"""
+		Return the LineBreak property for the current codepoint.
+		"""
+		return udata.linebreak(self.c)
+	
+	@property
+	def br(self):
+		"""Alias for linebreak."""
+		return udata.linebreak(self.c)
+	
+	
+	
 	#
 	# INFO
 	#
@@ -323,6 +341,9 @@ class charinfo(xiter):
 			# #  - I still haven't seen it in actual practice.
 			# #  - Maybe it's nothing to do with parsing text.
 			# #  - I'll leave this here for a while, just in case.
+			# #
+			# # ---> FOUND IT! LineBreak.txt. Dunno how I missed it before.
+			# #
 			#
 			# linebreak = udata.propalias.linebreak(info['linebreak'])
 			# if linebreak:

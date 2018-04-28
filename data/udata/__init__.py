@@ -112,7 +112,7 @@ class udata(object):
 	
 	# LINE-BREAK PROPERTY (CODE)
 	@classmethod
-	def breakprop(cls, c):
+	def linebreak(cls, c):
 		linebreak = trix.nmodule('data.udata.linebreak')
 		return linebreak.find_linebreak_property(ord(c))
 	
