@@ -264,6 +264,12 @@ class charinfo(xiter):
 		"""Alias for linebreak."""
 		return udata.linebreak(self.c)
 	
+	@property
+	def brname(self):
+		"""Alias for linebreak."""
+		d = udata.propalias().linebreak(udata.linebreak(self.c))
+		return d[self.br]
+	
 	
 	
 	#
@@ -292,7 +298,8 @@ class charinfo(xiter):
 			block   = self.block,
 			bracket = self.bracket,
 			props   = self.props,
-
+			linebreak = self.linebreak,
+			
 			#
 			c = self.c
 		)
