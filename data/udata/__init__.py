@@ -96,6 +96,15 @@ class udata(object):
 			return cls.__propfast
 	
 	@classmethod
+	def breakfast(cls):
+		"""Returns an object that looks up linebreak properties fast."""
+		try:
+			return cls.__breakfast
+		except AttributeError:
+			cls.__breakfast = trix.ncreate('data.udata.breakfast.breakfast')
+			return cls.__breakfast
+	
+	@classmethod
 	def properties(cls, c):
 		"""List of all properties of the given char `c`."""
 		return cls.propfast().get(c)
@@ -113,8 +122,9 @@ class udata(object):
 	# LINE-BREAK PROPERTY (CODE)
 	@classmethod
 	def linebreak(cls, c):
-		linebreak = trix.nmodule('data.udata.linebreak')
-		return linebreak.find_linebreak_property(ord(c))
+		return cls.breakfast().get(c)
+		#linebreak = trix.nmodule('data.udata.linebreak')
+		#return linebreak.find_linebreak_property(ord(c))
 	
 	
 	
