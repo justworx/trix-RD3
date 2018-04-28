@@ -49,15 +49,41 @@ LINEBREAK = {
 }
 
 
-import bisect
 
-def brprops(c):
-	rr = []
-	x = ord(c)
-	for propname in LINEBREAK.keys():
-		proplist = LINEBREAK[propname]
-		for i in proplist:
-			if ((x==i) if isinstance(i,int) else (x>=i[0] and x<=i[1])):
-				rr.append([c, x, propname])
+
+def find_linebreak_property(char_code):
 	
-	return rr
+	for k in LINEBREAK.keys():
+		range_list = LINEBREAK[k]
+		if is_in_unicode_range_list(char_code, range_list):
+			return k
+		
+	return []
+
+
+
+
+def is_in_unicode_range_list(char_code, range_list):
+    """Thanks again to jotun for this speed-up."""
+    first = 0
+    last = len(range_list) - 1
+
+    while first <= last:
+        i = int((first + last) / 2)
+        current = range_list[i]
+
+        if isinstance(current, int):
+            if current == char_code:
+                return True
+            elif current > char_code:
+                last = i - 1
+            else:
+                first = i + 1
+        else:
+            if current[0] <= char_code <= current[1]:
+                return True
+            elif current[1] > char_code:
+                last = i - 1
+            else:
+                first = i + 1
+    return False

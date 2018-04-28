@@ -2,13 +2,15 @@
 # Copyright 2018 justworx
 # This file is part of the trix project, distributed under
 # the terms of the GNU Affero General Public License.
+# 
+# Thanks, jotun, for the speed boost on linebreak properties.
 #
 
 from ... import *
 from .blocks import BLOCKS
 from .brackets import BRACKETPAIRS
 from .proplist import PROPERTIES
-import struct, bisect
+import bisect
 
 
 
@@ -16,6 +18,7 @@ class udata(object):
 	
 	CTime = 30
 	CSize = 512*2
+	
 	
 	#
 	# BRACKETS
@@ -36,6 +39,8 @@ class udata(object):
 			return (BP[2], unichr(BP[1])) if (BP and BP[0]==i) else None
 		except IndexError:
 			return None
+	
+	
 	
 	#
 	# BLOCKS
@@ -76,6 +81,8 @@ class udata(object):
 			cls.blocks() # calling blocks sets self.__blocknames 
 			return cls.__blocknames
 	
+	
+	
 	#
 	# PROPERTIES
 	#
@@ -103,7 +110,17 @@ class udata(object):
 			cls.__propalias=trix.nvalue('data.udata.propalias','propalias')
 			return cls.__propalias
 	
+	# LINE-BREAK PROPERTY (CODE)
+	@classmethod
+	def breakprop(cls, c):
+		linebreak = trix.nmodule('data.udata.linebreak')
+		return linebreak.find_linebreak_property(ord(c))
+	
+	
+	
+	#
 	# QUERY
+	#
 	@classmethod
 	def query(cls, **k):
 		"""

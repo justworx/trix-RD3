@@ -118,6 +118,9 @@ class ScanQuery(Scanner):
 						elif t in ['props', 'properties']:
 							r.append(" ".join(self.c.props))
 						
+						elif t in ['bp', 'breakprops']:
+							r.append(" ".join(self.c.bp))
+						
 						elif t == 'bidiname':
 							r.append(self.c.bidiname)
 						elif t == 'catname':
@@ -145,30 +148,5 @@ class ScanQuery(Scanner):
 			print(hd)
 		trix.ncreate('fmt.Grid').output(rr)
 		print ('qtime: %f' % tt)
-	
-	
-	
 
-def charloop():
-	"""
-	Loop, display the character properties for given string. Enter an
-	empty string (or use Ctrl-c) to	exit. 
-	
-	NOTE: Results can be long... use single characters or short strings.
-	"""
-	x = input("--> ")
-	while x:
-		s = Scanner(x)
-		try:
-			while s.cc:
-				s.c.display()
-		except:
-			pass
-		x = input("--> ")
-
-
-
-def char(c):
-	"""Display the properties of a single character."""
-	charinfo(c).next().display()
 
