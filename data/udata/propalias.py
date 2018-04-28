@@ -153,21 +153,22 @@ class propalias(object):
 	@classmethod
 	def find(cls, x, VAR):
 		
-		# if X is a key, return its value
-		if (len(x)==2) and (x in VAR):
-			return {x:VAR[x]}
-		
-		# otherwise, it's a search term for the value
-		X = x.upper() # KEY
-		for k in VAR:
-			w = x.lower()       # word(s)
-			v = VAR[k].lower()  # value
-			z = v.split("_")    # split value
-			if (w in v) or (w in v.split("_")):
-				return {x:VAR.get(X)}
+		if x:
+			# if X is a key, return its value
+			if (len(x)==2) and (x in VAR):
+				return {x:VAR[x]}
+			
+			# otherwise, it's a search term for the value
+			X = x.upper() # KEY
+			for k in VAR:
+				w = x.lower()       # word(s)
+				v = VAR[k].lower()  # value
+				z = v.split("_")    # split value
+				if (w in v) or (w in v.split("_")):
+					return {x:VAR.get(X)}
 		
 		# if both fail, return the search term and 
-		return {x:None}
+		return {x:''}
 	
 	#
 	# abreviated (for use in params)
