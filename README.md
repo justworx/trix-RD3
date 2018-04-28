@@ -32,3 +32,11 @@ want to lose it all in a fire or whatever.
 Some documentation is available. More is coming as time permits.
 <https://github.com/justworx/trix/wiki>
 
+
+#### thanks
+
+Thanks to everyone who's helped me out on this project:
+
+ * jotun, for the binary search function for ucd lists.
+ * mknod, for the unicode info and advice. WORD!
+
