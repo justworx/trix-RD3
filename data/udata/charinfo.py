@@ -340,23 +340,10 @@ class charinfo(xiter):
 			catname = udata.propalias().cat(info['category'])
 			if catname:
 				info['_catname'] = catname
-
-			#
-			# #
-			# # WHAT IS LINEBREAK?
-			# #  - How do I get this 'linebreak' value?
-			# #  - I still haven't seen it in actual practice.
-			# #  - Maybe it's nothing to do with parsing text.
-			# #  - I'll leave this here for a while, just in case.
-			# #
-			# # ---> FOUND IT! LineBreak.txt. Dunno how I missed it before.
-			# #
-			#
-			# linebreak = udata.propalias.linebreak(info['linebreak'])
-			# if linebreak:
-			#   info['linebreakname'] = linebreak
-			#
-
+			
+			info['linebreak'] = self.br
+			info['linebreakname'] = self.brname
+			
 			info['__char__'] = [str(info['c'])]
 			
 			# send through trix.display()
