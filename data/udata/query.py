@@ -77,6 +77,9 @@ class ScanQuery(Scanner):
 		# titles are taken from the select clause, but all-caps
 		rr.append(titles.split())
 		
+		# fallback in case of error before being set
+		c = t = None
+		
 		titles = titles.lower().split()
 		try:
 			while True:
@@ -119,7 +122,9 @@ class ScanQuery(Scanner):
 							r.append(" ".join(self.c.props))
 						
 						elif t in ['br', 'linebreak']:
-							r.append(" ".join(self.c.br))
+							r.append(self.c.br)
+						elif t in ['brname']:
+							r.append(self.c.brname)
 						
 						elif t == 'bidiname':
 							r.append(self.c.bidiname)
@@ -136,7 +141,7 @@ class ScanQuery(Scanner):
 			return rr
 		
 		except Exception:
-			raise Exception(xdata())
+			raise Exception(xdata(c=self.c.c, t=t))
 
 	
 	def table(self, **k):
