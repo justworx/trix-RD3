@@ -9,7 +9,7 @@ from .. import *
 
 
 class Bag(object):
-	"""A count of items by name."""
+	"""A selection of values, sorted by name."""
 	
 	def __init__(self, T):
 		"""Pass the type of object this bag holds."""
@@ -42,3 +42,12 @@ class Bag(object):
 			self.__d[key] += x
 		except KeyError:
 			self.__d[key] = x
+	
+	def append(self, key, x):
+		try:
+			self.__d[key].append(x)
+		except KeyError:
+			self.__d[key] = [x]
+		
+
+
