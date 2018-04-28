@@ -52,19 +52,35 @@ LINEBREAK = {
 
 
 def find_linebreak_property(char_code):
+	"""Return the linebreak property for the given char_code (int)."""
+	
+	"""
+	if char_code >= 0x10FFFE:
+		return ''
+	if char_code >= 0xF0000:
+		return 'XX'
+	elif char_code >= 0xE0020:
+		return 'CN'
+	"""
 	
 	for k in LINEBREAK.keys():
 		range_list = LINEBREAK[k]
 		if is_in_unicode_range_list(char_code, range_list):
 			return k
 		
-	return []
+	return ''
 
 
 
 
 def is_in_unicode_range_list(char_code, range_list):
-    """Thanks again to jotun for this speed-up."""
+    """
+    Binary search on ordered lists (such as those sometimes used in
+    the unicode database) that contain items that may be integers or
+    lists containing a minimum and a maximum to represent a range. 
+    
+    Thanks again to jotun for this speed-up.
+    """
     first = 0
     last = len(range_list) - 1
 
