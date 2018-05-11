@@ -251,7 +251,10 @@ class urlinfo(object):
 			R.update(self.__authority(x.netloc))
 			
 			# defaults - update(k), check scheme/port and wrap
-			self.__defaults(R, k)
+			try:
+				self.__defaults(R, k)
+			except Exception:
+				raise Exception(xdata(R=R, k=k))
 			
 			# save result
 			self.__dict = R
@@ -292,6 +295,12 @@ class urlinfo(object):
 			elif len(a) == 1: # host:port only
 				host,port = self.__authsplit(a[0])
 				user,pswd = (None,None)
+			
+			if not user:
+				user = ''
+			if not pswd:
+				pswd = ''
+			
 			try:
 				if port:
 					port = int(port)
@@ -325,7 +334,7 @@ class urlinfo(object):
 		R.update(k)
 			
 		# fill in port/scheme if one is empty
-		port = int(R.get('port', 0))
+		port = int(R.get('port', 0) or 0)
 		schm = R.get('scheme')
 		if schm and not port: 
 			try:
