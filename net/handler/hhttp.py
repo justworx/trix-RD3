@@ -21,10 +21,20 @@ class HandleHttp(Handler):
 	# INIT
 	def __init__(self, sock, **k):
 		
+		#
+		# Connection should be flexible. I want 'keep-alive' to be an
+		# option for javascript apps.
+		#
 		k.setdefault('Connection', 'close')
 		k.setdefault('Server', 'trix/%s' % str(VERSION))
-		k.setdefault('Content-Type', 'text/html')
 		k.setdefault('docroot', trix.path().path)
+		
+		#
+		# YIKES...
+		#  - This can't be set like this...
+		#    The whole class needs to be reorganized.
+		#
+		k.setdefault('Content-Type', 'text/html')
 		
 		self.__options = trix.kcopy(k, 'Connection Server Content-Type')
 		self.__docroot = k.get('docroot')
