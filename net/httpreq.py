@@ -4,7 +4,7 @@
 # the terms of the GNU Affero General Public License.
 #
 
-from . import *
+from ..util.mime import *
 
 #
 # HTTP (REQUEST PARSER)
