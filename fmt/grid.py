@@ -66,8 +66,15 @@ class Grid (FormatBase):
 		
 		r = []
 		f = self.formatstring(grid)
-		for row in grid:
-			r.append("%s%s" % (ind, f.format(*row)))
+		try:
+			for row in grid:
+				r.append("%s%s" % (ind, f.format(*row)))
+		except Exception:
+			xd = xdata(
+				error='err-grid-format', fmt=f, row=row, grid=grid[:3]
+			)
+			raise xd['xtype'] (xd)
+		
 		return '\n'.join(r)
 
 
@@ -86,18 +93,20 @@ class List(Grid):
 		self.__titles = k.get('titles')
 		self.__tsep = k.pop('tsep', '')
 		self.__sep = k.get('sep', '')
-		
+	
 	
 	def format(self, data, **k):
 		i = k.get('start', self.__start)
 		tsep = k.get('tsep', self.__tsep)
 		title = k.get('titles', self.__titles)
 		flist = []
+		
 		try:
 			# maybe it's a dict
 			jf = trix.ncreate('fmt.JCompact')
 			for x in data.keys():
 				flist.append([x+tsep, jf.format(data[x])])
+		
 		except Exception as ex:
 			if title:
 				for x in data:
