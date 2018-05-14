@@ -15,6 +15,9 @@ class test(cline):
 	error message, if any.
 	"""
 	def __init__(self):
-		print ("Scanning local ports...")
-		trix.ncreate('app.test.report')
-	
+		cline.__init__(self)
+		print ("\n#\n# Test Report:\n#")
+		trix.ncreate('app.test.report', **self.kwargs)
+		
+		
+			
