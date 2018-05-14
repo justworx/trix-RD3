@@ -7,23 +7,25 @@
 from ... import *
 
 
-def report(debug=False):
+def report(**k):
 	"""
 	Run basic compilation test.
 	
 	Loads all modules and prints a report listing modules and a brief
 	error message, if any.
 	"""
-	Test().report()
+	Test(**k).report()
+	trix.ncreate('app.test.test_url.report')
+	
 
 
 #
 # TEST - LOAD ALL MODULES
 #
 class Test(object):
-	def __init__(self, debug=False):
+	def __init__(self, **k):
 		
-		self.debug = debug
+		self.debug = k.get('debug', False)
 		
 		# the directory holding the root package (eg, ~/dev, ~, etc...)
 		self.parent = trix.path().path
@@ -74,10 +76,19 @@ class Test(object):
 			self.__paths = sorted(self.dir.find("*.py"))
 			return self.__paths
 	
+	
 	def pathgen(self):
 		"""Generator for module (/full/dir/*.py) paths."""
 		for path in self.paths:
-			yield path
+			#print (" - ", path)
+			if '/x/' in path:
+				pass
+			elif '_x' in path:
+				pass
+			elif 'x_' in path:
+				pass
+			else:
+				yield path
 	
 	
 	#
@@ -97,7 +108,7 @@ class Test(object):
 	def modgen(self):
 		"""Generator for module (python-import) paths."""
 		plen = self.parlen
-		for path in self.paths:
+		for path in iter(self.pathgen()): #self.paths:
 			# path from within parent directory
 			r = path.split('/')
 			r = r[plen:] 
