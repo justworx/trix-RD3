@@ -270,6 +270,9 @@ class charinfo(xiter):
 		d = udata.propalias().linebreak(udata.linebreak(self.c))
 		return d[self.br]
 	
+	@property
+	def comma(self):
+		return (self.cat == 'Po') and ("COMMA" in self.name)
 	
 	
 	#
