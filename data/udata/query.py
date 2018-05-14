@@ -17,6 +17,8 @@ class ScanQuery(Scanner):
 	
 	# default fields to query
 	Titles = 'block ord char bidi bracket cat num name'
+	
+	# default limit when block=='*'
 	ALimit = 0x3399
 	
 	@classmethod
@@ -107,12 +109,18 @@ class ScanQuery(Scanner):
 							r.append(self.c.bracket)
 						elif t in ['cat', 'category']:
 							r.append(self.c.category)
+						elif t in ['decomp', 'decomposition']:
+							r.append(self.c.decomposition)
+						elif t in ['mirrored']:
+							r.append(self.c.mirrored)
+						
 						elif t in ['num', 'numeric']:
 							r.append(self.c.numeric)
 						elif t in ['dec', 'decimal']:
 							r.append(self.c.decimal)
 						elif t in ['dig', 'digit']:
 							r.append(self.c.digit)
+						
 						elif t == 'name':
 							if self.c.name:
 								r.append(self.c.name)
@@ -133,6 +141,11 @@ class ScanQuery(Scanner):
 						
 						elif t == 'ord':
 							r.append(self.c.ord)
+						
+						else:
+							raise ValueError('err-unknown-property', xdata(
+									prop=t
+								))
 					
 					# add the row to results
 					rr.append(r)
