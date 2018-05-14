@@ -83,6 +83,5 @@ class Handler(sockwrap):
 		meaningful functionality (unless what you want is an echo server).
 		"""
 		if data:
-			trix.log("Handler.handledata' timeout", data=data)
 			self.socket.send(data)
 
