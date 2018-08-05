@@ -179,7 +179,6 @@ class Runner(EncodingHelper):
 	
 	def start(self):
 		"""Run in a new thread."""
-		
 		try:
 			self.__run_begin()
 			trix.start(self.__callio.callio)
