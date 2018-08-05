@@ -117,6 +117,11 @@ class Runner(EncodingHelper):
 							args=ex.args, xdata=xdata()
 						)
 		
+		except BaseException as ex:
+			trix.log("err-delete-ex", "shutdown-fail", ex=str(ex), 
+					args=ex.args, xdata=xdata()
+				)
+		
 		finally:
 			self.__csock = None
 			self.__proxy = None

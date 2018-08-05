@@ -27,7 +27,9 @@ class IRCCommand(IRCPlugin):
 	
 	
 	def handle_privmsg (self, e):
-		pass
+		x = self.handle_command(e)
+		if x:
+			self.bot.writeline("PRIVMSG %s :%s" % (e.nick, x))
 	
 	
 	def handle_notice (self, e):

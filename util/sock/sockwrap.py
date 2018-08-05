@@ -115,8 +115,15 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 		
 		if bdata:
 			return bdata.decode(**self.ek)
+			try:
+				return bdata.decode(**self.ek)
+			except UnicodeDecodeError:
+				print ("#")
+				print ("# sockwrap.read: UnicodeDecodeError; dt:" + time.strftime("%Y-%m-%d %H:%M:%S"))
+				print (b"# BYTES: " + bdata)
+				print ("#")
+				return ""
 		return bdata
-	
 	
 	
 	#

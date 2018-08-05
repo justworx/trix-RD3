@@ -8,6 +8,9 @@
 from . import *
 
 
+LOG_ENDL = "\n"
+
+
 class IRCLog(IRCPlugin):
 	"""Log IRC chat conversations."""
 	
@@ -16,11 +19,12 @@ class IRCLog(IRCPlugin):
 		
 		IRCPlugin.__init__(self, config, *a, **k)
 		
-		self.logfile = self.config.get('logfile', LOG_PATH)
+		self.logfile = self.config['logpath']
 		self.lend    = self.config.get('logendl', LOG_ENDL)
 		
 		p = trix.path(self.logfile, affirm='touch')
-		print ("\n\n# log_path: %s\n#\n" % p.path)
+		if IRC_DEBUG:
+			print ("\n\n# log_path: %s\n#\n" % p.path)
 		
 		w = p.wrapper(**self.ek)
 		self.writer = w.writer()
