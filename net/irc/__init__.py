@@ -16,9 +16,9 @@ PLUG_UPDT = 15 # update plugins every 15 seconds
 
 
 #
-# ---- CONNECT -----
+# ---- IRC CONNECT -----
 #
-def connect(config, **k):
+def irc_connect(config, **k):
 	"""
 	Pass config dict or string path to config json file. Connects to 
 	IRC network and returns an IRCConnect object (see below).
@@ -32,7 +32,7 @@ def connect(config, **k):
 		conf = config
 	else:
 		raise ValueError("err-invalid-config", xdata(
-				detail="bad-config-type", require1=['dict','str'],
+				detail="bad-config-type", require1=['dict','json-file-path'],
 				Note="Requires a dict or string path to json file"
 			))
 	
@@ -142,8 +142,16 @@ class IRCEvent(object):
 				self.user=x[0]
 				if len(x)>1:
 					self.host=x[1]
-			self.irccmd = mm[1]
-			self.target = mm[2]
+			
+			if len(mm) > 1:
+				self.irccmd = mm[1]
+			else:
+				print(
+					"\n#\n#\n# STRANGE LINE\n# STRANGE CMD: "+self.line+"'\n#\n#"
+					)
+			if len(mm) > 2:
+				self.target = mm[2]
+			
 			self.uid ='%s@%s' % (self.user, self.host)
 		
 		if self.text:
@@ -316,16 +324,22 @@ class IRCConnect(Connect, Runner):
 			self.pi_update = time.time()
 			
 			#print ("# plugins update; " + str(time.time()))
+			
+			pfailed = []
 			for pname in self.plugins:
 				try:
-					self.plugins[pname]
-					p.update()
+					self.plugins[pname].update()
 				except Exception as ex:
 					if self.debug:
 						print("#")
 						print("# Plugin Update Failed. Removing: %s" % pname)
 						print("# Error: %s" % str(ex))
 						print("#")
+					pfailed.append(pname)
+			
+			# remove plugins that failed to load
+			if pfailed:
+				for pname in pfailed:
 					del(self.plugins[pname])
 	
 	

@@ -39,15 +39,17 @@ class IRCCommand(IRCPlugin):
 	
 	
 	def handle_command( self, e):
-		cmd = e.argv[0]
-		if cmd == 'JOIN':
+		cmd = e.argv[0].lower()
+		if cmd == 'join':
 			self.bot.writeline("JOIN %s" % e.argv[1])
-		elif cmd == 'PART':
+		elif cmd == 'part':
 			if self.is_channel_name(e.argv[1]): # TODO: see below 
 				self.bot.writeline("PART %s" % e.argv[1])
-		elif cmd == 'QUIT':
+		elif cmd == 'quit':
 			self.bot.writeline("QUIT %s" % " ".join(e.argv[1:]))
-	
+		elif cmd == 'nick':
+			self.bot.writeline("NICK %s" % " ".join(e.argv[1:]))
+		
 	
 	#
 	# TODO: This probably belings in `irc.__init__` or something...
