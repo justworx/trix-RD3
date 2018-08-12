@@ -4,12 +4,14 @@
 # the terms of the GNU Affero General Public License.
 #
 
+#
+# TO DO: Non-PRIVMSG log lines need to be logged with * instead of
+#        just looking like <>; particularly JOIN/PART/ETC...
+#
 
 from . import *
 
-
 LOG_ENDL = "\n"
-
 
 class IRCLog(IRCPlugin):
 	"""Log IRC chat conversations."""
@@ -43,7 +45,7 @@ class IRCLog(IRCPlugin):
 	
 	
 	def handle(self, e):
-		ts = time.strftime("%Y:%m:%d %H:%I:%S")
+		ts = time.strftime("%Y-%m-%d %H:%I:%S")
 		log_line = "%s\t<%s>\t%s%s" % (ts, e.nick, e.text, self.lend)
 		self.writer.write(log_line)
 	

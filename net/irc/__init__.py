@@ -243,8 +243,8 @@ class IRCConnect(Connect, Runner):
 				pluginname = pi_name
 				pi_config  = plug_conf[pi_name]
 				
-				print("# plugin config: %s" % pi_name)
-				trix.display(plug_conf)
+				#print("# plugin config: %s" % pi_name)
+				#trix.display(plug_conf)
 				
 				pi = trix.create(createpath, pi_config, self)
 				self.plugins[pi_name] = pi
@@ -266,9 +266,9 @@ class IRCConnect(Connect, Runner):
 		self.writeline(user_line)
 		self.writeline(nick_line)
 		
-		if self.debug:
-			print ("# user_line: %s" % user_line)
-			print ("# nick_line: %s" % nick_line)
+		#if self.debug:
+		#	print ("# user_line: %s" % user_line)
+		#	print ("# nick_line: %s" % nick_line)
 		
 		#
 		# start running so that io() gets called frequently
@@ -308,12 +308,12 @@ class IRCConnect(Connect, Runner):
 			for line in inlines:
 				
 				if line[0:4] == 'PING':
-					if self.debug:
-						print ("# ping")
+					#if self.debug:
+					#	print ("# ping")
 					RESP = line.split()[1] # handle PING
 					self.writeline('PONG ' + RESP)
-					if self.debug:
-						print ("# pong")
+					#if self.debug:
+					#	print ("# pong")
 				else:
 					self.on_message(line)  # handle everything besides PINGs
 				

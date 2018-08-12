@@ -17,8 +17,12 @@ class IRCCommand(IRCPlugin):
 		if not (e.irccmd in ["PRIVMSG","NOTICE"]):
 			return
 		
+		# DEBUGGING 
+		#print ("# DEBUG:")
+		#trix.display(e.dict)
+		
 		# FIX THIS! (auth needs to be passed through config somehow)
-		if e.uid == 'ninebits@ninebits.users.undernet.org':
+		if e.host == 'ninebits.users.undernet.org':
 			
 			if e.irccmd == "PRIVMSG":
 				self.handle_privmsg(e)
@@ -39,6 +43,8 @@ class IRCCommand(IRCPlugin):
 	
 	
 	def handle_command( self, e):
+		#print ("# handle_command")
+		#print ("# ARGV: %s" % (e.argv))
 		cmd = e.argv[0].lower()
 		if cmd == 'join':
 			self.bot.writeline("JOIN %s" % e.argv[1])
@@ -49,6 +55,12 @@ class IRCCommand(IRCPlugin):
 			self.bot.writeline("QUIT %s" % " ".join(e.argv[1:]))
 		elif cmd == 'nick':
 			self.bot.writeline("NICK %s" % " ".join(e.argv[1:]))
+		
+		# untested....
+		elif cmd == 'tell':
+			target = e.argv[1]
+			message = " ".join(e.argv[2:])
+			self.bot.writeline("PRIVMSG %s :%s" % (target, message))
 		
 	
 	#
