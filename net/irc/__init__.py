@@ -11,7 +11,7 @@ from trix.util.enchelp import *
 import re
 
 
-IRC_DEBUG = 1  # debug level default: 1
+IRC_DEBUG = 9  # debug level default: 1
 PLUG_UPDT = 15 # update plugins every 15 seconds
 
 
@@ -44,10 +44,12 @@ def irc_connect(config, **k):
 #
 # ---- DEBUG -----
 #
-def debug (*a):
-	for item in a:
-		print ("# %s" % str(item))
-
+def debug (*a, **k):
+	if IRC_DEBUG:
+		for item in a:
+			print ("# %s" % str(item))
+		if k:
+			trix.display(k)
 
 
 
@@ -205,13 +207,13 @@ class IRCConnect(Connect, Runner):
 	
 	def __init__(self, config=None, **k):
 		
-		self.show = None
-		self.debug = IRC_DEBUG
-		
 		# read config
 		config = config or {}
 		config.setdefault('encoding', DEF_ENCODE)
 		config.update(k)
+		
+		self.show = None
+		self.debug = k.get('debug', IRC_DEBUG)
 		
 		# check config
 		if self.debug > 0:
@@ -266,9 +268,17 @@ class IRCConnect(Connect, Runner):
 		self.writeline(user_line)
 		self.writeline(nick_line)
 		
-		#if self.debug:
-		#	print ("# user_line: %s" % user_line)
-		#	print ("# nick_line: %s" % nick_line)
+		if self.debug:
+			debug(
+				"#\n# CONNECTING:",
+				"#       HOST: %s" % host,
+				"#       USER: %s" % user_line,
+				"#       NICK: %s" % nick_line
+			)
+		
+		# 
+		self.pi_update = time.time()
+		self.pi_interval = config.get('pi_interval', PLUG_UPDT)
 		
 		#
 		# start running so that io() gets called frequently
@@ -276,17 +286,13 @@ class IRCConnect(Connect, Runner):
 		if k.get('run'):
 			self.show = k.get('show', self.debug)
 			if self.debug:
-				print ("# Running %s" % (nick))
+				debug ("# Running %s" % (nick))
 			Runner.run(self)
 		else:
 			if self.debug:
 				print ("# Starting %s!%s@%s" % (nick, user, host))
 			self.show = k.get('show', True)
 			Runner.start(self)
-		
-		# 
-		self.pi_update = time.time()
-		self.pi_interval = config.get('pi_interval', PLUG_UPDT)
 	
 	
 	#
@@ -308,12 +314,12 @@ class IRCConnect(Connect, Runner):
 			for line in inlines:
 				
 				if line[0:4] == 'PING':
-					#if self.debug:
-					#	print ("# ping")
+					if self.debug > 2:
+						print ("# ping")
 					RESP = line.split()[1] # handle PING
 					self.writeline('PONG ' + RESP)
-					#if self.debug:
-					#	print ("# pong")
+					if self.debug > 2:
+						print ("# pong")
 				else:
 					self.on_message(line)  # handle everything besides PINGs
 				
@@ -355,7 +361,7 @@ class IRCConnect(Connect, Runner):
 			print (e.text)
 		
 		# debugging 
-		if self.debug > 1:
+		if self.debug > 2:
 			trix.display(e.dict)
 		
 		# let each plugin handle each event (but not PINGs)
