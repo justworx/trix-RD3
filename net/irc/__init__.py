@@ -302,7 +302,13 @@ class IRCConnect(Connect, Runner):
 		
 		# read all received text since last io;
 		# might be multiple lines (or empty).
-		intext = self.read()
+		try:
+			intext = self.read()
+		except BaseException as e:
+			intext = ''
+			print ("# READ ERROR (WARNING)")
+			print ("# -type: %s" % type(e))
+			print ("# -err : %s" % str(e))
 		
 		# if new lines exist...
 		if intext:
@@ -322,8 +328,11 @@ class IRCConnect(Connect, Runner):
 						print ("# pong")
 				else:
 					self.on_message(line)  # handle everything besides PINGs
-				
-		# every now-n-then, call the plugins' `update` method
+		
+		#
+		# PLUGINS	
+		#  - every now-n-then, call the plugins' `update` method
+		#
 		if time.time() > (self.pi_update + self.pi_interval):
 			
 			# update to wait another `interval` seconds.
@@ -358,13 +367,13 @@ class IRCConnect(Connect, Runner):
 		
 		# showing text
 		if self.show or self.debug:
-			print (e.text)
+			print (e.line)
 		
 		# debugging 
 		if self.debug > 2:
 			trix.display(e.dict)
 		
-		# let each plugin handle each event (but not PINGs)
+		# HANDLE! Let each plugin handle each event (but not PINGs)
 		for pname in self.plugins:
 			p = self.plugins[pname]
 			p.handle(e)
