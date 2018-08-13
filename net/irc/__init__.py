@@ -11,7 +11,7 @@ from trix.util.enchelp import *
 import re
 
 
-IRC_DEBUG = 9  # debug level default: 1
+IRC_DEBUG = 1  # debug level default: 1
 PLUG_UPDT = 15 # update plugins every 15 seconds
 
 
@@ -212,6 +212,8 @@ class IRCConnect(Connect, Runner):
 		config.setdefault('encoding', DEF_ENCODE)
 		config.update(k)
 		
+		self.owner = config.get('owner', [])
+		
 		self.show = None
 		self.debug = k.get('debug', IRC_DEBUG)
 		
@@ -320,11 +322,11 @@ class IRCConnect(Connect, Runner):
 			for line in inlines:
 				
 				if line[0:4] == 'PING':
-					if self.debug > 2:
+					if self.debug > 1:
 						print ("# ping")
 					RESP = line.split()[1] # handle PING
 					self.writeline('PONG ' + RESP)
-					if self.debug > 2:
+					if self.debug > 1:
 						print ("# pong")
 				else:
 					self.on_message(line)  # handle everything besides PINGs
