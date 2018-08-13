@@ -55,12 +55,17 @@ class IRCCommand(IRCPlugin):
 			self.bot.writeline("QUIT %s" % " ".join(e.argv[1:]))
 		elif cmd == 'nick':
 			self.bot.writeline("NICK %s" % " ".join(e.argv[1:]))
-		
-		# untested....
 		elif cmd == 'tell':
 			target = e.argv[1]
 			message = " ".join(e.argv[2:])
 			self.bot.writeline("PRIVMSG %s :%s" % (target, message))
+		elif cmd == 'mode':
+			self.bot.writeline(" ".join(e.argv[0:]))
+
+		# all purpose
+		# e.g., do mode +v nick
+		elif cmd == 'do':
+			self.bot.writeline(" ".join(e.argv[1:]))
 		
 	
 	#
