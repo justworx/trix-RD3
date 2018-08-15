@@ -389,3 +389,8 @@ class IRCConnect(Connect, Runner):
 		s['ircconf'] = self.config
 		s['runner'] = Runner.status(self)
 		return s
+	
+	
+	def ping(self, x=None):
+		x = x or time.time()
+		self.writeline("PING :%s" % x)
