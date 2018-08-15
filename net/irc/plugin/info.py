@@ -20,19 +20,32 @@ class IRCInfo(IRCPlugin):
 	
 	def __init__(self, config=None, bot=None, **k):
 		IRCPlugin.__init__(self, config, bot, **k)
-		self.info = {}
+		self.info = {'flag':[], 'pair':{}}
 		
 	def handle(self, event):
-		
 		# connect info
-		if event.irccmd = '005':
-			data = event.text.split()
-			flag = []
-			pair = {}
+		if event.irccmd == '005':
 			
+			# data is an array now... need the first item
+			data = event.text.split(':')
+			data = data[0].split() # <--- split on ' ' (space)
+			
+			# parse each item into the correct info dict structure
 			for item in data:
 				x = item.split("=")
 				try:
-					pair[x[0]] = x[1]
+					# NAME=VALUD
+					self.info['pair'][x[0]] = x[1]
 				except IndexError:
-					flag.append(x[0]
+					# FLAG-LIKE ITEMS
+					self.info['flag'].append(x[0])
+			
+			
+			# debug
+			if self.bot.debug > 8:
+				print("\n# info debug")
+				trix.display(event.dict)
+				trix.display(self.info)
+				print("")
+			
+
