@@ -4,10 +4,10 @@
 # of the GNU Affero General Public License.
 #
 
-#
-# UNDER CONSTRUCTION! This object may change significantly.
-#
+# UNDER CONSTRUCTION!
+#  - This object may change significantly.
 
+import re
 from .. import * # trix
 from . import url
 
@@ -15,14 +15,16 @@ from . import url
 class EmbedInfo(object):
 	"""Find info on embeded media. (Uses https://noembed.com)"""
 	
+	rex_title = re.compile(b"<title.*?>(.+?)</title>")
+	
 	def __init__(self, tags=None):
 		"""
 		Pass array `tags` of keys for the desired data items. Available
 		keys vary by provider. Unavailable keys are silently discarded.
 		
-		Default keys are: provider_name, title, url, and author_name.
+		Default keys are: title, url, provider_name, and author_name.
 		"""
-		self.keys = ['provider_name', 'title', 'url', 'author_name']
+		self.keys = ['title', 'url', 'provider_name', 'author_name']
 	
 	
 	def query(self, text):
@@ -71,15 +73,28 @@ class EmbedInfo(object):
 			link = None
 			words = text.split()
 			for word in words:
-				if (word[:8] == 'https://') or (ord[:87] == 'http://'):
+				if (word[:8] == 'https://') or (word[:7] == 'http://'):
 					link = word
 			
 			# find info
 			if link:
 				u = url.open("https://noembed.com/embed?url=%s" % link)
 				r = u.reader(encoding=u.charset)
-				return trix.jparse(r.read())
-		
+				try:
+					# look for embeded video link
+					return trix.jparse(r.read())
+				
+				except:
+					# otherwise look for title
+					u = url.open(link)
+					r = u.reader()
+					b = r.read()
+					t = re.findall(self.rex_title, b)
+					if t:
+						t = t[0].decode(u.charset)
+						return {"url":link, "title":t}
+			
+		# if all else fails... return empty dict
 		return {}
 
 				
