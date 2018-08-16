@@ -7,10 +7,11 @@
 from . import *
 from ...util.compenc import *
 
-
 class compenc(cline):
 	"""
-	Scan local ports. This may take several seconds.
+	Compression/Encoding.
+	
+	$ python3 -m trix compenc compact Test! This is a test.
 	"""
 	def __init__(self):
 		cline.__init__(self)
