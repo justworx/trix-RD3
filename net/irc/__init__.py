@@ -16,29 +16,32 @@ PLUG_UPDT = 15 # update plugins every 15 seconds
 
 
 #
-# ---- IRC CONNECT -----
+# ---- IRC Functions -----
 #
-def irc_connect(config, **k):
-	"""
-	Pass config dict or string path to config json file. Connects to 
-	IRC network and returns an IRCConnect object (see below).
-	"""
+class irc(object):
+	"""I'm sick of typing the underscore in irc_connect"""
 	
-	# get configuration
-	if isinstance(config, str):
-		conf = trix.path(config).wrapper(encoding='utf_8').read()
-		conf = trix.jparse(conf)
-	elif isinstance(config, dict):
-		conf = config
-	else:
-		raise ValueError("err-invalid-config", xdata(
-				detail="bad-config-type", require1=['dict','json-file-path'],
-				Note="Requires a dict or string path to json file"
-			))
-	
-	# create and return the connect object
-	return IRCConnect(conf, **k)
-
+	@classmethod
+	def connect(cls, config, **k):
+		"""
+		Pass config dict or string path to config json file. Connects to 
+		IRC network and returns an IRCConnect object (see below).
+		"""
+		
+		# get configuration
+		if isinstance(config, str):
+			conf = trix.path(config).wrapper(encoding='utf_8').read()
+			conf = trix.jparse(conf)
+		elif isinstance(config, dict):
+			conf = config
+		else:
+			raise ValueError("err-invalid-config", xdata(
+					detail="bad-config-type", require1=['dict','json-file-path'],
+					Note="Requires a dict or string path to json file"
+				))
+		
+		# create and return the connect object
+		return IRCConnect(conf, **k)
 
 
 #
@@ -394,3 +397,6 @@ class IRCConnect(Connect, Runner):
 	def ping(self, x=None):
 		x = x or time.time()
 		self.writeline("PING :%s" % x)
+
+
+
