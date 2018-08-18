@@ -11,42 +11,38 @@ from . import *
 class IRCCommand(IRCPlugin):
 	"""Useful commands for controlling the bot via privmsg/notify."""
 	
+	#
+	# AUTHORIZATION
+	#  - Currently, only 'owner' (as set in bot/<botname>.json file)
+	#    can control the bot via PRIVMSG/NOTICE.
+	#  - NOTE: The 'owner' member variable is a list.
+	#  - TODO: Needs a better auth scheme that allows partial 
+	#          control by others and/or all.
+	#
+	def authorize(self, e):
+		return e.host in self.bot.owner
+	
+	
+	
+	#
+	# HANDLE
+	#
 	def handle(self, e):
 		
 		# only handles PRIVMSG 	and NOTICE events
 		if not (e.irccmd in ["PRIVMSG","NOTICE"]):
 			return
 		
-		#
-		# AUTHORIZATION
-		#  - Currently, only 'owner' (as set in bot.json file) can
-		#    control the bot via PRIVMSG/NOTICE.
-		#  - NOTE: The 'owner' member variable is a list.
-		#  - TODO: Needs a better auth scheme that allows partial 
-		#          control by others and/or all.
-		#
-		if (e.host in self.bot.owner): #or ???:
-			
-			if e.irccmd == "PRIVMSG":
-				self.handle_privmsg(e)
-			elif e.irccmd == "NOTICE":
-				self.handle_notice(e)
+		if self.authorize(e):
+			result = self.handle_command(e)
+			if result:
+				self.reply(e, result)
+	
+	
 	
 	#
-	# dispatch command as it was received (PRIVMSG or NOTICE)
-	#
-	def handle_privmsg (self, e):
-		x = self.handle_command(e)
-		if x:
-			self.bot.writeline("PRIVMSG %s :%s" % (e.nick, x))
-	
-	def handle_notice (self, e):
-		x = self.handle_command(e)
-		if x:
-			self.bot.writeline("NOTICE %s :%s" % (e.nick, x))
-	
-	#
-	# actual handling of commands
+	# HANDLE COMMAND
+	#  - actual handling of commands
 	#
 	def handle_command( self, e):
 		
@@ -76,6 +72,39 @@ class IRCCommand(IRCPlugin):
 			# e.g., do mode +v nick
 			elif cmd == 'do':
 				self.bot.writeline(" ".join(e.argv[1:]))
+			
+			#
+			# PLUGINS
+			#
+			elif cmd in ['plugin', 'plugins']:
+				
+				# lowercase the first argument
+				arg1 = e.argv[1].lower()
+				if arg1 == 'list':
+					self.reply(e, " ".join(self.bot.plugins.keys()))
+				else:
+					argx = e.argv[2:] # plugin cmd <plugin list>
+					
+					# respond to argument 1
+					if arg1 == 'load':
+						for p in argx:
+							# find plugin path
+							ppath = 'net.irc.plugin.%s' % p.lower()
+							
+							# load plugin at ppath
+							self.bot.plugins[p] = trix.ncreate(ppath)
+						
+						# report successful load
+						self.reply(e, "load: %s" % (" ".join(argx)))
+					
+					elif arg1 == 'unload':
+						for p in argx:
+							# delete specified plugin (by name `p`)
+							p = p.lower()
+							del(self.bot.plugins[p])
+						
+						# report successful unload
+						self.reply(e, "unload: %s" % (" ".join(argx)))
 		
 		# -- error handling --
 		except Exception as ex: 
@@ -84,6 +113,8 @@ class IRCCommand(IRCPlugin):
 			msg = "%s: %s" % (typ, err)
 			print ("# %s" % msg)
 			return msg
+	
+	
 	
 	#
 	# TODO: This probably belings in `irc.__init__` or something...

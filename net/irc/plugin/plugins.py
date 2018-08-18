@@ -1,0 +1,62 @@
+#
+# Copyright 2018 justworx
+# This file is part of the trix project, distributed under
+# the terms of the GNU Affero General Public License.
+#
+
+
+from . import *
+
+
+class Plugins(IRCPlugin):
+	"""List, load, unload, reload plugins."""
+	
+	def handle(self, e):
+		"""
+		User PRIVMSG or NOTICE to send 'plugin' commands. Available
+		commands are: 'list', 'load', 'unload'.
+		"""
+		if e.irccmd in ["PRIVMSG", "NOTICE"]:
+			
+			# if command is 'plugin'...
+			arg0 = e.argv[0].lower()
+			if arg0 in ['plugin', 'plugins']:
+				
+				# lowercase the first argument
+				arg1 = e.argv[1].lower()
+				if arg1 == 'list':
+					self.reply(e, " ".join(self.bot.plugins.keys()))
+				else:
+					argx = e.argv[2:] # plugin cmd <plugin list>
+					
+					# respond to argument 1
+					if arg1 == 'reload':
+						for p in argx:
+							self.bot.plugin_reload(p.lower())
+					
+					elif arg1 in ['add', 'load']:
+						for p in argx:
+							if not p in self.bot.plugins:
+								self.bot.plugin_add(p.lower())
+						
+						# report successful load
+						#self.reply(e, "load: %s" % (" ".join(argx)))
+					
+					elif arg1 in ['remove', 'unload']:
+						for p in argx:
+							if p in self.bot.plugins:
+								self.bot.plugin_remove(p.lower())
+					
+					elif arg1 == 'test':
+						self.reply(e, 'pass!!!')
+					
+					# report current plugin list
+					#plugins = self.bot.plugins.keys()
+					#self.reply(e, "PLUGINS: %s" % (" ".join(plugins)))
+
+"""
+,
+		"plugins" : {
+			"plugin": "trix.net.irc.plugin.plugins.Plugins"
+		}
+"""

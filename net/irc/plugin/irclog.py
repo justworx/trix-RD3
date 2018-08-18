@@ -31,6 +31,9 @@ class IRCLog(IRCPlugin):
 		w = p.wrapper(**self.ek)
 		self.writer = w.writer()
 		self.writer.seekend()
+		
+		print ("\n\n# log-pos: %s\n#\n" % str(self.writer.tell()))
+		
 	
 	
 	
