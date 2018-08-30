@@ -14,7 +14,7 @@ class Plugins(IRCPlugin):
 	def handle(self, e):
 		"""
 		User PRIVMSG or NOTICE to send 'plugin' commands. Available
-		commands are: 'list', 'load', 'unload'.
+		commands are: 'list', 'load', 'unload', and "reload".
 		"""
 		if e.irccmd in ["PRIVMSG", "NOTICE"]:
 			
@@ -49,14 +49,3 @@ class Plugins(IRCPlugin):
 					
 					elif arg1 == 'test':
 						self.reply(e, 'pass!!!')
-					
-					# report current plugin list
-					#plugins = self.bot.plugins.keys()
-					#self.reply(e, "PLUGINS: %s" % (" ".join(plugins)))
-
-"""
-,
-		"plugins" : {
-			"plugin": "trix.net.irc.plugin.plugins.Plugins"
-		}
-"""

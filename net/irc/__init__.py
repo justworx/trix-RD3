@@ -4,29 +4,26 @@
 # the terms of the GNU Affero General Public License.
 #
 
-from . import *
-from trix.net.connect import *
-from trix.util.runner import *
 from trix.util.enchelp import *
-import re
+from trix.net.client import *
 
 
 IRC_DEBUG = 1  # debug level default: 1
 PLUG_UPDT = 15 # update plugins every 15 seconds
 
 
-
 #
 # ---- IRC Functions -----
 #
 class irc(object):
-	"""I'm sick of typing the underscore in irc_connect"""
+	"""IRC Utility Class."""
 	
 	@classmethod
-	def connect(cls, config, **k):
+	def config(cls, config, **k):
 		"""
-		Pass config dict or string path to config json file. Connects to 
-		IRC network and returns an IRCConnect object (see below).
+		Pass config dict or string path to config json file. Returns
+		the given dict, or a dict taken from a json file, updated with
+		any given keyword arguments.
 		"""
 		
 		# get configuration
@@ -40,474 +37,99 @@ class irc(object):
 					detail="bad-config-type", require1=['dict','json-file-path'],
 					Note="Requires a dict or string path to json file"
 				))
-		
-		# create and return the connect object
-		return IRCConnect(conf, **k)
-
-
-
-
-#
-# ---- DEBUG -----
-#
-def debug (*a, **k):
-	if IRC_DEBUG:
-		for item in a:
-			print ("# %s" % str(item))
-		if k:
-			trix.display(k)
-
-
-
-
-
-# ------------------------------------------------------------------
-#
-# IRC CONNECT
-#
-# ------------------------------------------------------------------
-
-class IRCConnect(Connect, Runner):
-	"""
-	IRC Connection object.
-	
-	IRCConnect creates and maintains one connection to one irc network
-	server. The functionality is limited to connecting and replying to
-	PING lines. All other activity is handled by plugins.
-	"""
-	
-	def __init__(self, config=None, **k):
-		
-		# read config
-		config = config or {}
-		config.setdefault('encoding', DEF_ENCODE)
-		config.update(k)
-		
-		# store config for plugin load/unload
-		self.pconfig = config.get('plugins', {})
-		
-		# host-masks in this list fully control the bot
-		self.owner = config.get('owner', [])
-		
-		# display/debug
-		self.show = None
-		self.debug = k.get('debug', IRC_DEBUG)
-		
-		# if debugging at all, display config in terminal
-		if self.debug > 0:
-			trix.display(config)
-		
-		# config
-		host = config['host']
-		port = config['port']
-		nick = self.nick = config['nick']
-		
-		# config (optional; defaults to: nick)
-		user = self.user = config.get('user', self.nick).lower()
-		ident = self.ident = config.get('ident', self.nick)
-		
-		#
-		# plugin support - start initial plugins
-		#
-		self.plugins = {} # store existing plugins here
-		
-		# check for plugins that need to be created from config
-		if 'plugins' in config:
-			# INIT PLUGINS
-			#  - loop through each name in the pconf dict
-			for pname in self.pconfig:
-				pi = self.__plugin_load(pname)
-				if pi:
-					self.plugins[pname] = pi
-		
-		#
-		# initialize superclasses
-		#  - Runner repeatedly calls the event loop `io`
-		#  - Connect opens a connection to the server immediately
-		#
-		Runner.__init__(self, config, **k)
-		Connect.__init__(self, (host, port))
-		
-		#
-		# connection
-		#
-		user_line = "USER "+nick+' '+user+' '+host+' :'+ident
-		nick_line = "NICK "+nick
-		
-		self.writeline(user_line)
-		self.writeline(nick_line)
-		
-		if self.debug:
-			debug(
-				"#\n# CONNECTING:",
-				"#       HOST: %s" % host,
-				"#       USER: %s" % user_line,
-				"#       NICK: %s" % nick_line
-			)
-		
-		# runtime values
-		self.pi_update = time.time()
-		self.pi_interval = config.get('pi_interval', PLUG_UPDT)
-		
-		#
-		# start running so that io() gets called frequently
-		#
-		if k.get('run'):
-			self.show = k.get('show', self.debug)
-			if self.debug:
-				debug ("# Running %s" % (nick))
-			Runner.run(self)
-		else:
-			if self.debug:
-				print ("# Starting %s!%s@%s" % (nick, user, host))
-			self.show = k.get('show', True)
-			Runner.start(self)
-		
-		# plugin management - runtime add/remove
-		self.pm_add = []
-		self.pm_rmv = []
+		return conf
 	
 	
-	
-	# RUNTIME ADD/REMOVE OF PLUGINS 
-	def plugin_add(self, pname):
-		"""Add `pname` to the plugin add-list."""
-		if pname not in self.plugins:
-			self.pm_add.append(pname)
-	
-	
-	def plugin_remove(self, pname):
-		"""Add `pname` to the plugin remove list."""
-		if pname in self.plugins:
-			self.pm_rmv.append(pname)		
-	
-	
-	def plugin_reload(self, pname):
-		"""
-		Reload `pname` and add it to the plugin add and remove lists.
-		"""
-		if pname in self.plugins:
-			
-			# find and reload the plugin
-			ppath = self.pconfig[pname]['plugin']   # plugin class path
-			pmodp = ".".join(ppath.split('.')[:-1]) # plugin module path
-			pmod = trix.value(pmodp)                # plugin module object
-			reload(pmod)
-			
-			# set the current plugin to be removed, then recreated (as the
-			# newly reloaded version) on next call to self.io();
-			# NOTE: trix defines `reload()` to work in python3.
-			self.pm_rmv.append(pname)
-			self.pm_add.append(pname)
-	
-	
-	def __plugin_load(self, pname):
-		"""Load plugin `pname` immediately."""
-		if not (pname in self.plugins):
-			pi = self.__plugin_create(pname)
-			if not pi:
-				raise Exception ("plugin-create-fail", xdata(pname=pname))
-			self.plugins[pname] = pi
-			return pi
-	
-	
-	def __plugin_unload(self, pname):
-		"""Unload (delete) plugin `pname` immediately."""
-		if (pname in self.plugins):
-			del(self.plugins[pname])
-	
-	
-	def __plugin_create(self, pname):
-		"""
-		Create and return a plugin object given plugin name `pname`.
-		"""
-		ppath = self.pconfig[pname]['plugin'] # path for `trix.create`
-		pconf = self.pconfig[pname]
-		pi = trix.create(ppath, pconf, self)
-		if not pi:
-			raise Exception ("plugin-create-fail", xdata(pname=pname,
-					ppath=ppath, pconf=pconf
-				))
-		
-		return pi
-	
-	
-	
-	# ----------------------------------------------------------------
-	# IO
-	# ----------------------------------------------------------------
-	def io(self):
-		
-		# read all received text since last io;
-		# might be multiple lines (or empty).
-		try:
-			intext = self.read()
-		except BaseException as e:
-			intext = ''
-			print ("\n#")
-			print ("# READ ERROR (WARNING)")
-			print ("# -type: %s" % type(e))
-			print ("# -err : %s" % str(e))
-			print ("\n#\n")
-		
-		#
-		# INPUT
-		#  - Handle received text.
-		#
-		if intext:
-			
-			try:
-				# split them...
-				inlines = intext.splitlines()
-				
-				# ...and handle each line.
-				for line in inlines:
-					
-					if line[0:4] == 'PING':
-						if self.debug > 1:
-							print ("# ping")
-						RESP = line.split()[1] # handle PING
-						self.writeline('PONG ' + RESP)
-						if self.debug > 1:
-							print ("# pong")
-					else:
-						self.on_message(line)  # handle everything besides PINGs
-			
-			except Exception as ex:
-				print ("ERROR: %s: %s" % (str(type(ex)), str(ex)))
-				print (traceback.extract_tb(sys.exc_info()[2]))
-
-		
-		#
-		# PLUGINS	
-		#  - every now-n-then, call the plugins' `update` method
-		#
-		if time.time() > (self.pi_update + self.pi_interval):
-			
-			# update to wait another `interval` seconds.
-			self.pi_update = time.time()
-			
-			#print ("# plugins update; " + str(time.time()))
-			
-			pfailed = []
-			for pname in self.plugins:
-				try:
-					self.plugins[pname].update()
-				except Exception as ex:
-					if self.debug:
-						print("#")
-						print("# Plugin Update Failed. Removing: %s" % pname)
-						print("# Error: %s" % str(ex))
-						print("#")
-					pfailed.append(pname)
-			
-			# remove plugins that failed to load
-			if pfailed:
-				for pname in pfailed:
-					del(self.plugins[pname])
-		
-		#
-		# MANAGE PLUGINS
-		#  - add, remove, reload plugins
-		#  - this must be handled outside the event loop so that 
-		#    changes to the self.plugins dict won't happen during 
-		#    iteration.
-		#
-		
-		# do removes first (in case a plugin has been reloaded)
-		if self.pm_rmv:
-			try:
-				for pname in self.pm_rmv:
-					if (pname in self.pm_rmv) and (pname in self.plugins):
-						del(self.plugins[pname])
-			except Exception as ex:
-				print ("Plugin Rmv Fail! %s: %s" % (str(type(ex), str(ex))))
-			finally:
-				self.pm_rmv = []
-		
-		# do adds afterward, so reloaded plugins can be re-added
-		if self.pm_add:
-			try:
-				for pname in self.pm_add:
-					if (pname in self.pm_add):
-						self.plugins[pname] = self.__plugin_load(pname)
-			except Exception as ex:
-				print ("Plugin Add Fail! %s: %s" % (str(type(ex)), str(ex)))
-			finally:
-				self.pm_add = []
-		
-	
-	
-	# ----------------------------------------------------------------
-	# ON MESSAGE
-	# ----------------------------------------------------------------
-	def on_message(self, line):
-		
-		e = IRCEvent(line)
-		
-		# showing text
-		if self.show or self.debug:
-			print (e.line)
-		
-		# debugging 
-		if self.debug > 2:
-			trix.display(e.dict)
-		
-		# HANDLE! Let each plugin handle each event (but not PINGs)
-		for pname in self.plugins:
-			p = self.plugins[pname]
-			p.handle(e)
-	
-	
-	
-	# ----------------------------------------------------------------
-	# OTHER UTIL
-	# ----------------------------------------------------------------
-	
-	def status(self):
-		s = {}
-		s['ircconf'] = self.config
-		s['runner'] = Runner.status(self)
-		return s
-	
-	def ping(self, x=None):
-		x = x or time.time()
-		self.writeline("PING :%s" % x)
-
-
-
-
-
-
-# ------------------------------------------------------------------
-#
-# IRC EVENT
-#
-# ------------------------------------------------------------------
-
-class IRCEvent(object):
-	"""
-	Parses lines of text received from the IRC server. Separates 
-	each line into the following member variables:
-	
-	line   : full line as received
-	orig   : text portion of line, with formatting
-	text   : deformatted text
-	target : recipient channel/nick
-	prefix : sender nick!user@[host]
-	host   : irc host
-	user   : irc user
-	nick   : irc nick
-	uid    : user@host
-	irccmd : the IRC-specific command (eg. NICK, JOIN, etc...)
-	
-	For example: 
-	```
-	    if evt.uid == 'myuser@my-host-mask':
-	        channelOrUser = self.target
-	        executeCommand(channelOrUser, *evt.argv)
-	```
-	"""
-	
-	REX = re.compile(r'\x03(?:\d{1,2},\d{1,2}|\d{1,2}|,\d{1,2}|)')
 	
 	@classmethod
-	def stripFormat(cls, s):
-		"""Strip color/formating codes from text."""
-		s = s.replace('\x02', '').replace('\x16', '')
-		s = s.replace('\x1f', '').replace('\x1F', '')
-		return cls.REX.sub('', s).replace('\x0f', '').replace('\x0F', '')
-	
-	
-	def __init__(self, line_text):
+	def connect(cls, config, **k):
 		"""
-		Parse a single line of as received from the server into the
-		appropriate member variables.
+		Pass config dict or string path to config json file. Connects to 
+		IRC network and returns an IRCConnect object (see below).
 		"""
 		
-		line = line_text.strip()
-		mm = line.split(' ', 3) # split the line
-		ML = len(mm)            # get line length
+		# get configuration
+		conf = cls.config(config, **k)
 		
-		# manipulate the data
-		if mm[0][0:1]==':':
-			mm[0] = mm[0][1:]
-		if ML>2 and mm[2][0:1]==':':
-			mm[2] = mm[2][1:]
-		if ML>3 and mm[3][0:1]==':':
-			mm[3] = mm[3][1:]
-		self.mm = mm
-		
-		# set up properties
-		self.line   = line # full line as received
-		self.orig   = ''   # text portion of line
-		self.text   = ''   # deformatted text
-		self.target = ''   # recipient channel/nick
-		self.prefix = ''   # sender nick!user@[host]
-		self.host   = ''   # irc host
-		self.user   = ''   # irc user
-		self.nick   = ''   # irc nick
-		self.uid    = ''   # user@host (for auth)
-		
-		self.irccmd = None # Placeholder for the IRC-specific command
-		
-		# parse the event text
-		if ML>3 and mm[3]:
-			self.text = mm[3]
-		if ML == 2:
-			self.text = mm[1]
-			self.irccmd = mm[0]
-		else:
-			self.prefix=mm[0]
-			x = mm[0].split('!',1)
-			if len(x)==1:
-				self.nick=''
-				self.user=''
-				self.host=x[0]
-			else:
-				self.nick=x[0]
-				x = x[1].split('@',1)
-				self.user=x[0]
-				if len(x)>1:
-					self.host=x[1]
-			
-			if len(mm) > 1:
-				self.irccmd = mm[1]
-			else:
-				print(
-					"\n#\n#\n# STRANGE LINE\n# STRANGE CMD: "+self.line+"'\n#\n#"
-					)
-			if len(mm) > 2:
-				self.target = mm[2]
-			
-			self.uid ='%s@%s' % (self.user, self.host)
-		
-		if self.text:
-			self.orig = self.text
-			self.text = self.stripFormat(self.text)
-		
-	@property
-	def argv(self):
-		return self.text.split(' ')
+		# create and return the connect object
+		return trix.ncreate("net.irc.irc_connect.IRCConnect", conf, **k)
 	
-	@property
-	def argc(self):
-		return len(self.argv)
 	
-	@property
-	def dict(self):
-		"""Debugging utility - returns dict."""
-		return {
-			'line'   : self.line,
-			'orig'   : self.orig,
-			'text'   : self.text,
-			'target' : self.target,
-			'prefix' : self.prefix,
-			'host'   : self.host,
-			'user'   : self.user,
-			'nick'   : self.nick,
-			'uid'    : self.uid,
-			'irccmd' : self.irccmd,
-			'argv'   : self.argv,
-			'argc'   : self.argc
-		}
+	
+	"""
+	@classmethod
+	def client(cls, config=None):
+		#Pass `config` as dict or json file path. If `config` is None,
+		#a client object is returned with no clients running; You can use
+		#`Client.connect()` to add new connections individually.
+		
+		# load the full config (or {})
+		config = cls.config(config or {})
+		
+		
+		#raise Exception(config)
+		# Has "client" and "connections" keys; connections has botix
+		
+		
+		# get client portion of config
+		cclient = config.get("client", {})
+		if not "create" in cclient:
+			cclient.setdefault("ncreate", "net.irc.irc_connect.IRCConnect")
+		
+		
+		#raise Exception(cclient)
+		# Has "ncreate" and "sleep" keys
+		
+		
+		# create the client object using `cclient` config dict
+		client = Client(cclient)
+		
+		# load the connect portion of the config (the "networks" key)
+		cconnect = config.get("connections", {})
+		
+		
+		#raise Exception(cconnect)
+		# has "botix" config
+		
+		
+		# load any connections
+		for con_name in cconnect:
+			
+			
+			#print ("CON NAME:", con_name)
+			
+			
+			# get each connection name and its configuration
+			con_config = cconnect[con_name]
+			
+			
+			#raise Exception(con_config)
+			# has botix config dict
+			
+			
+			# Client calls each connection's `io` method, so make sure 
+			# both run and start are False. (This may not be necessary or
+			# even desirable - it may change if the Client class changes.
+			con_config['run'] = False
+			con_config['start'] = False
+			
+			# add this connection to the client
+			client.connect(con_name, con_config)
+		
+		# return the client object
+		return client
+	"""
+	
+	
+	@classmethod
+	def debug (*a, **k):
+		if IRC_DEBUG:
+			print ("\n#\n# DEBUG:")
+			for item in a:
+				print ("# %s" % str(item))
+			if k:
+				trix.display(k)
+			print ("#\n")
+
+
+

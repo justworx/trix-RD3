@@ -17,8 +17,9 @@ class Announce(IRCPlugin):
 		self.uu = EmbedInfo(keys)
 	
 	def handle(self, event):
-		targ = event.target
-		info = self.uu.query(event.text)
-		if info:
-			self.bot.writeline("PRIVMSG %s :%s" % (targ, info))
+		if event.nick != self.bot.nick:
+			targ = event.target
+			info = self.uu.query(event.text)
+			if info:
+				self.bot.writeline("PRIVMSG %s :%s" % (targ, info))
 	

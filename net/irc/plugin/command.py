@@ -73,6 +73,7 @@ class IRCCommand(IRCPlugin):
 			elif cmd == 'do':
 				self.bot.writeline(" ".join(e.argv[1:]))
 			
+			"""
 			#
 			# PLUGINS
 			#
@@ -105,6 +106,7 @@ class IRCCommand(IRCPlugin):
 						
 						# report successful unload
 						self.reply(e, "unload: %s" % (" ".join(argx)))
+			"""
 		
 		# -- error handling --
 		except Exception as ex: 
