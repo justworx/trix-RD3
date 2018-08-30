@@ -15,7 +15,7 @@ from . import url
 class EmbedInfo(object):
 	"""Find info on embeded media. (Uses https://noembed.com)"""
 	
-	rex_title = re.compile(b"<title.*?>(.+?)</title>")
+	rex_title = re.compile(b"<title.*?>(.+?)</title>", re.IGNORECASE)
 	
 	def __init__(self, tags=None):
 		"""
@@ -35,6 +35,7 @@ class EmbedInfo(object):
 		Any python exceptions are caught and an empty string is returned.
 		"""
 		try:
+			ta = None
 			r = self.scan(text)
 			
 			# check for error
@@ -57,6 +58,7 @@ class EmbedInfo(object):
 			return ''
 		
 		except BaseException as ex:
+			#print ("URLI ERROR: %s %s" % (str(type(ex)), str(ex))) #DEBUG
 			return ''
 		
 	
@@ -90,6 +92,7 @@ class EmbedInfo(object):
 					r = u.reader()
 					b = r.read()
 					t = re.findall(self.rex_title, b)
+					
 					if t:
 						t = t[0].decode(u.charset)
 						return {"url":link, "title":t}

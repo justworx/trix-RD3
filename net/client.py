@@ -5,69 +5,83 @@
 from ..util.runner import *  # trix
 from .connect import Connect
 
-"""python3
-# sample server (echo)
-from trix.net.server import *
-s = Server(8888)
-s.start()
-
-# client
-from trix.net.client import Client
-c = Client()
-c.connect("test1", s.port)
-c["test1"].write("Hello!")
-c["test1"].read()
-"""
-
 
 class Client(Runner):
 	"""Client with multiple connections."""
 	
+	DefType = Connect
+	
+	# INIT
 	def __init__(self, config=None, **k):
 		"""Pass config for Runner."""
 		Runner.__init__(self, config, **k)
-		
-		if 'connect' in self.config:
-			self.__contype = trix.value(self.config['connect'])
-		elif 'nconnect' in self.config:
-			self.__contype = trix.nvalue(self.config['nconnect'])
-		else:
-			self.__contype = Connect
-		
 		self.__conlist = {}
-		self.get = self.__conlist.get
 	
+	
+	# DEL
 	def __del__(self):
 		"""Calls `Stop()`."""
 		self.stop()
 	
+	
+	# CALL
 	def __call__(self, conid):
 		"""Read `conid` and handle any received data."""
 		data = self.__conlist[conid].read()
 		if data:
 			self.handleio(data)
 	
+	
+	# CONTAINS
 	def __contains__(self, conid):
 		"""Return True if conid in this Client's connection list."""
 		return conid in self.__conlist
 	
+	
+	# GET ITEM
 	def __getitem__(self, conid):
 		"""Return named connection."""
 		return self.__conlist[conid]
-			
 	
-	@property
-	def contype(self):
-		return self.__contype
 	
 	@property
 	def conlist(self):
+		"""Return list of of connection names."""
 		return list(self.__conlist.keys())
+	
+	
 	
 	# CONNECT
 	def connect(self, connid, config=None, **k):
-		"""Pass required connection name and connect params."""
-		self.__conlist[connid] = self.__contype(config, **k)
+		"""
+		Pass string `connid`, a unique name for this connection. Also 
+		pass optional `config` dict (which is, as always, updated by 
+		kwargs). 
+		
+		Config (or kwargs) should contain a "create" or "ncreate" key 
+		describing the full (or inner, repsectively) pythonic path to 
+		the [package.][module.]class to be created. This object must 
+		implement the Config class (which is based on Runner).
+		
+		If no "create" or "ncreate" class path string is specified, the
+		default trix.net.connect.Connect is used.
+		
+		Creates the described connection object and adds it to the 
+		`self.conlist` connection list property.
+		"""
+		config = config or {}
+		config.update(k)
+		
+		if 'create' in config:
+			T = trix.value(config['connect'])
+		elif 'ncreate' in config:
+			T = trix.nvalue(config['nconnect'])
+		else:
+			T = self.DefType #Connect
+		
+		connection = T(config)
+		self.__conlist[connid] = connection
+	
 	
 	# IO
 	def io(self):
@@ -90,15 +104,17 @@ class Client(Runner):
 			if rmvlist:
 				self.remove(rmvlist)
 	
+	
 	# STOP
 	def stop(self):
 		Runner.stop(self)
 		self.remove(self.__conlist)
+
 	
 	# REMOVE (connections)
 	def remove(self, rmvlist):
 		for cname in rmvlist:
-			conn = cc.get(cname)
+			conn = c.get(cname)
 			try:
 				conn.shutdown()
 			except:
