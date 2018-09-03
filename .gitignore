@@ -9,6 +9,7 @@ data/vector/
 data/vector.py
 data/matrix.py
 dev/
+soxy/
 
 
 # temporary backups
