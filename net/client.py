@@ -11,11 +11,12 @@ class Client(Runner):
 	
 	DefType = Connect
 	
+	
 	# INIT
 	def __init__(self, config=None, **k):
 		"""Pass config for Runner."""
 		Runner.__init__(self, config, **k)
-		self.__conlist = {}
+		self.__connections = {}
 	
 	
 	# DEL
@@ -25,29 +26,29 @@ class Client(Runner):
 	
 	
 	# CALL
-	def __call__(self, conid):
-		"""Read `conid` and handle any received data."""
-		data = self.__conlist[conid].read()
+	def __call__(self, connid):
+		"""Read `connid` and handle any received data."""
+		data = self.__connections[connid].read()
 		if data:
 			self.handleio(data)
 	
 	
 	# CONTAINS
-	def __contains__(self, conid):
-		"""Return True if conid in this Client's connection list."""
-		return conid in self.__conlist
+	def __contains__(self, connid):
+		"""Return True if connid in this Client's connection list."""
+		return connid in self.__connections
 	
 	
 	# GET ITEM
-	def __getitem__(self, conid):
+	def __getitem__(self, connid):
 		"""Return named connection."""
-		return self.__conlist[conid]
+		return self.__connections[connid]
 	
 	
 	@property
 	def conlist(self):
 		"""Return list of of connection names."""
-		return list(self.__conlist.keys())
+		return list(self.__connections.keys())
 	
 	
 	
@@ -69,38 +70,70 @@ class Client(Runner):
 		Creates the described connection object and adds it to the 
 		`self.conlist` connection list property.
 		"""
+		xt=xa=xd = None
 		config = config or {}
-		config.update(k)
+		try:
+			
+			# this allows dict config
+			config.update(k)
+			if 'create' in config:
+				T = trix.value(config['connect'])
+			elif 'ncreate' in config:
+				T = trix.nvalue(config['nconnect'])
+			else:
+				T = self.DefType #Connect
+		except Exception as ex:
+			T = self.DefType 
+			xt = type(ex)
+			xa = ex.args
+			xd = xdata()
 		
-		if 'create' in config:
-			T = trix.value(config['connect'])
-		elif 'ncreate' in config:
-			T = trix.nvalue(config['nconnect'])
-		else:
-			T = self.DefType #Connect
 		
-		connection = T(config)
-		self.__conlist[connid] = connection
+		# this allows a config other than type dict (eg, port number)
+		try:
+			connection = T(config)
+			self.__connections[connid] = connection
+		except Exception as ex:
+			raise type(ex)('err-connect-fail', xdata(
+				xprior=[xt,xa,xd], config=config, T=T
+			))			
 	
 	
 	# IO
 	def io(self):
 		"""Check for (and handle) input for each connection."""
-		condict = self.__conlist
+		condict = self.__connections
 		if condict:
 			rmvlist = []
-			for k in condict:
-				try:
-					conn = condict.get(k)
-					if conn:
-						data = conn.read()
-						if data:
-							self.handleio(data)
-					else:
-						rmvlist.append(k)
-				except BaseException as ex:
-					self.handlex(type(ex), ex.args, xdata())
 			
+			# loop through each connection name 
+			for connid in condict:
+				try:
+					#
+					# If the connection exists, handle it's io. Otherwise, 
+					# remove it.
+					#
+					conn = condict.get(connid)
+					if conn:
+						self.handleio(conn)
+					else:
+						rmvlist.append(connid)
+				
+				except BaseException as ex:
+					#
+					# BIG CHANGE! 
+					#  - Prefix identity of connect object that threw the 
+					#    exception.
+					#  - The Client class has been around (and unused, at least
+					#    by me) for a long time. Neglecting to pass the connect
+					#    objct from which the excepption has been a fatal flaw
+					#    all along. This class has been unusable, or at least
+					#    extremely annoying, because of it.
+					#
+					self.handlex(connid, type(ex), ex.args, xdata())
+			
+			# Handle any connection removals, specified in `rmvlist` by
+			# connid string.
 			if rmvlist:
 				self.remove(rmvlist)
 	
@@ -108,23 +141,38 @@ class Client(Runner):
 	# STOP
 	def stop(self):
 		Runner.stop(self)
-		self.remove(self.__conlist)
+		self.remove(list(self.__connections.keys()))
 
 	
 	# REMOVE (connections)
 	def remove(self, rmvlist):
 		for cname in rmvlist:
-			conn = c.get(cname)
-			try:
-				conn.shutdown()
-			except:
-				pass
-			try:
-				del(self.__conlist[cname])
-			except:
-				pass
+			conn = self.__connections.get(cname)
+			if conn:
+				try:
+					conn.shutdown()
+				except:
+					pass
+				try:
+					del(self.__connections[cname])
+				except:
+					pass
+	
+	
+	
+	# --- override these to handle input and exceptions ---
 	
 	# HANDLE-DATA
-	def handleio(self, data):
-		print (data)
+	def handleio(self, conn):
+		x = conn.read()
+		if x:
+			print (x)
+	
+	
+	# HANDLE-X (Exception)
+	def handlex(self, ident, xtype, xargs, xdata):
+		print ("\nEXCEPTION! %s: %s(%s)" % (ident, xtype, xargs))
+		if xdata:
+			trix.display(xdata)
+	
 
