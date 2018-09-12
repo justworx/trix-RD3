@@ -119,7 +119,8 @@ class Client(Runner):
 					else:
 						rmvlist.append(connid)
 				
-				except BaseException as ex:
+				#except BaseException as ex:
+				except Exception as ex:
 					#
 					# BIG CHANGE! 
 					#  - Prefix identity of connect object that threw the 
@@ -170,8 +171,8 @@ class Client(Runner):
 	
 	
 	# HANDLE-X (Exception)
-	def handlex(self, ident, xtype, xargs, xdata):
-		print ("\nEXCEPTION! %s: %s(%s)" % (ident, xtype, xargs))
+	def handlex(self, connid, xtype, xargs, xdata):
+		print ("\nEXCEPTION! %s: %s(%s)" % (connid, xtype, xargs))
 		if xdata:
 			trix.display(xdata)
 	

@@ -9,11 +9,10 @@
 from . import *
 from .irc_event import *
 from ..connect import *
-from ...util.runner import *
 
 
 # connect class
-class IRCConnect(Connect, Runner):
+class IRCConnect(Connect):
 	"""
 	IRC Connection class.
 	
@@ -28,6 +27,7 @@ class IRCConnect(Connect, Runner):
 		# read config
 		config = config or {}
 		config.setdefault('encoding', DEF_ENCODE)
+		config.setdefault('errors', "replace")
 		config.update(k)
 		
 		# store config for plugin load/unload
@@ -68,11 +68,9 @@ class IRCConnect(Connect, Runner):
 					self.plugins[pname] = pi
 		
 		#
-		# initialize superclasses
-		#  - Runner repeatedly calls the event loop `io`
+		# initialize superclass
 		#  - Connect opens a connection to the server immediately
 		#
-		Runner.__init__(self, config, **k)
 		Connect.__init__(self, (host, port))
 		
 		#
@@ -95,20 +93,6 @@ class IRCConnect(Connect, Runner):
 		# runtime values
 		self.pi_update = time.time()
 		self.pi_interval = config.get('pi_interval', PLUG_UPDT)
-		
-		#
-		# start running so that io() gets called frequently
-		#
-		if k.get('run'):
-			self.show = k.get('show', self.debug)
-			if self.debug:
-				irc.debug ("# Running %s" % (nick))
-			Runner.run(self)
-		elif k.get('start', True):
-			if self.debug:
-				print ("# Starting %s!%s@%s" % (nick, user, host))
-			self.show = k.get('show', True)
-			Runner.start(self)
 		
 		# plugin management - runtime add/remove
 		self.pm_add = []
@@ -322,7 +306,7 @@ class IRCConnect(Connect, Runner):
 	def status(self):
 		s = {}
 		s['ircconf'] = self.config
-		s['runner'] = Runner.status(self)
+		#s['runner'] = Runner.status(self)
 		return s
 	
 	def ping(self, x=None):

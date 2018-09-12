@@ -4,9 +4,9 @@
 # the terms of the GNU Affero General Public License.
 #
 
-from trix.util.enchelp import *
-from trix.net.client import *
 
+from ... import *
+from ...util.enchelp import *
 
 IRC_DEBUG = 1  # debug level default: 1
 PLUG_UPDT = 15 # update plugins every 15 seconds
@@ -16,14 +16,13 @@ PLUG_UPDT = 15 # update plugins every 15 seconds
 # ---- IRC Functions -----
 #
 class irc(object):
-	"""IRC Utility Class."""
+	"""Common top-level irc classmethods."""
 	
 	@classmethod
 	def config(cls, config, **k):
 		"""
-		Pass config dict or string path to config json file. Returns
-		the given dict, or a dict taken from a json file, updated with
-		any given keyword arguments.
+		Pass config dict or string path to config json file. Connects to 
+		IRC network and returns an IRCConnect object (see below).
 		"""
 		
 		# get configuration
@@ -34,91 +33,70 @@ class irc(object):
 			conf = config
 		else:
 			raise ValueError("err-invalid-config", xdata(
-					detail="bad-config-type", require1=['dict','json-file-path'],
+					detail="bad-config-type", 
+					require1=['dict','json-file-path'],
 					Note="Requires a dict or string path to json file"
 				))
+				
 		return conf
 	
+	
+	@classmethod
+	def client(cls, clientconfig=None, **k):
+		"""
+		Return an IRCClient object. If `clientconfig` is a dict and
+		contains a `connections` key with valid IRCConnect configuration
+		dicts, the connections will be added to the client object before
+		it's returned.
+		"""
+		
+		trix.display ([clientconfig, k])
+		
+		# sort out config
+		try:
+			# default clientconfig is an empty dict plus any kwargs
+			conf = clientconfig or {}
+			
+			# if it's given as a string (file path) an raise an error
+			# and load the json file as a dict
+			conf.update(k)
+			
+		except AttributeError:
+			# load json file and update with any given kwargs
+			conf = cls.config(clientconfig)
+			conf.update(k)
+		
+		#trix.display (conf) #DEBUGGING
+		
+		# create the client object
+		client = trix.ncreate("net.irc.irc_client.IRCClient", conf)
+		
+		# open any specified connections
+		if 'connections' in conf:
+			connections = conf['connections']
+			for connid in connections:
+				cconfig = connections[connid]
+				client.connect(connid, cconfig)
+		
+		# return the client
+		return client
 	
 	
 	@classmethod
 	def connect(cls, config, **k):
 		"""
-		Pass config dict or string path to config json file. Connects to 
-		IRC network and returns an IRCConnect object (see below).
+		Returns an IRCConnect object.
+		
+		This is only useful if you want to manually handle io for the
+		connection object. In this case, it's necessary to keep up with
+		commands/data received from the server.
 		"""
 		
-		# get configuration
+		# get the configuration dict
 		conf = cls.config(config, **k)
 		
 		# create and return the connect object
-		return trix.ncreate("net.irc.irc_connect.IRCConnect", conf, **k)
-	
-	
-	
-	"""
-	@classmethod
-	def client(cls, config=None):
-		#Pass `config` as dict or json file path. If `config` is None,
-		#a client object is returned with no clients running; You can use
-		#`Client.connect()` to add new connections individually.
-		
-		# load the full config (or {})
-		config = cls.config(config or {})
-		
-		
-		#raise Exception(config)
-		# Has "client" and "connections" keys; connections has botix
-		
-		
-		# get client portion of config
-		cclient = config.get("client", {})
-		if not "create" in cclient:
-			cclient.setdefault("ncreate", "net.irc.irc_connect.IRCConnect")
-		
-		
-		#raise Exception(cclient)
-		# Has "ncreate" and "sleep" keys
-		
-		
-		# create the client object using `cclient` config dict
-		client = Client(cclient)
-		
-		# load the connect portion of the config (the "networks" key)
-		cconnect = config.get("connections", {})
-		
-		
-		#raise Exception(cconnect)
-		# has "botix" config
-		
-		
-		# load any connections
-		for con_name in cconnect:
-			
-			
-			#print ("CON NAME:", con_name)
-			
-			
-			# get each connection name and its configuration
-			con_config = cconnect[con_name]
-			
-			
-			#raise Exception(con_config)
-			# has botix config dict
-			
-			
-			# Client calls each connection's `io` method, so make sure 
-			# both run and start are False. (This may not be necessary or
-			# even desirable - it may change if the Client class changes.
-			con_config['run'] = False
-			con_config['start'] = False
-			
-			# add this connection to the client
-			client.connect(con_name, con_config)
-		
-		# return the client object
-		return client
-	"""
+		return trix.ncreate("net.irc.irc_connect.IRCConnect", conf)
 	
 	
 	@classmethod
