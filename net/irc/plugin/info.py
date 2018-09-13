@@ -18,13 +18,24 @@ from . import *
 class IRCInfo(IRCPlugin):
 	"""Info collected from various commands."""
 	
-	def __init__(self, config=None, bot=None, **k):
-		IRCPlugin.__init__(self, config, bot, **k)
-		self.info = {'flag':[], 'pair':{}}
-		
+	def __init__(self, pname, config=None, bot=None, **k):
+		IRCPlugin.__init__(self, pname, config, bot, **k)
+		if not self.info:
+			self.info['flag'] = []
+			self.info['pair'] = {}
+	
+	
 	def handle(self, event):
+		
 		# connect info
-		if event.irccmd == '005':
+		if event.irccmd == 'flags':
+			self.reply(event, str(self.info['flag']))
+		
+		elif event.irccmd.upper() in self.info['pair']:
+			item = event.irccmd.upper()
+			self.reply(event, self.info['pair'].get('item'))
+			
+		elif event.irccmd == '005':
 			
 			# data is an array now... need the first item
 			data = event.text.split(':')

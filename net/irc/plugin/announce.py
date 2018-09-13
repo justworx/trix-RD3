@@ -11,8 +11,8 @@ from ...urli import *
 class Announce(IRCPlugin):
 	"""Scan lines for urls and check for embed info (eg, youtube)."""
 	
-	def __init__(self, config=None, bot=None, **k):
-		IRCPlugin.__init__(self, config, bot, **k)
+	def __init__(self, pname, config=None, bot=None, **k):
+		IRCPlugin.__init__(self, pname, config, bot, **k)
 		keys = config.get('tags')
 		self.uu = EmbedInfo(keys)
 	

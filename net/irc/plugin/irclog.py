@@ -16,10 +16,10 @@ LOG_ENDL = "\n"
 class IRCLog(IRCPlugin):
 	"""Log IRC chat conversations."""
 	
-	def __init__(self, config=None, *a, **k):
+	def __init__(self, pname, config=None, *a, **k):
 		"""Pass logging config; encoding and logfile."""
 		
-		IRCPlugin.__init__(self, config, *a, **k)
+		IRCPlugin.__init__(self, pname, config, *a, **k)
 		
 		self.logfile = self.config['logpath']
 		self.lend    = self.config.get('logendl', LOG_ENDL)
@@ -42,6 +42,11 @@ class IRCLog(IRCPlugin):
 			# make sure the log gets flushed when this object closes.
 			if self.writer:
 				self.writer.flush()
+		except:
+			pass
+		
+		try:
+			self.writer.close()
 		except:
 			pass
 	

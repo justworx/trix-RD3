@@ -1,12 +1,8 @@
 
 This `irc` subpackage is under construction.
 
-There's no IRC connectivity provided here yet, only parts of it that
-I hope will be useful in the future.
+It's still buggy, but closer than before.
 
-Everything in the trix package is subject to change, but the things
-that appear here are much more likely to change than other elements
-of the project.
+There's a long way to go yet.
 
-Even as is is, there are likely lots of bugs in this code!
 

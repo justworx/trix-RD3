@@ -50,7 +50,7 @@ class irc(object):
 		it's returned.
 		"""
 		
-		trix.display ([clientconfig, k])
+		#trix.display ([clientconfig, k])
 		
 		# sort out config
 		try:
@@ -77,6 +77,10 @@ class irc(object):
 			for connid in connections:
 				cconfig = connections[connid]
 				client.connect(connid, cconfig)
+		
+		# Start the client so that any connections receive the time they
+		# need to handle input.
+		client.start()
 		
 		# return the client
 		return client

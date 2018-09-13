@@ -7,6 +7,7 @@
 
 # import
 from . import *
+from .plugin import *    # <-- reload IRCPlugin before other plugins
 from .irc_event import *
 from ..connect import *
 
@@ -41,8 +42,8 @@ class IRCConnect(Connect):
 		self.debug = k.get('debug', IRC_DEBUG)
 		
 		# if debugging at all, display config in terminal
-		if self.debug > 0:
-			trix.display(config)
+		#if self.debug > 0:
+		#	trix.display(config)
 		
 		# config
 		host = config['host']
@@ -58,11 +59,17 @@ class IRCConnect(Connect):
 		#
 		self.plugins = {} # store existing plugins here
 		
-		# check for plugins that need to be created from config
+		# global information storage - set by plugins, used by all.
+		self.ginfo = {}
+		
+		#
+		# INIT PLUGINS
+		# Check for plugins that need to be created from config
+		#
 		if 'plugins' in config:
-			# INIT PLUGINS
-			#  - loop through each name in the pconf dict
+			# loop through each name in the pconf dict
 			for pname in self.pconfig:
+				self.ginfo[pname] = {}
 				pi = self.__plugin_load(pname)
 				if pi:
 					self.plugins[pname] = pi
@@ -118,6 +125,9 @@ class IRCConnect(Connect):
 		"""
 		Reload `pname` and add it to the plugin add and remove lists.
 		"""
+		
+		reload(plugin)
+		
 		if pname in self.plugins:
 			
 			# find and reload the plugin
@@ -158,10 +168,10 @@ class IRCConnect(Connect):
 		"""
 		ppath = self.pconfig[pname]['plugin'] # path for `trix.create`
 		pconf = self.pconfig[pname]
-		pi = trix.create(ppath, pconf, self)
+		pi = trix.create(ppath, pname, pconf, self)
 		if not pi:
-			raise Exception ("plugin-create-fail", xdata(pname=pname,
-					ppath=ppath, pconf=pconf
+			raise Exception ("plugin-create-fail", xdata(
+					pname=pname, ppath=ppath, pconf=pconf
 				))
 		
 		return pi
@@ -286,8 +296,8 @@ class IRCConnect(Connect):
 			print (e.line)
 		
 		# debugging 
-		if self.debug > 2:
-			trix.display(e.dict)
+		#if self.debug > 2:
+		#	trix.display(e.dict)
 		
 		# HANDLE! Let each plugin handle each event (but not PINGs)
 		for pname in self.plugins:

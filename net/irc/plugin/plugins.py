@@ -20,7 +20,7 @@ class Plugins(IRCPlugin):
 			
 			# if command is 'plugin'...
 			arg0 = e.argv[0].lower()
-			if arg0 in ['plugin', 'plugins']:
+			if (e.argc>1) and (arg0 in ['plugin', 'plugins']):
 				
 				# lowercase the first argument
 				arg1 = e.argv[1].lower()
@@ -48,4 +48,7 @@ class Plugins(IRCPlugin):
 								self.bot.plugin_remove(p.lower())
 					
 					elif arg1 == 'test':
-						self.reply(e, 'pass!!!')
+						self.reply(e, "PASSED!!!!!!!!!")
+		
+			else:
+				IRCPlugin.handle(self, event)
