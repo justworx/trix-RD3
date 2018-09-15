@@ -254,25 +254,25 @@ class IRCConnect(Connect):
 	#
 	def __handle_received_text(self, intext):
 		
-			try:
-				# split them...
-				inlines = intext.splitlines()
-				
-				# ...and handle each line.
-				for line in inlines:
-					
-					if line[0:4] == 'PING':
-						if self.debug > 1:
-							print ("# ping")
-						RESP = line.split()[1] # handle PING
-						self.writeline('PONG ' + RESP)
-						if self.debug > 7:
-							print ("# pong")
-					else:
-						self.on_message(line)  # handle everything besides PINGs
+		try:
+			# split them...
+			inlines = intext.splitlines()
 			
-			except Exception as ex:
-				irc.debug (str(type(ex)), str(ex))
+			# ...and handle each line.
+			for line in inlines:
+				
+				if line[0:4] == 'PING':
+					if self.debug > 1:
+						print ("# ping")
+					RESP = line.split()[1] # handle PING
+					self.writeline('PONG ' + RESP)
+					if self.debug > 7:
+						print ("# pong")
+				else:
+					self.on_message(line)  # handle everything besides PINGs
+		
+		except Exception as ex:
+			irc.debug (str(type(ex)), str(ex))
 	
 	
 	#

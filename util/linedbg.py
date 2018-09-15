@@ -8,11 +8,6 @@ class linedbg(object):
 		self.jformat = JDisplay()
 	
 	def dbg (self, *a, **k):
-		"""
-		try:
-			raise Exception("debug-break", xdata())
-		except Exception as ex:
-		"""
 			
 		# title			
 		print ("\n#\n# DEBUG:")
@@ -45,14 +40,4 @@ class linedbg(object):
 				ll = item.splitlines()
 				for line in ll:
 					print ("# %s" % str(line))
-	
-	
-	"""
-	def print_traceback(self):
-		tb = trix.tracebk()
-		if tb:
-			print ("#\n# Traceback:")
-			for item in tb:
-				print ("# %s" % str(item))
-	"""
 	
