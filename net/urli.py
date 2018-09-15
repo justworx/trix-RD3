@@ -5,7 +5,7 @@
 #
 
 # UNDER CONSTRUCTION!
-#  - This object may change significantly.
+#  - This class may change significantly.
 
 import re
 from .. import * # trix
@@ -24,7 +24,18 @@ class EmbedInfo(object):
 		
 		Default keys are: title, url, provider_name, and author_name.
 		"""
-		self.keys = ['title', 'url', 'provider_name', 'author_name']
+		self.__keys = tags or ['title']
+		#self.keys = ['title', 'url', 'provider_name', 'author_name']
+	
+	
+	@property
+	def keys(self):
+		return self.__keys
+	
+	
+	@keys.setter
+	def keys(self, keys):
+		self.__keys = keys
 	
 	
 	def query(self, text):
