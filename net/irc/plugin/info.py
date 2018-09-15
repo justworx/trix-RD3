@@ -18,27 +18,47 @@ from . import *
 class IRCInfo(IRCPlugin):
 	"""Info collected from various commands."""
 	
-	def __init__(self, pname, config=None, bot=None, **k):
-		IRCPlugin.__init__(self, pname, config, bot, **k)
+	def __init__(self, pname, bot, config=None, **k):
+		IRCPlugin.__init__(self, pname, bot, config, **k)
 		if not self.info:
 			self.info['flag'] = []
 			self.info['pair'] = {}
 	
 	
-	def handle(self, event):
+	def handle(self, e):
+		
+		if not e.argv:
+			return
+		
+		bcmd = e.argv[0]
 		
 		# connect info
-		if event.irccmd == 'flags':
-			self.reply(event, str(self.info['flag']))
+		if bcmd == 'flags':
+			trix.display(e.dict)
+			self.reply(e, str(self.info['flag']))
 		
-		elif event.irccmd.upper() in self.info['pair']:
-			item = event.irccmd.upper()
-			self.reply(event, self.info['pair'].get('item'))
-			
-		elif event.irccmd == '005':
+		elif bcmd == 'pairs':
+			item = bcmd.upper()
+			self.reply(e, " ".join(self.info['pair'].keys()))
+		
+		elif bcmd == 'pair':
+			if e.argc < 2:
+				self.reply(e, "ERROR: pair key required.")
+			else:
+				key = e.argv[1].upper()
+				if key in self.info['pair']:
+					self.reply(e, self.info['pair'].get(key))
+		
+		
+		#
+		# PASSIVE
+		#  - This one's different in that it responds to an irc command
+		#    rather than a command given by PRIVMSG or NOTICE.
+		#
+		elif e.irccmd == '005':
 			
 			# data is an array now... need the first item
-			data = event.text.split(':')
+			data = e.text.split(':')
 			data = data[0].split() # <--- split on ' ' (space)
 			
 			# parse each item into the correct info dict structure
@@ -55,7 +75,7 @@ class IRCInfo(IRCPlugin):
 			# debug
 			if self.bot.debug > 8:
 				print("\n# info debug")
-				trix.display(event.dict)
+				trix.display(e.dict)
 				trix.display(self.info)
 				print("")
 			

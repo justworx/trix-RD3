@@ -4,9 +4,9 @@
 # the terms of the GNU Affero General Public License.
 #
 
-
 from ... import *
 from ...util.enchelp import *
+from ...util.linedbg import *
 
 IRC_DEBUG = 1  # debug level default: 1
 PLUG_UPDT = 15 # update plugins every 15 seconds
@@ -106,12 +106,7 @@ class irc(object):
 	@classmethod
 	def debug (*a, **k):
 		if IRC_DEBUG:
-			print ("\n#\n# DEBUG:")
-			for item in a:
-				print ("# %s" % str(item))
-			if k:
-				trix.display(k)
-			print ("#\n")
+			linedbg().dbg(*a, **k)
 
 
 

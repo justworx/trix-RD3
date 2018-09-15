@@ -103,8 +103,8 @@ class IRCEvent(object):
 			if len(mm) > 1:
 				self.irccmd = mm[1]
 			else:
-				print(
-					"\n#\n#\n# STRANGE LINE\n# STRANGE CMD: "+self.line+"'\n#\n#"
+				irc.debug(
+					"Strange Line", "Strange Command", self.line
 					)
 			if len(mm) > 2:
 				self.target = mm[2]

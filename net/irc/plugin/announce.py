@@ -11,15 +11,15 @@ from ...urli import *
 class Announce(IRCPlugin):
 	"""Scan lines for urls and check for embed info (eg, youtube)."""
 	
-	def __init__(self, pname, config=None, bot=None, **k):
-		IRCPlugin.__init__(self, pname, config, bot, **k)
+	def __init__(self, pname, bot, config=None, **k):
+		IRCPlugin.__init__(self, pname, bot, config, **k)
 		keys = config.get('tags')
 		self.uu = EmbedInfo(keys)
 	
-	def handle(self, event):
-		if event.nick != self.bot.nick:
-			targ = event.target
-			info = self.uu.query(event.text)
+	def handle(self, e):
+		if e.nick != self.bot.nick:
+			targ = e.target
+			info = self.uu.query(e.text)
 			if info:
 				self.bot.writeline("PRIVMSG %s :%s" % (targ, info))
 	

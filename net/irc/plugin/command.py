@@ -72,43 +72,10 @@ class IRCCommand(IRCPlugin):
 			# e.g., do mode +v nick
 			elif cmd == 'do':
 				self.bot.writeline(" ".join(e.argv[1:]))
-			
-			"""
-			#
-			# PLUGINS
-			#
-			elif cmd in ['plugin', 'plugins']:
-				
-				# lowercase the first argument
-				arg1 = e.argv[1].lower()
-				if arg1 == 'list':
-					self.reply(e, " ".join(self.bot.plugins.keys()))
-				else:
-					argx = e.argv[2:] # plugin cmd <plugin list>
-					
-					# respond to argument 1
-					if arg1 == 'load':
-						for p in argx:
-							# find plugin path
-							ppath = 'net.irc.plugin.%s' % p.lower()
-							
-							# load plugin at ppath
-							self.bot.plugins[p] = trix.ncreate(ppath)
-						
-						# report successful load
-						self.reply(e, "load: %s" % (" ".join(argx)))
-					
-					elif arg1 == 'unload':
-						for p in argx:
-							# delete specified plugin (by name `p`)
-							p = p.lower()
-							del(self.bot.plugins[p])
-						
-						# report successful unload
-						self.reply(e, "unload: %s" % (" ".join(argx)))
-			"""
 		
+		#
 		# -- error handling --
+		#
 		except Exception as ex: 
 			typ = str(type(ex))
 			err = str(ex)

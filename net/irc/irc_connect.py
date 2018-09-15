@@ -109,6 +109,9 @@ class IRCConnect(Connect):
 	#
 	# RUNTIME - ADD/REMOVE OF PLUGINS 
 	#
+	
+	# ------ lists that control what will happen next .io() ------
+	
 	def plugin_add(self, pname):
 		"""Add `pname` to the plugin add-list."""
 		if pname not in self.plugins:
@@ -121,45 +124,68 @@ class IRCConnect(Connect):
 			self.pm_rmv.append(pname)		
 	
 	
+	# ------ stuff that happens during io ------
+	
 	def plugin_reload(self, pname):
 		"""
 		Reload `pname` and add it to the plugin add and remove lists.
 		"""
-		
-		reload(plugin)
-		
-		if pname in self.plugins:
+		try:
+			reload(plugin)
 			
-			# find and reload the plugin
-			ppath = self.pconfig[pname]['plugin']   # plugin class path
-			pmodp = ".".join(ppath.split('.')[:-1]) # plugin module path
-			pmod = trix.value(pmodp)                # plugin module object
-			reload(pmod)
-			
-			# set the current plugin to be removed, then recreated (as the
-			# newly reloaded version) on next call to self.io();
-			# NOTE: trix defines `reload()` to work in python3.
-			self.pm_rmv.append(pname)
-			self.pm_add.append(pname)
-	
+			if pname in self.plugins:
+				
+				# find and reload the plugin
+				ppath = self.pconfig[pname]['plugin']   # plugin class path
+				pmodp = ".".join(ppath.split('.')[:-1]) # plugin module path
+				pmod = trix.value(pmodp)                # plugin module object
+				reload(pmod)
+				
+				# set the current plugin to be removed, then recreated (as the
+				# newly reloaded version) on next call to self.io();
+				# NOTE: trix defines `reload()` to work in python3.
+				self.pm_rmv.append(pname)
+				self.pm_add.append(pname)
+				
+				irc.debug("plugin_reload",
+						pm_rmv = self.pm_rmv,
+						pm_add = self.pm_add
+					)
+		
+		except Exception as ex:
+			irc.debug (
+				"plugin_reload", "DEBUG: reload fail", pname
+			)
+			raise
+
 	
 	#
 	# IO LOOP - ADD/REMOVE OF PLUGINS 
 	#
 	def __plugin_load(self, pname):
 		"""Load plugin `pname` immediately."""
-		if not (pname in self.plugins):
-			pi = self.__plugin_create(pname)
-			if not pi:
-				raise Exception ("plugin-create-fail", xdata(pname=pname))
-			self.plugins[pname] = pi
-			return pi
-	
+		try:
+			if not (pname in self.plugins):
+				pi = self.__plugin_create(pname)
+				if not pi:
+					raise Exception ("plugin-create-fail", xdata(pname=pname))
+				self.plugins[pname] = pi
+				return pi
+		except:
+			irc.debug (
+				"__plugin_load", "load plugin fail!", pname
+			)
+			raise
+			
 	
 	def __plugin_unload(self, pname):
 		"""Unload (delete) plugin `pname` immediately."""
-		if (pname in self.plugins):
-			del(self.plugins[pname])
+		try:
+			if (pname in self.plugins):
+				del(self.plugins[pname])
+		except:
+			irc.debug ("__plugin_unload", pname)
+			raise
 	
 	
 	def __plugin_create(self, pname):
@@ -168,7 +194,7 @@ class IRCConnect(Connect):
 		"""
 		ppath = self.pconfig[pname]['plugin'] # path for `trix.create`
 		pconf = self.pconfig[pname]
-		pi = trix.create(ppath, pname, pconf, self)
+		pi = trix.create(ppath, pname, self, pconf)
 		if not pi:
 			raise Exception ("plugin-create-fail", xdata(
 					pname=pname, ppath=ppath, pconf=pconf
@@ -201,7 +227,33 @@ class IRCConnect(Connect):
 		#  - Handle received text.
 		#
 		if intext:
-			
+			self.__handle_received_text(intext)
+
+		#
+		# PLUGINS	- - - - - - - - - - - - - - - - - - - - - - - - - - -
+		#  - every now-n-then, call the plugins' `update` method
+		#
+		if time.time() > (self.pi_update + self.pi_interval):
+			self.__handle_plugin_update()
+		
+		#
+		# MANAGE PLUGINS - - - - - - - - - - - - - - - - - - - - - - - -
+		#  - add, remove, reload plugins
+		#  - do removes first (in case a plugin has been reloaded)
+		#  - do adds afterward, so reloaded plugins can be re-added
+		#
+		if self.pm_rmv:
+			self.__handle_plugin_rmv()
+		
+		if self.pm_add:
+			self.__handle_plugin_add()
+	
+	
+	#
+	# HANDLE RECEIVED LINES
+	#
+	def __handle_received_text(self, intext):
+		
 			try:
 				# split them...
 				inlines = intext.splitlines()
@@ -214,78 +266,81 @@ class IRCConnect(Connect):
 							print ("# ping")
 						RESP = line.split()[1] # handle PING
 						self.writeline('PONG ' + RESP)
-						if self.debug > 1:
+						if self.debug > 7:
 							print ("# pong")
 					else:
 						self.on_message(line)  # handle everything besides PINGs
 			
 			except Exception as ex:
-				print ("ERROR: %s: %s" % (str(type(ex)), str(ex)))
-				print (traceback.extract_tb(sys.exc_info()[2]))
-
+				irc.debug (str(type(ex)), str(ex))
+	
+	
+	#
+	# HANDLE PLUGIN UPDATE
+	#
+	def __handle_plugin_update(self):
 		
-		#
-		# PLUGINS	- - - - - - - - - - - - - - - - - - - - - - - - - - -
-		#  - every now-n-then, call the plugins' `update` method
-		#
-		if time.time() > (self.pi_update + self.pi_interval):
-			
-			# update to wait another `interval` seconds.
-			self.pi_update = time.time()
-			
-			#print ("# plugins update; " + str(time.time()))
-			
-			pfailed = []
-			for pname in self.plugins:
-				try:
-					self.plugins[pname].update()
-				except Exception as ex:
-					if self.debug:
-						print("#")
-						print("# Plugin Update Failed. Removing: %s" % pname)
-						print("# Error: %s" % str(ex))
-						print("#")
-					pfailed.append(pname)
-			
-			# remove plugins that failed to load
-			if pfailed:
-				for pname in pfailed:
+		# update to wait another `interval` seconds.
+		self.pi_update = time.time()
+		
+		pfailed = []
+		for pname in self.plugins:
+			try:
+				self.plugins[pname].update()
+			except Exception as ex:
+				if self.debug:
+					irc.debug(
+						"Plugin Update Failed", "Removing: %s" % pname,
+						"Error: %s" % str(ex)
+					)
+				pfailed.append(pname)
+		
+		# remove plugins that failed to load
+		if pfailed:
+			for pname in pfailed:
+				del(self.plugins[pname])
+		
+	
+	
+	#
+	# HANDLE PLUGIN REMOVE
+	#
+	def __handle_plugin_rmv(self):
+		try:
+			for pname in self.pm_rmv:
+				if (pname in self.pm_rmv) and (pname in self.plugins):
 					del(self.plugins[pname])
-		
-		#
-		# MANAGE PLUGINS - - - - - - - - - - - - - - - - - - - - - - - -
-		#  - add, remove, reload plugins
-		#  - this must be handled outside the event loop so that 
-		#    changes to the self.plugins dict won't happen during 
-		#    iteration.
-		#
-		
-		# do removes first (in case a plugin has been reloaded)
-		if self.pm_rmv:
-			try:
-				for pname in self.pm_rmv:
-					if (pname in self.pm_rmv) and (pname in self.plugins):
-						del(self.plugins[pname])
-			except Exception as ex:
-				print ("Plugin Rmv Fail! %s: %s" % (str(type(ex), str(ex))))
-			finally:
-				self.pm_rmv = []
-		
-		# do adds afterward, so reloaded plugins can be re-added
-		if self.pm_add:
-			try:
-				for pname in self.pm_add:
-					if (pname in self.pm_add):
-						self.plugins[pname] = self.__plugin_load(pname)
-			except Exception as ex:
-				print ("Plugin Add Fail! %s: %s" % (str(type(ex)), str(ex)))
-			finally:
-				self.pm_add = []
-		
+					irc.debug(
+						"__handle_plugin_rmv", "removed plugin", pname
+					)
+		except Exception as ex:
+			irc.debug ("__handle_plugin_rmv", str(type(ex), str(ex)))
+		finally:
+			self.pm_rmv = []
+	
+	
+	
+	#
+	# HANDLE PLUGIN ADD
+	#
+	def __handle_plugin_add(self):
+		try:
+			for pname in self.pm_add:
+				if (pname in self.pm_add):
+					self.plugins[pname] = self.__plugin_load(pname)
+		except Exception as ex:
+			irc.debug ("__handle_plugin_add")
+		finally:
+			self.pm_add = []
+			
+	
+	
 	
 	
 	# ----------------------------------------------------------------
+	#
 	# ON MESSAGE
+	#
 	# ----------------------------------------------------------------
 	def on_message(self, line):
 		
@@ -294,10 +349,6 @@ class IRCConnect(Connect):
 		# showing text
 		if self.show or self.debug:
 			print (e.line)
-		
-		# debugging 
-		#if self.debug > 2:
-		#	trix.display(e.dict)
 		
 		# HANDLE! Let each plugin handle each event (but not PINGs)
 		for pname in self.plugins:
@@ -310,14 +361,13 @@ class IRCConnect(Connect):
 	
 	
 	# ----------------------------------------------------------------
+	#
 	# OTHER UTIL
+	#
 	# ----------------------------------------------------------------
 	
 	def status(self):
-		s = {}
-		s['ircconf'] = self.config
-		#s['runner'] = Runner.status(self)
-		return s
+		return self.config
 	
 	def ping(self, x=None):
 		x = x or time.time()

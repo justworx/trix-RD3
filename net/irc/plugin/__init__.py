@@ -11,7 +11,7 @@ from .. import *
 class IRCPlugin(EncodingHelper):
 	"""Base IRC plugin."""
 
-	def __init__(self, pname, config=None, bot=None, **k):
+	def __init__(self, pname, bot, config=None, **k):
 		
 		# store the bot object
 		self.bot = bot
@@ -40,7 +40,7 @@ class IRCPlugin(EncodingHelper):
 	def handle(self, e):
 		# Plugins may override this to handle whatever action is
 		# indicated by `event`.
-		if event.argv[0] == 'about':
+		if e.argv[0] == 'about':
 			self.reply(e, self.created)
 	
 	

@@ -27,7 +27,5 @@ class IRCClient(Client):
 	def handlex(self, connid, xtype, xargs, xdata):
 		if connid in self.conlist:
 			conn = self[connid]
-			irc.debug("\nEXCEPTION! %s: %s(%s)" % (ident, xtype, xargs))
-			if xdata:
-				trix.display(xdata)
+			irc.debug("irc_client.handlex", xtype, xargs)
 

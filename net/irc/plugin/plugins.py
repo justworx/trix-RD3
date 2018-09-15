@@ -32,6 +32,7 @@ class Plugins(IRCPlugin):
 					# respond to argument 1
 					if arg1 == 'reload':
 						for p in argx:
+							print ("reload 1; plugins.handle;", p)
 							self.bot.plugin_reload(p.lower())
 					
 					elif arg1 in ['add', 'load']:
@@ -48,7 +49,7 @@ class Plugins(IRCPlugin):
 								self.bot.plugin_remove(p.lower())
 					
 					elif arg1 == 'test':
-						self.reply(e, "PASSED!!!!!!!!!")
+						self.reply(e, "PASSED Finally!")
 		
 			else:
-				IRCPlugin.handle(self, event)
+				IRCPlugin.handle(self, e)
