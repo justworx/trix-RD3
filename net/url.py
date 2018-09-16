@@ -35,12 +35,11 @@ class MM3(object):
 #  - urlreq is 'urllib2' in python2, urllib.request in python3
 
 try:
-	import urllib2 as urlreq
-	MessageMerge = MM2
-
-except:
-	import urllib.request as urlreq
+	from urllib.request import Request, urlopen  # Python 3
 	MessageMerge = MM3
+except ImportError:
+	from urllib2 import Request, urlopen  # Python 2
+	MessageMerge = MM2
 
 
 
@@ -76,7 +75,7 @@ def head(url):
 	h = url.head(someUrl)
 	print (h.info())
 	"""
-	request = urlreq.Request(url)
+	request = Request(url)
 	request.get_method = lambda : 'HEAD'
 	return UResponse(request)
 
@@ -94,20 +93,35 @@ class UResponse(object):
 	def __init__(self, *a, **k):
 		"""Arguments are the same as for urllib.urlopen()"""
 		
-		# open the file
-		self.__file = urlreq.urlopen(*a, **k)
+		#
+		# # open the file
+		# self.__file = urlopen(*a, **k)
+		#
+		q = Request(*a)
+		if k:
+			for header in k:
+				q.add_header(header, k[header])
+		
+		self.__file = urlopen(q)
+		self.__info = self.__file.info()
 		
 		# buffer type
 		TBuffer = trix.nvalue('util.stream.buffer.Buffer')
 		
 		# buffer... reads bytes
-		self.__buf = TBuffer(self.__file.read())
+		content = self.__file.read()
+		hh = self.__info
+		if hh['Content-Encoding'] in ['gzip']:
+			import zlib
+			content = zlib.decompress(content, 16+zlib.MAX_WBITS)
+		
+		self.__buf = TBuffer(content)
+		self.__buf.seek(0)
 		
 		#
 		# Find the encoding, if possible;
+		#  - hopefully the charset is in the headers
 		#
-		
-		# hopefully the charset is in the headers
 		c = self.param('charset')
 		if not c:
 			
@@ -165,6 +179,12 @@ class UResponse(object):
 	def charset(self):
 		"""Return the document's encoding."""
 		return self.__charset
+	
+	
+	@property
+	def contentenc(self):
+		"""The content encoding, as given by 'info'."""
+		return self.info()['Content-Encoding']
 	
 	
 	# READER
