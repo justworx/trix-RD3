@@ -5,13 +5,6 @@
 #
 
 
-#
-# UNDER CONSTRUCTION!
-#  - Actually, this is totally untested. it may change or even
-#    totally disappear.
-#
-
-
 from . import *
 
 
@@ -71,6 +64,10 @@ class IRCInfo(IRCPlugin):
 					# FLAG-LIKE ITEMS
 					self.info['flag'].append(x[0])
 			
+			# set channel types so they're directly available to the conn
+			chantypes = self.info.get('pair',{}).get('CHANTYPES')
+			if chantypes:
+				self.bot.chantypes = chantypes
 			
 			# debug
 			if self.bot.debug > 8:

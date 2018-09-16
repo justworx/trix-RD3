@@ -20,11 +20,11 @@ class IRCEvent(object):
 	orig   : text portion of line, with formatting
 	text   : deformatted text
 	target : recipient channel/nick
-	prefix : sender nick!user@[host]
-	host   : irc host
-	user   : irc user
-	nick   : irc nick
-	uid    : user@host
+	prefix : sender's nick!user@[host]
+	host   : sender's host
+	user   : sender's user
+	nick   : sender's nick
+	uid    : sender's user@host
 	irccmd : the IRC-specific command (eg. NICK, JOIN, etc...)
 	
 	For example: 

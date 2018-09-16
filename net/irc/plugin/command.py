@@ -12,19 +12,6 @@ class IRCCommand(IRCPlugin):
 	"""Useful commands for controlling the bot via privmsg/notify."""
 	
 	#
-	# AUTHORIZATION
-	#  - Currently, only 'owner' (as set in bot/<botname>.json file)
-	#    can control the bot via PRIVMSG/NOTICE.
-	#  - NOTE: The 'owner' member variable is a list.
-	#  - TODO: Needs a better auth scheme that allows partial 
-	#          control by others and/or all.
-	#
-	def authorize(self, e):
-		return e.host in self.bot.owner
-	
-	
-	
-	#
 	# HANDLE
 	#
 	def handle(self, e):
@@ -84,11 +71,4 @@ class IRCCommand(IRCPlugin):
 			return msg
 	
 	
-	
-	#
-	# TODO: This probably belings in `irc.__init__` or something...
-	#       possibly in some kind of extension system.
-	#
-	def is_channel_name(self, text):
-		return text[0] == '#'
 

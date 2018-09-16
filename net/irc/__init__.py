@@ -76,7 +76,8 @@ class irc(object):
 			connections = conf['connections']
 			for connid in connections:
 				cconfig = connections[connid]
-				client.connect(connid, cconfig)
+				if cconfig.get('enabled', True):
+					client.connect(connid, cconfig)
 		
 		# Start the client so that any connections receive the time they
 		# need to handle input.

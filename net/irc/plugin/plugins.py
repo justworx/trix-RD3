@@ -16,7 +16,10 @@ class Plugins(IRCPlugin):
 		User PRIVMSG or NOTICE to send 'plugin' commands. Available
 		commands are: 'list', 'load', 'unload', and "reload".
 		"""
-		if e.irccmd in ["PRIVMSG", "NOTICE"]:
+		if not self.authorize(e):
+			pass
+			
+		elif e.irccmd in ["PRIVMSG", "NOTICE"]:
 			
 			# if command is 'plugin'...
 			arg0 = e.argv[0].lower()

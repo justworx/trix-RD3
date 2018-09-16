@@ -17,6 +17,8 @@ class Announce(IRCPlugin):
 		self.uu = EmbedInfo(keys)
 	
 	def handle(self, e):
+		
+		# don't let botix trigger the announcement!
 		if e.nick != self.bot.nick:
 			targ = e.target
 			info = self.uu.query(e.text)

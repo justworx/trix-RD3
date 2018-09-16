@@ -62,6 +62,10 @@ class IRCConnect(Connect):
 		# global information storage - set by plugins, used by all.
 		self.ginfo = {}
 		
+		# This is replaced by ginfo['info']['pair']['CHANTYPES'] if
+		# and when the 005 command is parsed.
+		self.chantypes = '#'
+		
 		#
 		# INIT PLUGINS
 		# Check for plugins that need to be created from config
