@@ -114,14 +114,48 @@ class IRCEvent(object):
 		if self.text:
 			self.orig = self.text
 			self.text = self.stripFormat(self.text)
-		
-	@property
-	def argv(self):
-		return self.text.split(' ')
+	
 	
 	@property
 	def argc(self):
-		return len(self.argv)
+		try:
+			return self.__argc
+		except:
+			self.__argc = len(self.argv)
+			return self.__argc
+	
+	
+	@property
+	def argv(self):
+		try:
+			return self.__argv
+		except:
+			self.__argv = self.text.split(' ')
+			return self.__argv
+	
+	
+	@property
+	def argvc(self):
+		try:
+			return self.__argvc
+		except:
+			self.__argvc = []
+			for a in self.argv:
+				self.__argvc.append(a.upper())
+			return self.__argvc
+	
+	
+	@property
+	def argvl(self):
+		try:
+			return self.__argvl
+		except:
+			self.__argvl = []
+			for a in self.argv:
+				self.__argvl.append(a.lower())
+			return self.__argvl
+	
+	
 	
 	@property
 	def dict(self):
