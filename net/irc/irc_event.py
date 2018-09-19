@@ -26,16 +26,6 @@ class IRCEvent(object):
 	nick   : sender's nick
 	uid    : sender's user@host
 	irccmd : the IRC-specific command (eg. NICK, JOIN, etc...)
-	
-	For example: 
-	```
-	    if evt.uid == 'myuser@my-host-mask':
-	        channelOrUser = self.target
-	        try:
-	        	executeCommand(channelOrUser, *evt.argv)
-	        except:
-	        	
-	```
 	"""
 	
 	REX = re.compile(r'\x03(?:\d{1,2},\d{1,2}|\d{1,2}|,\d{1,2}|)')
@@ -136,6 +126,7 @@ class IRCEvent(object):
 	
 	@property
 	def argvc(self):
+		"""Arg-v all-caps."""
 		try:
 			return self.__argvc
 		except:
@@ -147,6 +138,7 @@ class IRCEvent(object):
 	
 	@property
 	def argvl(self):
+		"""Arg-v all lowercase."""
 		try:
 			return self.__argvl
 		except:

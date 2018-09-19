@@ -12,8 +12,13 @@ from ..util.enchelp import * # trix
 #    in both 2 and 3.
 
 class MM2(object):
+	"""
+	def contentenc
+	"""
 	@classmethod
 	def contenttype(cls, i): return i.gettype();
+	@classmethod
+	def contentenc(cls, i): return i.getencoding();
 	@classmethod
 	def maintype(cls, i): return i.getmaintype();
 	@classmethod
@@ -24,6 +29,8 @@ class MM2(object):
 class MM3(object):
 	@classmethod
 	def contenttype(cls, i): return i.get_content_type(); 
+	@classmethod
+	def contentenc(cls, i): return i.getencoding();
 	@classmethod
 	def maintype(cls, i): return i.get_content_maintype();
 	@classmethod
@@ -110,10 +117,14 @@ class UResponse(object):
 		
 		# buffer... reads bytes
 		content = self.__file.read()
-		hh = self.__info
-		if hh['Content-Encoding'] in ['gzip']:
-			import zlib
-			content = zlib.decompress(content, 16+zlib.MAX_WBITS)
+		
+		try:
+			hh = self.__info
+			if self.contentenc() in ['gzip']:
+				import zlib
+				content = zlib.decompress(content, 16+zlib.MAX_WBITS)
+		except:
+			pass
 		
 		self.__buf = TBuffer(content)
 		self.__buf.seek(0)
@@ -166,6 +177,11 @@ class UResponse(object):
 		return MessageMerge.contenttype(self.info())
 	
 	@property
+	def contentenc(self):
+		"""..."""
+		return MessageMerge.contentenc(self.info())
+	
+	@property
 	def maintype(self):
 		"""The main type, as given by 'info'."""
 		return MessageMerge.maintype(self.info())
@@ -179,12 +195,7 @@ class UResponse(object):
 	def charset(self):
 		"""Return the document's encoding."""
 		return self.__charset
-	
-	
-	@property
-	def contentenc(self):
-		"""The content encoding, as given by 'info'."""
-		return self.info()['Content-Encoding']
+		
 	
 	
 	# READER

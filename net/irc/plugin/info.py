@@ -27,7 +27,7 @@ class IRCInfo(IRCPlugin):
 		
 		# connect info
 		if bcmd == 'flags':
-			trix.display(e.dict)
+			#trix.display(e.dict)
 			self.reply(e, str(self.info['flag']))
 		
 		elif bcmd == 'pairs':
@@ -68,12 +68,3 @@ class IRCInfo(IRCPlugin):
 			chantypes = self.info.get('pair',{}).get('CHANTYPES')
 			if chantypes:
 				self.bot.chantypes = chantypes
-			
-			# debug
-			if self.bot.debug > 8:
-				print("\n# info debug")
-				trix.display(e.dict)
-				trix.display(self.info)
-				print("")
-			
-

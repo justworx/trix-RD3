@@ -42,17 +42,11 @@ class Plugins(IRCPlugin):
 						for p in argx:
 							if not p in self.bot.plugins:
 								self.bot.plugin_add(p.lower())
-						
-						# report successful load
-						#self.reply(e, "load: %s" % (" ".join(argx)))
 					
 					elif arg1 in ['remove', 'unload']:
 						for p in argx:
 							if p in self.bot.plugins:
 								self.bot.plugin_remove(p.lower())
-					
-					elif arg1 == 'test':
-						self.reply(e, "PASSED Finally!")
 		
 			else:
 				IRCPlugin.handle(self, e)
