@@ -53,12 +53,7 @@ class IRCDict(IRCPlugin):
 				r.seek(0)
 				ss = r.read()
 				
-				"""
-				try:
-					s = s.decode('utf_8')
-				except:
-					pass
-				"""
+				# decode
 				s = ss.decode('utf_8')
 				
 				defs = trix.jparse(s)

@@ -17,6 +17,7 @@ class Client(Runner):
 		"""Pass config for Runner."""
 		Runner.__init__(self, config, **k)
 		self.__connections = {}
+		self.__keepalive = self.config.get('keepalive', False)
 	
 	
 	# DEL
@@ -50,6 +51,11 @@ class Client(Runner):
 		"""Return list of of connection names."""
 		return list(self.__connections.keys())
 	
+	
+	
+	# DISCONNECT
+	def disconnect(self, **connid):
+		self.remove(connid)
 	
 	
 	# CONNECT
@@ -154,11 +160,15 @@ class Client(Runner):
 					conn.shutdown()
 				except:
 					pass
+				
 				try:
 					del(self.__connections[cname])
 				except:
 					pass
-	
+		
+		if not self.__keepalive:
+			if not self.__connections:
+				self.stop()
 	
 	
 	# --- override these to handle input and exceptions ---
