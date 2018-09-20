@@ -50,8 +50,6 @@ class irc(object):
 		it's returned.
 		"""
 		
-		#trix.display ([clientconfig, k])
-		
 		# sort out config
 		try:
 			# default clientconfig is an empty dict plus any kwargs
