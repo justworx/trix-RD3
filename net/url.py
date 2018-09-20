@@ -16,9 +16,9 @@ class MM2(object):
 	def contentenc
 	"""
 	@classmethod
-	def contenttype(cls, i): return i.gettype();
-	@classmethod
 	def contentenc(cls, i): return i.getencoding();
+	@classmethod
+	def contenttype(cls, i): return i.gettype();
 	@classmethod
 	def maintype(cls, i): return i.getmaintype();
 	@classmethod
@@ -28,9 +28,9 @@ class MM2(object):
 
 class MM3(object):
 	@classmethod
-	def contenttype(cls, i): return i.get_content_type(); 
+	def contentenc(cls, i): return i.get_encoding();
 	@classmethod
-	def contentenc(cls, i): return i.getencoding();
+	def contenttype(cls, i): return i.get_content_type(); 
 	@classmethod
 	def maintype(cls, i): return i.get_content_maintype();
 	@classmethod
@@ -101,8 +101,7 @@ class UResponse(object):
 		"""Arguments are the same as for urllib.urlopen()"""
 		
 		#
-		# # open the file
-		# self.__file = urlopen(*a, **k)
+		# open the file
 		#
 		q = Request(*a)
 		if k:
@@ -118,14 +117,17 @@ class UResponse(object):
 		# buffer... reads bytes
 		content = self.__file.read()
 		
+		# decompress (if gzip)
+		hh = self.__info
 		try:
-			hh = self.__info
-			if self.contentenc() in ['gzip']:
+			if hh['Content-Encoding'] in ['gzip']:
 				import zlib
 				content = zlib.decompress(content, 16+zlib.MAX_WBITS)
 		except:
-			pass
-		
+			raise Exception("gzip decompression", xdata(info=dict(hh), 
+					content=content)
+				)
+			
 		self.__buf = TBuffer(content)
 		self.__buf.seek(0)
 		
