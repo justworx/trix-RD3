@@ -19,7 +19,7 @@ class IRCCommand(IRCPlugin):
 		# only handles PRIVMSG 	and NOTICE events
 		if not (e.irccmd in ["PRIVMSG","NOTICE"]):
 			return
-		
+
 		if self.authorize(e):
 			result = self.handle_command(e)
 			if result:
@@ -34,7 +34,7 @@ class IRCCommand(IRCPlugin):
 	def handle_command( self, e):
 		
 		try:
-			cmd = e.argv[0].lower()
+			cmd = e.argvl[0]
 			if cmd == 'join':
 				self.bot.writeline("JOIN %s" % e.argv[1])
 			elif cmd == 'part':
@@ -50,7 +50,7 @@ class IRCCommand(IRCPlugin):
 				self.bot.writeline("PRIVMSG %s :%s" % (target, message))
 			elif cmd == 'mode':
 				self.bot.writeline(" ".join(e.argv[0:]))
-		
+			
 			# -- bot internal control --
 			elif cmd == 'debug':
 				self.bot.debug = int(e.argv[1])
@@ -64,10 +64,13 @@ class IRCCommand(IRCPlugin):
 		# -- error handling --
 		#
 		except Exception as ex: 
+			
 			typ = str(type(ex))
 			err = str(ex)
 			msg = "%s: %s" % (typ, err)
-			print ("# %s" % msg)
+			
+			irc.debug("command plugin error", typ, err)
+			
 			return msg
 	
 	

@@ -37,8 +37,6 @@ class IRCPlugin(EncodingHelper):
 	#    config) can control the bot via PRIVMSG/NOTICE.
 	#
 	def authorize(self, e):
-		#print ("HOST : ", e.host)
-		#print ("OWNER: ", self.bot.owner)
 		if e.nick != self.bot.nick:
 			return e.host in self.bot.owner
 		return False

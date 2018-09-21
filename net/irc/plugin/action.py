@@ -9,26 +9,26 @@ from . import *
 class IRCAction(IRCPlugin):
 	"""Info collected from various commands."""
 	
-	CONNECT_HANDLED = False
+	connected = False
 	
 	def __init__(self, pname, bot, config=None, **k):
 		IRCPlugin.__init__(self, pname, bot, config, **k)
 		self.on_connect = self.config.get("on_connect")
-		self.connected = False
 	
 	
 	def handle(self, e):
-		pass
 		
-		"""
-		if not self.CONNECT_HANDLED:
-			if e.argvl.irccmd == '376':  # end motd
-				print ("\n")
+		# respond to invitations
+		if e.irccmd == "INVITE":
+			if self.authorize(e):
+				self.bot.writeline("JOIN %s" % e.argv[0])
+		
+		# end motd - connect commands (join)
+		elif not self.connected:
+			if e.irccmd == '376':  
 				trix.display(e.dict)
 				for cmd in self.on_connect:
 					self.bot.writeline(cmd)
-					print (cmd, "\n")
-				self.CONNECT_HANDLED = True
-		
-		"""
+				
+				self.connected = True
 
