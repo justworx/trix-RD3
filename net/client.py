@@ -168,7 +168,7 @@ class Client(Runner):
 		
 		if not self.__keepalive:
 			if not self.__connections:
-				self.stop()
+				Runner.stop(self)
 	
 	
 	# --- override these to handle input and exceptions ---
