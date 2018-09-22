@@ -93,12 +93,16 @@ class IRCConnect(Connect):
 		self.writeline(user_line)
 		self.writeline(nick_line)
 		
+		logplugin = self.plugins.get('irclog')
+		LOGS = logplugin.logfile or "None"
+		
 		if self.debug:
 			irc.debug(
 				"#\n# CONNECTING:",
 				"#       HOST: %s" % host,
 				"#       USER: %s" % user_line,
-				"#       NICK: %s" % nick_line
+				"#       NICK: %s" % nick_line,
+				"#       LOGS: %s" % LOGS
 			)
 		
 		# runtime values
@@ -360,7 +364,9 @@ class IRCConnect(Connect):
 				p = self.plugins[pname]
 				p.handle(e)
 			except BaseException as ex:
-				p.reply(e, "Error: %s %s" % (str(type(ex)), str(ex)))
+				msg = "Error: %s %s" % (str(type(ex)), str(ex))
+				irc.debug(msg)
+				p.reply(e, msg)
 	
 	
 	

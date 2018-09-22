@@ -59,6 +59,27 @@ class IRCCommand(IRCPlugin):
 			# e.g., do mode +v nick
 			elif cmd == 'do':
 				self.bot.writeline(" ".join(e.argv[1:]))
+			
+			# -- channel only --
+			elif self.is_channel_name(e.target):
+				try:
+					if cmd == 'op':
+						for nick in L:
+							self.bot.writeline("MODE %s +o %s" % e.target, nick)
+					elif cmd == 'deop':
+						for nick in L:
+							self.bot.writeline("MODE %s -o %s" % e.target, nick)
+				except:
+					irc.debug("command plugin - channel-only command failed")
+			
+			# TEST
+			elif cmd == 'test':
+				print ("\n -- test: start")
+				trix.display(e, str(e.dict))
+				
+				#self.reply(e, "%s %s" % (e.target, e.nick))
+				print (" -- test: end\n")
+		
 		
 		#
 		# -- error handling --

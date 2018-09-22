@@ -25,14 +25,14 @@ class IRCLog(IRCPlugin):
 		self.lend    = self.config.get('logendl', LOG_ENDL)
 		
 		p = trix.path(self.logfile, affirm='touch')
-		if IRC_DEBUG:
-			print ("\n\n# log_path: %s\n#\n" % p.path)
+		#if IRC_DEBUG:
+		#	print ("\n\n# log_path: %s\n#\n" % p.path)
 		
 		w = p.wrapper(**self.ek)
 		self.writer = w.writer()
 		self.writer.seekend()
 		
-		print ("\n\n# log-pos: %s\n#\n" % str(self.writer.tell()))
+		#print ("\n\n# log-pos: %s\n#\n" % str(self.writer.tell()))
 		
 	
 	

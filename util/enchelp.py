@@ -12,7 +12,7 @@ class EncodingHelper(object):
 	"""Holds default encoding and (optionally) errors."""
 	
 	__EE = ['encoding', 'errors']
-	
+	DEBUG = []
 	Strict = False
 	
 	def __init__(self, config=None, **k):
@@ -20,6 +20,8 @@ class EncodingHelper(object):
 		
 		config = config or {}
 		config.update(k)
+		
+		self.DEBUG.append(config)
 		
 		self.__ek = {}
 		self.__given = enc = config.get('encoding')

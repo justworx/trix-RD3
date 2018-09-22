@@ -64,7 +64,6 @@ class irc(object):
 			conf = cls.config(clientconfig)
 			conf.update(k)
 		
-		#trix.display (conf) #DEBUGGING
 		
 		# create the client object
 		client = trix.ncreate("net.irc.irc_client.IRCClient", conf)
