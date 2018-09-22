@@ -67,7 +67,7 @@ class IRCInfo(IRCPlugin):
 			#    self.authorized more than once when other auth-requiring
 			#    features are added.
 			#
-			if not self.authorized(e):
+			if not self.authorize(e):
 				return
 			
 			# 

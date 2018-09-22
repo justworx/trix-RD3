@@ -25,7 +25,7 @@ class IRCAction(IRCPlugin):
 		
 		# end motd - connect commands (join)
 		elif not self.connected:
-			if e.irccmd == '376':  
+			if e.irccmd in ['376', '422']:  
 				trix.display(e.dict)
 				for cmd in self.on_connect:
 					self.bot.writeline(cmd)
