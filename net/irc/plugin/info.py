@@ -56,10 +56,19 @@ class IRCInfo(IRCPlugin):
 				if key in self.info['pair']:
 					self.reply(e, self.info['pair'].get(key))
 		
+		
 		# WHO - Channel nick list
 		elif bcmd == 'who':
 			
-			#irc.debug(str(e.dict))
+			#
+			# REQUIRE AUTH FOR THIS ONE!
+			#  - This probably needs to be moved below and put into some
+			#    kind of "if" section so that it's not necessary to call 
+			#    self.authorized more than once when other auth-requiring
+			#    features are added.
+			#
+			if not self.authorized(e):
+				return
 			
 			# 
 			if e.argc < 1:
