@@ -25,10 +25,13 @@ class IRCAction(IRCPlugin):
 		
 		# end motd - connect commands (join)
 		elif not self.connected:
+			#
+			# CONNECTION COMMANDS
+			#  - 376 = End MOTD
+			#  - 422 = No MOTD file found
+			#
 			if e.irccmd in ['376', '422']:  
-				trix.display(e.dict)
 				for cmd in self.on_connect:
 					self.bot.writeline(cmd)
-				
 				self.connected = True
 

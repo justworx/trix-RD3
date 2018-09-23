@@ -319,10 +319,13 @@ class IRCConnect(Connect):
 				if (pname in self.pm_rmv) and (pname in self.plugins):
 					del(self.plugins[pname])
 					irc.debug(
-						"__handle_plugin_rmv", "removed plugin", pname
-					)
+						"irc_connect.__handle_plugin_rmv", "removed plugin", 
+							pname
+						)
 		except Exception as ex:
-			irc.debug ("__handle_plugin_rmv", str(type(ex), str(ex)))
+			irc.debug ("irc_connect.__handle_plugin_rmv", 
+					str(type(ex), str(ex))
+				)
 		finally:
 			self.pm_rmv = []
 	
@@ -332,12 +335,15 @@ class IRCConnect(Connect):
 	# HANDLE PLUGIN ADD
 	#
 	def __handle_plugin_add(self):
+		pname = None
 		try:
 			for pname in self.pm_add:
 				if (pname in self.pm_add):
 					self.plugins[pname] = self.__plugin_load(pname)
 		except Exception as ex:
-			irc.debug ("__handle_plugin_add")
+			irc.debug ("irc_connect.__handle_plugin_add", 
+					pname=pname, addlist=self.pm_add
+				)
 		finally:
 			self.pm_add = []
 			
