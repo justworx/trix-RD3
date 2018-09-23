@@ -5,7 +5,7 @@
 #
 
 from . import *
-from ...net.irc import *
+from ...net.irc import irc as ircc
 
 
 class irc(cline):
@@ -15,6 +15,4 @@ class irc(cline):
 		cline.__init__(self)
 		
 		if self.args:
-			irc_connect(self.args[0], run=True, **self.kwargs)
-	
-	
+			c = ircc.client(*self.args, run=True, **self.kwargs)

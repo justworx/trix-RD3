@@ -76,9 +76,16 @@ class irc(object):
 				if cconfig.get('enabled', True):
 					client.connect(connid, cconfig)
 		
-		# Start the client so that any connections receive the time they
-		# need to handle input.
-		client.start()
+		#
+		# Start the client in a thread so that any connections receive
+		# the time they need to handle input. If config or kwargs specify
+		# that run=True, the client will be run in a closed loop (rather
+		# than being started in a thread).
+		#
+		if conf.get('run'):
+			client.run()
+		else:
+			client.start()
 		
 		# return the client
 		return client
