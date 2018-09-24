@@ -97,6 +97,9 @@ class Client(Runner):
 		
 		# this allows a config other than type dict (eg, port number)
 		try:
+			# add connid to the connection's config
+			config.setdefault('connid', connid)
+			
 			connection = T(config)
 			self.__connections[connid] = connection
 		except Exception as ex:

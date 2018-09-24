@@ -23,13 +23,19 @@ class IRCConnect(Connect):
 	activity is handled by plugins themselves.
 	"""
 	
+	self.cache = "~/.cache/trix"
+	
 	def __init__(self, config=None, **k):
-		
+			
 		# read config
 		config = config or {}
 		config.setdefault('encoding', DEF_ENCODE)
 		config.setdefault('errors', "replace")
 		config.update(k)
+		
+		# client sets the connid, the key from the config dict, which
+		# is also the bot's id.
+		self.__botid = config.get('connid')
 		
 		# store config for plugin load/unload
 		self.pconfig = config.get('plugins', {})
@@ -116,6 +122,12 @@ class IRCConnect(Connect):
 		# plugin management - runtime add/remove
 		self.pm_add = []
 		self.pm_rmv = []
+	
+	
+	@property
+	def botid(self):
+		return self.__botid
+	
 	
 	
 	#
