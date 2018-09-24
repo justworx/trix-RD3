@@ -34,6 +34,7 @@ class IRCInfo(IRCPlugin):
 		"""Returns the channel info dict."""
 		return self.__channels
 	
+	
 	@property
 	def prefixes(self):
 		"""
@@ -83,7 +84,7 @@ class IRCInfo(IRCPlugin):
 		# PAIR - connection info dict
 		elif bcmd == 'pair':
 			if e.argc < 2:
-				self.reply(e, "ERROR: pair key required.")
+				self.reply(e, "Keyword required. Eg, 'pair chantypes'")
 			else:
 				key = e.argv[1].upper()
 				if key in self.info['pair']:
@@ -92,7 +93,8 @@ class IRCInfo(IRCPlugin):
 		
 		# WHO - Channel nick list
 		elif bcmd == 'who':
-			
+			self.on_who(e)
+			"""
 			#
 			# REQUIRE AUTH FOR THIS ONE!
 			#
@@ -116,6 +118,7 @@ class IRCInfo(IRCPlugin):
 				except IndexError:
 					irc.debug(e_dict=e.dict)
 					self.reply(e, "No info for channel: %s" % e.argv[1])
+			"""
 		
 		
 		
@@ -125,38 +128,14 @@ class IRCInfo(IRCPlugin):
 		#    rather than commands given by PRIVMSG or NOTICE.
 		# --------------------------------------------------------------
 		
-		
-		#
-		# JOIN - Updates 'who'
-		#
 		elif e.irccmd == 'JOIN':
-			if e.nick != self.bot.nick:
-				chan = clist = None
-				try:
-					chan = e.target
-					clist = self.channels[chan]
-					clist.append(e.nick)
-				except:
-					irc.debug(
-						"info plugin: JOIN fail.", e=e.dict, clist=clist, 
-						chan=chan
-					)
+			self.on_join(e)
 		
+		elif e.irccmd == 'KICK':
+			self.on_kick(e)
 		
-		
-		#
-		# PART - Updates 'who'
-		#
 		elif e.irccmd == 'PART':
-			try:
-				chan = e.target
-				if e.nick == self.bot.nick:
-					del(self.channels[chan])
-				else:
-					self.channels[chan].remove(e.nick)
-			except:
-				irc.debug("info plugin: PART fail.", e=e.dict)
-		
+			self.on_part(e)
 		
 		
 		#
@@ -190,7 +169,6 @@ class IRCInfo(IRCPlugin):
 				raise
 		
 		
-		
 		#
 		# SERVER INFO - 005
 		#
@@ -214,6 +192,52 @@ class IRCInfo(IRCPlugin):
 			chantypes = self.info.get('pair',{}).get('CHANTYPES')
 			if chantypes:
 				self.bot.chantypes = chantypes
+	
+	
+	
+	#
+	# EVENT HANDLERS
+	#  - The code's easier for me to read when separated this way.
+	#
+	
+	def on_who(self, e):
+		if self.authorize(e):
+			if e.argc < 1:
+				self.reply(e, " ".join(self.channels.keys()))
+			else:
+				try:
+					nicklist = " ".join(self.channels[e.argv[1]])
+					self.reply(e, "%s: %s" % (e.argv[1], nicklist))
+				except (KeyError, IndexError):
+					irc.debug(e_dict=e.dict)
+					self.reply(e, "No info for channel: %s" % e.argv[1])
+	
+	
+	def on_kick(self, e):
+		self.on_part(e)
+		#
+		# More to come here. For now, it handles the chan-list update,
+		# which is what's needed immediately.
+		#
+	
+	
+	def on_part(self, e):
+		try:
+			if e.nick == self.bot.nick:
+				del(self.channels[e.target])
+			else:
+				self.channels[e.target].remove(e.nick)
+		except:
+			irc.debug("info plugin: PART fail.", e=e.dict)
+	
+	
+	def on_join (self, e):
+		if e.nick != self.bot.nick:
+			try:
+				clist = self.channels[e.target]
+				clist.append(e.nick)
+			except:
+				irc.debug("info plugin: JOIN fail.", e=e.dict)
 		
 
 
