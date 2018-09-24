@@ -82,8 +82,9 @@ class IRCConnect(Connect):
 		# initialize superclass
 		#  - Connect opens a connection to the server immediately
 		#
-		Connect.__init__(self, (host, port),  
-				encoding=config.encoding, errors=config.errors
+		Connect.__init__(self, (host, port),
+				encoding = config.get('encoding', 'utf_8'),
+				errors   = config.get('errors', 'replace')
 			)
 		
 		
