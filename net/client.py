@@ -23,7 +23,10 @@ class Client(Runner):
 	# DEL
 	def __del__(self):
 		"""Calls `Stop()`."""
-		self.stop()
+		try:
+			self.stop()
+		except:
+			pass
 	
 	
 	# CALL
