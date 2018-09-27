@@ -17,7 +17,7 @@ def xinput(prompt="> "):
 	
 	try:
 		r = input(prompt)
-	except:
+	except NameError:
 		import sys, locale
 		e = sys.stdin.encoding or locale.getpreferredencoding(True)
 		r = raw_input(prompt).decode(e)

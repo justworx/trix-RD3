@@ -23,7 +23,7 @@ class IRCConnect(Connect):
 	activity is handled by plugins themselves.
 	"""
 	
-	self.cache = "~/.cache/trix"
+	cache = "~/.cache/trix"
 	
 	def __init__(self, config=None, **k):
 			

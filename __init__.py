@@ -133,8 +133,8 @@ class trix(object):
 		
 		try:
 			return T(*a, **k)
-		except BaseException:
-			raise BaseException(xdata(path=path, a=a, k=k, obj=o))
+		except BaseException as ex:
+			raise type(ex)(xdata(path=path, a=a, k=k, obj=o))
 		
 	
 	# N-CREATE - create an object given path from inside trix

@@ -1,57 +1,21 @@
 
- --------- UNDER CONSTRUCTION! ---------
+ --------- NEW DEVELOPMENT - UNDER CONSTRUCTION! ---------
 
-In the unlikely event you are thinking of building on this: STOP!
-   
-    DO NOT BUILD ON THIS CODE!
-    
-    EVERYTHING HERE IS ABOUT TO CHANGE...
-    ...OR, POSSIBLY, I MIGHT GIVE UP.
-    
-    EITHER WAY, THE STRUCTURE OF THIS PROJECT IS WRONG. 
-                IT CAN, AS-IS, GO LITTLE FURTHER.
-	
-
-More details/warnings you should heed:
-
-The `trix.net.irc` package is undergoing radical reconstruction. Do
-not count on anything here to work, remain stable, or... anything!
+		I'm rearranging code, creating a new `Bot` class.
+		It's not ready for use yet, does nothing, and may
+		cause your computer (if not the whole universe)
+		to explode.
+		
+		The old irc module stuff still works pretty much
+		as before, though there may be new bugs i haven't 
+		noticed yet.
 
 
-What I'm doing about this:
+As before...
 
-The second phase of utterly unreliable `irc` bot programming is 
-beginning. I'll attempt to add a `Bot` class that will incorporate
-all the important lessons I've learned so far. The new package will 
-work in a totally different way from the original version, though
-much of the original code will probably be used.
-
-
-What I hope to achieve sooner or later:
-
-I hope to eventually mark this `irc` package as stable, but for now
-it's important to note:
-
-    ANYTHING (OR EVEN EVERYTHING) IN THE `trix.net.irc` package may
-    change significantly, disappear, fluctuate, gyrate, or otherwise
-    disappoint you.
-    
-    DO NOT COUNT ON ANYTHING PRESENTED HERE!
-    
-    The old stuff will probably be removed as it is being rewritten 
-    into the new stuff will be removed.
-    
-I'll definitely report here when anything seems even a little bit
-stable. Until then... probably best to ignore this package for any
-real, practical purpose.
-
-
-
-### Original contents:
-
-    This `irc` subpackage is under construction.
-    It's still buggy, but closer than before.
-    There's a long way to go yet.
+  This `irc` subpackage is under construction.
+  It's still buggy, but closer than before.
+  There's a long way to go yet.
 
 
 
