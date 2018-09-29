@@ -33,13 +33,12 @@ class Bot(Client):
 	
 	def __init__(self, botid):
 		"""
-		Pass string `botid` - the bot's name. If the named bot exists
-		in .cache/trix/config.json, it will be started. Otherwise, a
-		new config for the given `botid` will be generated, afterwhich
-		the bot will be started.
+		Pass string `botid` - the bot's name. If the named bot's config
+		file exists in .cache/trix/config.json, it will be started. 
+		Otherwise, a new config for the given `botid` must be generated
+		and a console will open in the terminal to help create it.
 		
-		NOTE: Bot id is always reset to lower-case. Files with capital
-		      letters belong to the Bot class.
+		NOTE: The botid value is always reset to lower-case. 
 		"""
 		
 		#
@@ -94,8 +93,50 @@ class Bot(Client):
 				self.conadd()
 	
 	
+	def __loadconfig(self):
+		botid = self.__botid
+		self.__jconfig = jconf("~/.cache/trix/irc/bots/%s.json" % botid)
+		self.__config = self.__jconfig.obj
+		if not self.__config['connections']:
+			self.__addconfig()
+	
+	def __addconfig(self)
+		self.__config['botid'] = self.__botid
+		self.__config['plugins'] = DEF_PLUGIN_CONFIG
+		self.__config['connections'] = {}
+		
+		#
+		#
+		#
+		# YOU ARE HERE!
+		#  - generate and save a config from console
+		#  - i want to add a config param that lets me put the user
+		#    into an "config add" form.
+		#
+		#
+		#
+	
+	
+	@property
+	def botid (self):
+		return self.__botid
+	
+	
+	@property
+	def config(self):
+		return self.__config
+	
+	
+	"""
+	# HANDLE-DATA
+	def handleio(self, conn):
+		if conn.debug:
+			# Call the connection object's `io()` method so that received
+			# text may be handled.
+			conn.io()
+	
+	
 	def conadd(self):
-		"""Add a connection configuration."""
 		
 		conlist=bc=xin=None
 		try:
@@ -136,34 +177,9 @@ class Bot(Client):
 	
 	
 	
-	@property
-	def botid (self):
-		"""Return the botid."""
-		return self.__botid
-	
-	
-	@property
-	def config(self):
-		"""Return the config dict."""
-		return self.__config
-	
-	
-	
-	
-	
-	
-	# HANDLE-DATA
-	def handleio(self, conn):
-		"""Overrides Client.handleio()"""
-		if conn.debug:
-			# Call the connection object's `io()` method so that received
-			# text may be handled.
-			conn.io()
-	
-	
 	# HANDLE-X (Exception)
 	def handlex(self, connid, xtype, xargs, xdata):
-		"""Overrides Client.handlex()"""
 		if connid in self.conlist:
 			conn = self[connid]
 			irc.debug("irc_client.handlex", xtype, xargs)
+	"""
