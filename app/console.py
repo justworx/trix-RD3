@@ -8,7 +8,9 @@
 import time
 from ..util.xinput import *
 from ..util.enchelp import *
+from ..app.event import *
 from ..fmt import List
+
 
 
 # --- DEFAULTS ---
@@ -53,7 +55,11 @@ class Console(EncodingHelper):
 		"""
 		
 		config = config or {}
-		config.update(**k)
+		try:
+			config.update(**k)
+		except AttributeError:
+			jconf = trix.nvalue("app.jconf.jconf")
+			config = jconf(config).obj
 		
 		EncodingHelper.__init__(self, config)
 		
@@ -82,9 +88,14 @@ class Console(EncodingHelper):
 			while self.__active:
 				try:
 					cmd = xinput(self.__prompt)
-					self.handle_input(cmd)
+					evt = TextEvent(cmd)
+					self.handle_input(evt)
+					if evt.argc and evt.argv[0]:
+						print ('')
+				
 				except EOFError:
 					self.__active = False
+				
 		except KeyboardInterrupt:
 			pass
 		
@@ -97,14 +108,19 @@ class Console(EncodingHelper):
 	# HANDLE INPUT
 	#  - Override (and add to) these
 	#
-	def handle_input(self, line):
-		if line:
-			args = line.split()
-			if args[0] == 'help':
-				self.handle_help (args[1:])
-			elif args[0] == 'exit':
+	def handle_input(self, e):
+		"""Handle input event `e`."""
+		
+		if e.argc:
+			
+			# handle valid commands...
+			if e.argvl[0] == 'help':
+				self.handle_help (e)
+			elif e.argvl[0] == 'exit':
 				self.__active = False
-			else:
+			
+			# if the first argument is blank...
+			elif e.argv[0]:
 				self.handle_error("invalid-command")
 	
 	
@@ -114,14 +130,14 @@ class Console(EncodingHelper):
 	#  - Add a handler for each console command you want to implement.
 	#  - Override these if you need to change behavior/output.
 	#
+	def handle_help(self, e):
+		flist = List(sep=': ', titles=sorted(self.__help.keys()))
+		print (flist.format(self.__help))
+	
+	
 	def handle_error(self, err):
 		if err in self.__errors:
-			print ("Error! %s\n" % self.__errors[err])
-	
-	
-	def handle_help(self, args):
-		flist = List(sep=': ', titles=sorted(self.__help.keys()))
-		print (flist.format(self.__help) + "\n")
+			print ("Error! %s" % self.__errors[err])
 	
 	
 	
@@ -135,7 +151,7 @@ class Console(EncodingHelper):
 	
 	
 	def banner(self, message):
-		lines = message.splitlines()
+		lines = message.strip().splitlines()
 		print ("*")
 		for line in lines:
 			print ("* %s" % line)
