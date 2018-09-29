@@ -27,6 +27,18 @@ because I think some of it might be useful as-is, and because I don't
 want to lose it all in a fire or whatever.
 
 
+#### big changes
+
+The trix package is in under construction and all code within it is
+subject to sweeping change, so this "big changes" section may be a
+bit redundant. However, I'd like to point out a farily important
+change that is (or soon will be) in effect: The `x` subpackage has 
+been removed from .gitignore. 
+
+PLEASE READ AND UNDERSTAND THE "trix/x/README-X" FILE BEFORE USING 
+ANYTHING WITHIN THE `x` SUBPACKAGE.
+
+
 #### doc
 
 Some documentation is available. More is coming as time permits.

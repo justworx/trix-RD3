@@ -24,7 +24,6 @@ bu/
 # Files/directories marked with 'x' are experimental and/or under
 # construction.
 #
-x/
 *.x.*
 */x/*
 *_x.py
