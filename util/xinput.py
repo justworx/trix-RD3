@@ -15,15 +15,19 @@ def xinput(prompt="> "):
 	Returns text exactly as entered.
 	"""
 	
+	e = None
 	try:
-		r = input(prompt)
-	except NameError:
-		import sys, locale
+		import sys, locale # python2
 		e = sys.stdin.encoding or locale.getpreferredencoding(True)
 		r = raw_input(prompt).decode(e)
+	except NameError:
+		r = input(prompt) # python3
 	
 	# return normalized string input
-	return ud.normalize('NFC', r)
+	try:
+		return ud.normalize('NFC', r)
+	except Exception as ex:
+		raise type(ex)("err-normalize-fail", xdata(e=e, r=r))
 
 
 
@@ -35,6 +39,7 @@ class Form(object):
 		The "desc" dict is required. It must contain a set of 
 		name:description pairs. 
 		
+		Eg,.
 		{
 			"desc" : {
 				"name" : "What's your name?",
