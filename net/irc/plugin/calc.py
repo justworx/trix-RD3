@@ -19,10 +19,12 @@ class IRCCalc(IRCPlugin):
 		# only handles PRIVMSG 	and NOTICE events
 		if not (e.irccmd in ["PRIVMSG","NOTICE"]):
 			return 
-
+		
 		cmd = e.argvl[0]
 		if not cmd.strip():
 			return
+		
+		
 		
 		try:
 			args = " ".join(e.argvl[1:])
@@ -47,8 +49,9 @@ class IRCCalc(IRCPlugin):
 					elif cmd == 'b16d':
 						self.reply(e, b16.decode(bts).decode(enc))
 				except IndexError:
-					err = "%s command requires arguments. Eg, `%s some text`"
-					self.reply(e, err % (cmd, cmd))
+					pass
+					#err = "%s command requires arguments. Eg, `%s some text`"
+					#self.reply(e, err % (cmd, cmd))
 				
 		except Exception as ex:
 			typ = str(type(ex))
