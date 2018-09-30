@@ -487,6 +487,7 @@ debug     = trix.debug
 display   = trix.display
 innerpath = trix.innerpath
 jparse    = trix.jparse
+jconf     = trix.jconf
 kcopy     = trix.kcopy
 kpop      = trix.kpop
 log       = trix.log
