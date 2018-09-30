@@ -137,6 +137,9 @@ class IRCInfo(IRCPlugin):
 		elif e.irccmd == 'PART':
 			self.on_part(e)
 		
+		elif e.irccmd == 'QUIT':
+			self.on_part(e)
+		
 		
 		#
 		# WHO
@@ -218,6 +221,8 @@ class IRCInfo(IRCPlugin):
 		#
 		# More to come here. For now, it handles the chan-list update,
 		# which is what's needed immediately.
+		#
+		# TODO: Keep a list of kicks - maybe in a database.
 		#
 	
 	
