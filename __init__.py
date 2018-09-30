@@ -330,6 +330,27 @@ class trix(object):
 		except TypeError:
 			k.setdefault('encoding', DEF_ENCODE)
 			return json.loads(jsonstr.decode(**k))
+	
+	# J-CONF
+	@classmethod
+	def jconf(cls, filepath, **k):
+		"""
+		Pass string `filepath` to which a config file will be written. 
+		A `trix.app.jconf` object is returned.
+		
+		NOTES:
+		 * Pass a `default` file path string using keyword arguments.
+		   The default path should point to a static default config file
+		   (in ast or json format).
+		 * The jconf object always writes output as JSON, with encoding
+		   utf_8. If your default file encoding is something other than
+		   utf_8, you must pass that file's encoding as a keyword arg.
+		 * Be careful that your `default` filepath is not unintentionally
+		   set to the same path as the `filepath` argument, or the `save`
+		   method will overwrite the default config. 
+		"""
+		m = cls.nmodule("app.jconf")
+		return m.jconf(filepath, **k)
 		
 	
 	# K-COPY
