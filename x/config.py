@@ -12,6 +12,12 @@ from ..fmt import JDisplay
 
 
 class Config(Dir, EncodingHelper):
+	"""
+	This thing is a lot of fun, but it's not very intuitive and not at
+	all business as usual. I've had it here a good long while and never
+	had the gumption to use it, so I'll set it aside (in trix.x) for 
+	now and try to come up with something better.
+	"""
 	
 	DefPath = "~/.config/"
 	
