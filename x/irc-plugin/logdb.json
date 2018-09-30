@@ -2,7 +2,7 @@
 	
 	"module" : "sqlite3",
 	"args" : [],
-	"path" : "~/.cache/trix/irclog.sqlite3",
+	"path" : "~/.cache/trix/irc/%s.sqlite3",
 	"auto" : true,
 	
 	"sql"  : {
