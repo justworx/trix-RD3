@@ -44,8 +44,18 @@ class jconf(EncodingHelper):
 		self.__obj = None
 		self.__path = path
 		
-		# read and parse config file (sets self.obj)
-		self.__load()
+		#
+		# Read and parse config file, coppied from a default, if the
+		# "default" kwarg specified a path.
+		#
+		# NOTE: kwargs get passed to the load method only on the first
+		#       call, here from the constructor. After this, the default,
+		#       if it exists, will have been read and the config will
+		#       have been read (in the given encoding) and written in 
+		#       utf8-encoded bytes.
+		# ALSO: The self.__load() method sets the self.obj property.
+		#
+		self.__load(**k)
 		
 		# start with selection object on self.__obj
 		self.__sel = self.__obj
@@ -139,20 +149,34 @@ class jconf(EncodingHelper):
 		#
 		fpath = k.get('default', self.path)
 		
-		# read file text; 'touch', if no such file.
-		try:
-			txt = Path(fpath).reader(**self.ek).read()
-			if not txt.strip():
-				File(fpath, affirm="touch").write("{}", encoding="utf_8")
-		except BaseException as ex:
+		# In first call to load (from constructor), keyword arguments
+		# are passed. If encoding and default are specified in kwargs,
+		# they are used here. After the first call, `self.reload()`
+		# may be used to restore self.obj to it's last-saved condition,
+		# but it will have been previously saved in utf8 encoding and
+		# the default (if it existed) will not be needed as it's already
+		# been written to a newly created version of the config. 
+		k = k or self.ek
+		
+		# 1 - read file text; 'touch', if no such file.
+		txt = Path(fpath).reader(**k).read()
+		if not txt.strip():
+			# if the default file is nothing but white-space...
 			f = File(fpath, affirm="touch", encoding="utf_8")
 			f.write("{}")
-			txt = f.read()
+		else:
+			# if the default file has json content...
+			f = File(fpath, affirm="touch", encoding="utf_8")
+			f.write(txt)
 		
 		
-		# load json to a data object
+		# 2 - read the text (whatever it is)
+		txt = f.read()
+		
+		
+		# 3 - load json to the data object, `self.__obj`
 		try:
-			# try with ast
+			# try with ast (in case we're loading a default given in ast).
 			try:
 				self.__obj = ast.literal_eval(txt)
 			except:
@@ -160,7 +184,8 @@ class jconf(EncodingHelper):
 				raise
 		
 		except BaseException as ast_ex:
-			# fallback on json
+			# fallback on json, which will work for both "default" and
+			# for config files passed as the constructor argument.
 			try:
 				self.__obj = json.loads(txt)
 			except BaseException as json_ex:
