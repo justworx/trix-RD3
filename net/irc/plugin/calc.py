@@ -4,9 +4,11 @@
 # the terms of the GNU Affero General Public License.
 #
 
+
 from . import *
 from ....util.matheval import *
 from ....util.compenc import *
+
 
 class IRCCalc(IRCPlugin):
 	"""Useful commands for controlling the bot via privmsg/notify."""
@@ -24,13 +26,14 @@ class IRCCalc(IRCPlugin):
 		if not cmd.strip():
 			return
 		
-		
-		
 		try:
 			args = " ".join(e.argvl[1:])
+			
+			# MATH
 			if cmd in ['calc', 'calculate']:
 				self.reply(e, str(matheval(args)))
 			
+			# BASE-64/32/16
 			else:
 				enc = self.bot.encoding
 				try:
