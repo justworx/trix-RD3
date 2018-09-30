@@ -155,7 +155,13 @@ class ScanQuery(Scanner):
 		
 		except Exception:
 			raise Exception(xdata(c=self.c.c, t=t))
-
+	
+	
+	
+	def format(self, **k):
+		rr = self.query(**k)
+		return trix.ncreate('fmt.Grid').format(rr)
+	
 	
 	def table(self, **k):
 		t = time.time()
