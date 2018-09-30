@@ -390,8 +390,7 @@ class Path(object):
 					if not OP.exists(OP.dirname(path)):
 						os.makedirs(OP.dirname(path))
 					if v == 'touch':
-						with open(path, 'a'):
-							os.utime(path, None)
+						Path(path).wrapper().touch()
 				elif (v=='makedirs'):
 					os.makedirs(path)
 		
