@@ -51,9 +51,12 @@ class EmbedInfo(object):
 			
 			# check for error
 			if 'error' in r:
-				ta = ['ERROR: %s' % r['error']]
-				if 'url' in r:
-					ta.append('; %s' % r['url'])
+				raise Exception("err-urli-fail", xdata(
+					reason='result-error', result=r
+				))
+				#ta = ['ERROR: %s' % r['error']]
+				#if 'url' in r:
+				#	ta.append('; %s' % r['url'])
 			
 			# generate result array
 			elif r:
