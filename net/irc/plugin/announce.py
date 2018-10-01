@@ -21,29 +21,31 @@ class Announce(IRCPlugin):
 	
 	def handle(self, e):
 		
-		# don't let this bot trigger the announcement!
-		if e.nick != self.bot.nick:
-			targ = e.target
-			info = self.uu.query(e.text)
-			
-			#irc.debug (info)
-			
-			#
-			# Remove announcement of url when the url is all that's
-			# returned; This prevents duplication of the same line.
-			#
-			if (info.strip() == e.text.strip()):
-				info = None
-			
-			# and this prevents repeats do to another bot in channel
-			elif info == self.prior:
-				info = None
-			
-			if info:
-				self.bot.writeline("PRIVMSG %s : -- %s" % (targ, info))
-				self.prior = info
-			
-			
-			
-			
+		try:
+			# don't let this bot trigger the announcement!
+			if e.nick != self.bot.nick:
+				targ = e.target
+				info = self.uu.query(e.text)
+				
+				#irc.debug (info)
+				
+				#
+				# Remove announcement of url when the url is all that's
+				# returned; This prevents duplication of the same line.
+				#
+				if (info.strip() == e.text.strip()):
+					info = None
+				
+				# and this prevents repeats do to another bot in channel
+				elif info == self.prior:
+					info = None
+				
+				if info:
+					self.bot.writeline("PRIVMSG %s : -- %s" % (targ, info))
+					self.prior = info
+		except:
+			if not self.is_channel_name(e.target):
+				self.reply(e, xdata(err="URLInfo Lookup Fail"))
+			pass
 	
+
