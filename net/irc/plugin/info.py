@@ -94,31 +94,6 @@ class IRCInfo(IRCPlugin):
 		# WHO - Channel nick list
 		elif bcmd == 'who':
 			self.on_who(e)
-			"""
-			#
-			# REQUIRE AUTH FOR THIS ONE!
-			#
-			#  - This probably needs to be moved below and put into some
-			#    kind of "if" section so that it's not necessary to call 
-			#    self.authorized more than once when other auth-requiring
-			#    features are added.
-			#  - For now, it's the only command requiring authorization, 
-			#    so I'll leave it here.
-			#
-			if not self.authorize(e):
-				return
-			
-			# 
-			if e.argc < 1:
-				self.reply(e, " ".join(self.channels.keys()))
-			else:
-				try:
-					nicklist = " ".join(self.channels[e.argv[1]])
-					self.reply(e, "%s: %s" % (e.argv[1], nicklist))
-				except IndexError:
-					irc.debug(e_dict=e.dict)
-					self.reply(e, "No info for channel: %s" % e.argv[1])
-			"""
 		
 		
 		
@@ -131,6 +106,9 @@ class IRCInfo(IRCPlugin):
 		elif e.irccmd == 'JOIN':
 			self.on_join(e)
 		
+		elif e.irccmd == 'NICK':
+			self.on_nick(e)
+		
 		elif e.irccmd == 'KICK':
 			self.on_kick(e)
 		
@@ -138,7 +116,7 @@ class IRCInfo(IRCPlugin):
 			self.on_part(e)
 		
 		elif e.irccmd == 'QUIT':
-			self.on_part(e)
+			self.on_quit(e)
 		
 		
 		#
@@ -216,15 +194,44 @@ class IRCInfo(IRCPlugin):
 					self.reply(e, "No info for channel: %s" % e.argv[1])
 	
 	
-	def on_kick(self, e):
-		self.on_part(e)
-		#
-		# More to come here. For now, it handles the chan-list update,
-		# which is what's needed immediately.
-		#
-		# TODO: Keep a list of kicks - maybe in a database.
-		#
+	def on_join (self, e):
+		if e.nick != self.bot.nick:
+			try:
+				clist = self.channels[e.target]
+				clist.append(e.nick)
+			except:
+				irc.debug("info plugin: on_join fail.", e=e.dict)
 	
+	
+	def on_nick(self, e):
+		"""Update channel lists with any nick changes."""
+		
+		# get the channel list
+		clist = self.channels
+		
+		# for all channel records...
+		for chan in clist:
+			# ...remove old nick and add new nick
+			clist[chan].remove(e.nick)
+			clist[chan].append(e.target)
+		
+	
+	
+	def on_kick(self, e):
+		"""Remove kicked nicks from channel list."""
+		
+		# TODO: Keep a list of kicks - maybe in a database.
+		try:
+			if e.nick == self.bot.nick:
+				del(self.channels[e.target])
+			else:
+				try:
+					self.channels[e.target].remove(e.argv[0])
+				except ValueError:
+					pass
+		except:
+			irc.debug("info plugin: on_kick fail.", e=e.dict)
+		
 	
 	def on_part(self, e):
 		try:
@@ -233,17 +240,11 @@ class IRCInfo(IRCPlugin):
 			else:
 				self.channels[e.target].remove(e.nick)
 		except:
-			irc.debug("info plugin: PART fail.", e=e.dict)
+			irc.debug("info plugin: on_part fail.", e=e.dict)
 	
 	
-	def on_join (self, e):
-		if e.nick != self.bot.nick:
-			try:
-				clist = self.channels[e.target]
-				clist.append(e.nick)
-			except:
-				irc.debug("info plugin: JOIN fail.", e=e.dict)
-		
+	def on_quit(self, e):
+		self.on_part(e)
 
 
 
