@@ -5,16 +5,17 @@
 #
 
 
-
 from . import *
+from ...app.event import *
 import re
 
 
 
-class IRCEvent(object):
+
+class IRCEvent(TextEvent):
 	"""
 	Parses lines of text received from the IRC server. Separates 
-	each line into the following member variables:
+	each line into the following properties:
 	
 	line   : full line as received
 	orig   : text portion of line, with formatting
@@ -43,8 +44,15 @@ class IRCEvent(object):
 		Parse a single line of as received from the server into the
 		appropriate member variables.
 		"""
-		
+		# always strip the line for irc text
 		line = line_text.strip()
+		
+		# init superclass
+		TextEvent.__init__(self, line)
+		
+		#
+		# parse the irc line
+		#
 		mm = line.split(' ', 3) # split the line
 		ML = len(mm)            # get line length
 		
@@ -58,96 +66,97 @@ class IRCEvent(object):
 		self.mm = mm
 		
 		# set up properties
-		self.line   = line # full line as received
-		self.orig   = ''   # text portion of line
-		self.text   = ''   # deformatted text
-		self.target = ''   # recipient channel/nick
-		self.prefix = ''   # sender nick!user@[host]
-		self.host   = ''   # irc host
-		self.user   = ''   # irc user
-		self.nick   = ''   # irc nick
-		self.uid    = ''   # user@host (for auth)
+		#self.line   = line # full line as received
+		self.__orig   = ''   # text portion of line
+		self.__text   = ''   # deformatted text
+		self.__target = ''   # recipient channel/nick
+		self.__prefix = ''   # sender nick!user@[host]
+		self.__host   = ''   # irc host
+		self.__user   = ''   # irc user
+		self.__nick   = ''   # irc nick
+		self.__uid    = ''   # user@host (for auth)
 		
-		self.irccmd = None # Placeholder for the IRC-specific command
+		self.__irccmd = None # Placeholder for the IRC-specific command
 		
 		# parse the event text
 		if ML>3 and mm[3]:
-			self.text = mm[3]
+			self.__text = mm[3]
 		if ML == 2:
-			self.text = mm[1]
-			self.irccmd = mm[0]
+			self.__text = mm[1]
+			self.__irccmd = mm[0]
 		else:
-			self.prefix=mm[0]
+			self.__prefix=mm[0]
 			x = mm[0].split('!',1)
 			if len(x)==1:
-				self.nick=''
-				self.user=''
-				self.host=x[0]
+				self.__nick=''
+				self.__user=''
+				self.__host=x[0]
 			else:
-				self.nick=x[0]
+				self.__nick=x[0]
 				x = x[1].split('@',1)
-				self.user=x[0]
+				self.__user=x[0]
 				if len(x)>1:
-					self.host=x[1]
+					self.__host=x[1]
 			
 			if len(mm) > 1:
-				self.irccmd = mm[1]
+				self.__irccmd = mm[1]
 			else:
 				irc.debug(
-					"Strange Line", "Strange Command", self.line
+					"Strange Line", "Strange Command", self.__line
 					)
 			if len(mm) > 2:
-				self.target = mm[2]
+				self.__target = mm[2]
 			
-			self.uid ='%s@%s' % (self.user, self.host)
+			self.__uid ='%s@%s' % (self.__user, self.__host)
 		
-		if self.text:
-			self.orig = self.text
-			self.text = self.stripFormat(self.text)
-	
-	
-	@property
-	def argc(self):
-		try:
-			return self.__argc
-		except:
-			self.__argc = len(self.argv)
-			return self.__argc
-	
+		if self.__text:
+			self.__orig = self.__text
+			self.__text = self.stripFormat(self.__text)
 	
 	@property
-	def argv(self):
-		try:
-			return self.__argv
-		except:
-			self.__argv = self.text.split(' ')
-			return self.__argv
-	
+	def orig(self):
+		"""Original text, potentially containing formatting."""
+		return self.__orig
 	
 	@property
-	def argvc(self):
-		"""Arg-v all-caps."""
-		try:
-			return self.__argvc
-		except:
-			self.__argvc = []
-			for a in self.argv:
-				self.__argvc.append(a.upper())
-			return self.__argvc
-	
+	def text(self):
+		"""Straight text, with any formatting removed."""
+		return self.__text
 	
 	@property
-	def argvl(self):
-		"""Arg-v all lowercase."""
-		try:
-			return self.__argvl
-		except:
-			self.__argvl = []
-			for a in self.argv:
-				self.__argvl.append(a.lower())
-			return self.__argvl
+	def target(self):
+		"""recipient channel/nick"""
+		return self.__target
 	
+	@property
+	def prefix(self):
+		"""sender nick!user@[host]"""
+		return self.__prefix
 	
+	@property
+	def host(self):
+		"""irc host"""
+		return self.__host
+	
+	@property
+	def user(self):
+		"""irc user"""
+		return self.__user
+	
+	@property
+	def nick(self):
+		"""irc nick"""
+		return self.__nick
+	
+	@property
+	def uid(self):
+		"""user@host (for auth)"""
+		return self.__uid
+		
+	@property
+	def irccmd (self):
+		"""Placeholder for the IRC-specific command"""
+		return self.__irccmd
 	
 	@property
 	def dict(self):
