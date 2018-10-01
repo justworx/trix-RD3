@@ -14,7 +14,7 @@
 #
 #  SERIOUSLY... DO NOT USE THIS MODULE YET!
 # 
-raise BaseException ("DO NOT RUN THIS CODE!")
+#raise BaseException ("DO NOT RUN THIS CODE!")
 
 
 from . import *
@@ -33,12 +33,16 @@ class Bot(Client):
 	
 	def __init__(self, botid):
 		"""
-		Pass string `botid` - the bot's name. If the named bot's config
-		file exists in .cache/trix/config.json, it will be started. 
-		Otherwise, a new config for the given `botid` must be generated
-		and a console will open in the terminal to help create it.
+		Pass string `botid` - the bot's name. The bot will be started if
+		its config file exists in BOT_CACHE_DIR.  Otherwise, a new config 
+		for the given `botid` must be generated, so a series of questions
+		will appear in the terminal.
 		
-		NOTE: The botid value is always reset to lower-case. 
+		NOTES: 
+		 * The botid value is always reset to lower-case. 
+		 * The BOT_CACHE_DIR is: "~/.cache/trix/irc/bots/";
+		   The config file will be saved as <botid>.json, where <botid>
+		   is the `botid` string given as the constructor.
 		"""
 		
 		#
@@ -49,22 +53,13 @@ class Bot(Client):
 		# Every bot config file in .cache config is named for its botid
 		# in the format '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
-		self.__botid = botid.lower()
-		
-		#
-		# CONFIG
-		# Configuration files are stored in the cache as JSON text.
-		# 
-		# The bot's owner must add one or more connection configuration
-		# dicts to the cache/config file.
-		#
+		self.__botid = str(botid).lower()
 		
 		#
 		# Use the `trix.app.jconf` class to manage the config file.
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
-		# Store this jconf object so that config may be saved later. 
 		#
-		self.__jconfig = jconf("~/.cache/trix/irc/bots/%s.json" % botid)
+		self.__jconfig = jconf(BOT_CACHE_DIR % self.__botid)
 		
 		# Keep track of the config in self.__config
 		self.__config = self.__jconfig.obj
@@ -93,14 +88,28 @@ class Bot(Client):
 				self.conadd()
 	
 	
+	@property
+	def botid (self):
+		return self.__botid
+	
+	@property
+	def config(self):
+		return self.__config
+	
+	
+	def conadd(self, botid):
+		self.__addconfig()
+	
+	
 	def __loadconfig(self):
 		botid = self.__botid
-		self.__jconfig = jconf("~/.cache/trix/irc/bots/%s.json" % botid)
+		self.__jconfig = jconf(BOT_CACHE_DIR % botid)
 		self.__config = self.__jconfig.obj
 		if not self.__config['connections']:
 			self.__addconfig()
 	
-	def __addconfig(self)
+	
+	def __addconfig(self):
 		self.__config['botid'] = self.__botid
 		self.__config['plugins'] = DEF_PLUGIN_CONFIG
 		self.__config['connections'] = {}
@@ -115,16 +124,6 @@ class Bot(Client):
 		#
 		#
 		#
-	
-	
-	@property
-	def botid (self):
-		return self.__botid
-	
-	
-	@property
-	def config(self):
-		return self.__config
 	
 	
 	"""
