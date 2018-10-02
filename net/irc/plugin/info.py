@@ -91,17 +91,17 @@ class IRCInfo(IRCPlugin):
 					self.reply(e, self.info['pair'].get(key))
 		
 		
+		"""
+		#
+		# something in one of the functions called here in this commented
+		# section seems to be causing a fatal error.
+		#
+		# i'm removing it all temporarily until i can find the problem.
+		#
+		
 		# WHO - Channel nick list
 		elif bcmd == 'who':
 			self.on_who(e)
-		
-		
-		
-		# --------------------------------------------------------------
-		# PASSIVE
-		#  - These are different in that they responds to irc commands
-		#    rather than commands given by PRIVMSG or NOTICE.
-		# --------------------------------------------------------------
 		
 		elif e.irccmd == 'JOIN':
 			self.on_join(e)
@@ -117,6 +117,8 @@ class IRCInfo(IRCPlugin):
 		
 		elif e.irccmd == 'QUIT':
 			self.on_quit(e)
+		"""
+		
 		
 		
 		#
