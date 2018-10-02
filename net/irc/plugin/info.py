@@ -91,35 +91,6 @@ class IRCInfo(IRCPlugin):
 					self.reply(e, self.info['pair'].get(key))
 		
 		
-		"""
-		#
-		# something in one of the functions called here in this commented
-		# section seems to be causing a fatal error.
-		#
-		# i'm removing it all temporarily until i can find the problem.
-		#
-		
-		# WHO - Channel nick list
-		elif bcmd == 'who':
-			self.on_who(e)
-		
-		elif e.irccmd == 'JOIN':
-			self.on_join(e)
-		
-		elif e.irccmd == 'NICK':
-			self.on_nick(e)
-		
-		elif e.irccmd == 'KICK':
-			self.on_kick(e)
-		
-		elif e.irccmd == 'PART':
-			self.on_part(e)
-		
-		elif e.irccmd == 'QUIT':
-			self.on_quit(e)
-		"""
-		
-		
 		
 		#
 		# WHO
