@@ -172,6 +172,12 @@ class trix(object):
 		eg..
 		trix.value('socket',"AF_INET","SOCK_STREAM")
 		"""
+		
+		try:
+			return __builtins__[pathname](*args, **kwargs)
+		except:
+			pass
+		
 		try:
 			mm = mc = cls.module(pathname)
 		except:
@@ -185,7 +191,7 @@ class trix(object):
 			# get the module
 			mm = cls.module('.'.join(pe))
 			
-			# Get the last object specified by `pathname `; This object must
+			# Get the last object specified by `pathname`; This object must
 			# be either a module or a class, not a function or other value.
 			# If no other args are specified, this is the final result.
 			mc = mm.__dict__[nm] if nm else mm
