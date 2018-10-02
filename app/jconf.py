@@ -15,7 +15,7 @@ from ..fs.file import *
 class jconf(EncodingHelper):
 	"""Json config file helper."""
 	
-	def __init__(self, path, **k):
+	def __init__(self, path, default=None, **k):
 		"""
 		Pass config file path. If the file is not encoded "utf_8", you 
 		must provide the encoding of the file (and optionally, errors).
@@ -43,6 +43,7 @@ class jconf(EncodingHelper):
 		# basic variables
 		self.__obj = None
 		self.__path = path
+		self.__def = default
 		
 		#
 		# Read and parse config file, coppied from a default, if the
@@ -158,20 +159,23 @@ class jconf(EncodingHelper):
 		# been written to a newly created version of the config. 
 		k = k or self.ek
 		
-		# 1 - read file text; 'touch', if no such file.
-		txt = Path(fpath).reader(**k).read()
+		# 1 - read `path` file text; 'touch', if no such file.
+		txt = Path(self.__path, affirm="touch").reader(**k).read()
+		
+		# 1b - now there's a `path` file, but it may be empty
 		if not txt.strip():
-			# if the default file is nothing but white-space...
-			f = File(fpath, affirm="touch", encoding="utf_8")
-			f.write("{}")
+			# if the `path` file is empty (or nothing but white-space),
+			# then read the default file's contents.
+			txt = File(self.__def, encoding="utf_8").read()
+		"""
 		else:
 			# if the default file has json content...
 			f = File(fpath, affirm="touch", encoding="utf_8")
 			f.write(txt)
 		
-		
 		# 2 - read the text (whatever it is)
 		txt = f.read()
+		"""
 		
 		
 		# 3 - load json to the data object, `self.__obj`
