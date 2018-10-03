@@ -18,25 +18,29 @@ class jconf(EncodingHelper):
 	def __init__(self, path, default=None, **k):
 		"""
 		Pass config file path. If the file is not encoded "utf_8", you 
-		must provide the encoding of the file (and optionally, errors).
+		must provide the encoding of the file (and optionally, errors)
+		as keyword arguments.
 		
 		The config file is loaded imediately into memory and may be
 		accessed using the self.obj property (which typically returns
 		a dict or list object). If the file does not yet exist, an empty
 		dict object is specified.
 		
-		NOTE:
-		 - JSON is the default input format, but a file readable by 
+		NOTES:
+		 * JSON is the default input format, but a file readable by 
 		   `ast.literal_eval` may also be given as keyword arg `default`.
 		   This provides an easy way to initialize a config file with
 		   default contents.
+		 * If `default` argument is given, its path points to an existing
+		   file. The contents of the file (along with. any subsequent 
+		   alterations) will replace any data in the file at `self.path` 
+		   when the `self.save()` method is called.
 		
-		WARNING:
-		 - If `default` kwarg is given and path points to an existing
-		   file, the contents of the file specified by `default` (along
-		   with any subsequent alterations) will replace any data in the
-		   file at `self.path` when the `self.save()` method is called.
+		REMEMBER:
+		 * The object loads both json and ast, but can only write JSON.
+		 * The default file is  never written to by this class.
 		"""
+		
 		k.setdefault('encoding', 'utf_8')
 		EncodingHelper.__init__(self, **k)
 		
@@ -125,17 +129,19 @@ class jconf(EncodingHelper):
 		return dq(self.obj, spec) if spec else self.obj
 	
 	def display(self, spec=None):
+		"""Print this object to the terminal in JSON display format."""
 		trix.display(self.query(spec))
 	
 	
-	# select/display
+	# select/displays
 	def select(self, spec=None):
-		"""Like `query`, but on the selected (`self.sel`) data."""
+		"""Set the selection `sel` to the given item within `obj`."""
 		self.__sel = self.query(spec)
 	
 	def displays(self, spec=None):
 		"""Like `display`, but on the selected (`self.sel`) data."""
-		trix.display(self.select(spec))
+		trix.display (dq(self.sel, spec) if spec else self.sel)
+	
 	
 	
 	
