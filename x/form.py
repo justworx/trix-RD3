@@ -15,16 +15,25 @@ class Form(object):
 		"""
 		Pass config dict that contains a "desc" dict and a "keys" list.
 		The "desc" dict is required. It must contain a set of 
-		{name:{description}} pairs. 
-		
-		Eg,.
-		{
-			"desc" : {
-				"name" : {'title':"What's your name?"},
-				"age"  : {'title':"How old are you?", 'type':'float'}
-			},
-			"keys" : ["name", "age"]
-		}
+		{name:description} pairs with the following parameters:
+			* field (required) is the field title
+			* desc (optional) may provide additional description/detail.
+			* type (default "str") can be set to typecast the given value,
+				Eg,.
+				{
+					# name field
+					"name" : {
+						"field" : "Full Name",
+						"desc" : "First Middle Last"
+					},
+					
+					# age field
+					"age"  : {
+						"field" : "Age",
+						"desc" : "How old are you?",
+						"type " : "float"
+					}
+				}
 		
 		The "keys" list is the order in which the discriptions are shown, 
 		then followed by an input prompt. If a keys list is not provided,
@@ -35,6 +44,31 @@ class Form(object):
 		this case, that json encoding rules apply. Eg., strings must be
 		enclosed in "double-quotes", etc...
 		"""
+		
+		config = config or {}
+		
+		try:
+			config.update(**k)
+		except AttributeError:
+			if config:
+				config = jconf(config, **k).obj
+			else:
+				config = k
+		
+		self.__title = self.preptext(config.get('title', ""))
+		self.__about = self.preptext(config.get("about", ""))
+		self.__fields = config.get("fields", {})
+		self.__keys   = config.get("keys", sorted(config.keys()))
+		self.__prompt = config.get("prompt", "--> ")
+		self.__mode = config.get('mode', '')
+		
+		#
+		# Need to preptext each field's description. Too tired now.
+		# for field in self.__fields; something like this...
+		#
+		#	desc = self.preptext(field.get("desc", ''))
+		#	self.__fields[field]['desc'] = desc
+		#
 		
 		config = config or {}
 		

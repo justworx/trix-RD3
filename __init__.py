@@ -229,8 +229,15 @@ class trix(object):
 	@classmethod
 	def nvalue(cls, pathname, *a, **k):
 		"""Like `value`, but pass the inner path instead of full path."""
-		return cls.value(cls.innerpath(pathname), *a, **k)
-	
+		try:
+			return cls.value(cls.innerpath(pathname), *a, **k)
+		except KeyError as kex:
+			try:
+				return __builtins__[pathname]
+			except Exception as ex:
+				raise type(ex)(ex.args, 'err-nvalue-fail', xdata(
+						pathname=pathname
+					))
 	
 	
 	# ---- process/thread creation -----
