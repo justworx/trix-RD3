@@ -65,6 +65,9 @@ class jconf(EncodingHelper):
 		# start with selection object on self.__obj
 		self.__sel = self.__obj
 		
+	@property
+	def dconfig(self):
+		return self.__def
 	
 	@property
 	def path(self):
@@ -96,15 +99,17 @@ class jconf(EncodingHelper):
 		
 		fmt = k.get('format', "display").lower()
 		if fmt == 'display':
-			conf = JDisplay().format(self.dict)
+			conf = JDisplay().format(self.obj)
 		elif fmt == 'compact':
-			conf = JCompact.format(self.dict)
+			conf = JCompact.format(self.obj)
 		elif fmt in ['json', None]:
-			conf = JSON().format(self.dict)
+			conf = JSON().format(self.obj)
 		else:
 			raise Exception('invalid-format-spec', xdata(
 					use1=["display", 'compact', 'json', None]
 				))
+		
+		
 	
 	
 	
@@ -148,56 +153,70 @@ class jconf(EncodingHelper):
 	#
 	# LOAD (on init)
 	#
-	def __load(self, **k):
+	def __load(self, default=None, **k):
 		
-		#
-		# If constructor kwarg 'default' is given, read from that.
-		# File will always be stored and saved at path `self.path`.
-		#
-		fpath = k.get('default', self.path)
-		
-		# In first call to load (from constructor), keyword arguments
-		# are passed. If encoding and default are specified in kwargs,
-		# they are used here. After the first call, `self.reload()`
-		# may be used to restore self.obj to it's last-saved condition,
-		# but it will have been previously saved in utf8 encoding and
-		# the default (if it existed) will not be needed as it's already
-		# been written to a newly created version of the config. 
-		k = k or self.ek
-		
-		# 1 - read `path` file text; 'touch', if no such file.
-		txt = Path(self.__path, affirm="touch").reader(**k).read()
-		
-		# 1b - now there's a `path` file, but it may be empty
-		if not txt.strip():
-			# if the `path` file is empty (or nothing but white-space),
-			# then read the default file's contents.
-			txt = File(self.__def, encoding="utf_8").read()
-		"""
-		else:
-			# if the default file has json content...
-			f = File(fpath, affirm="touch", encoding="utf_8")
-			f.write(txt)
-		
-		# 2 - read the text (whatever it is)
-		txt = f.read()
-		"""
-		
-		
-		# 3 - load json to the data object, `self.__obj`
 		try:
-			# try with ast (in case we're loading a default given in ast).
+		
+			#
+			# If constructor kwarg 'default' is given, read from that.
+			# File will always be stored and saved at path `self.path`.
+			#
+			fpath = k.get('default', self.path)
+			
+			# In first call to load (from constructor), keyword arguments
+			# are passed. If encoding and default are specified in kwargs,
+			# they are used here. After the first call, `self.reload()`
+			# may be used to restore self.obj to it's last-saved condition,
+			# but it will have been previously saved in utf8 encoding and
+			# the default (if it existed) will not be needed as it's been 
+			# written to a newly created version of the config. 
+			k = k or self.ek
+			
+			# 1 - read `path` file text; 'touch', if no such file.
+			self.txt = Path(self.__path, affirm="touch").reader(**k).read()
+			
+			# 2 - now there's a `path` file, but it may be empty
+			if not self.txt.strip():
+				#
+				# there's nothing in the config file...
+				#
+				
+				# if there's no default file, return and empty dict
+				if not self.__def:
+					outf = File(self.path, encoding="utf_8", affirm='touch')
+					outf.write("{}")
+					self.__obj = {}
+					return {}
+				
+				else:
+					# A) read the default file's contents.
+					self.txt = File(self.__def, encoding="utf_8").read()
+					
+					# B) write the default config to the file
+					outf = File(self.path, encoding="utf_8", affirm='touch')
+					outf.write(self.txt)
+					
+		
+			# 3 - load json to the data object, `self.__obj`
+			# try with ast (in case loading a default given in ast).
 			try:
-				self.__obj = ast.literal_eval(txt)
+				self.__obj = ast.literal_eval(self.txt)
 			except:
-				compile(txt, fpath, 'eval') #try to get a line number
+				compile(self.txt, fpath, 'eval') #try to get a line number
 				raise
+		
+		# DEBUGGING!
+		except IsADirectoryError as ex:
+			raise type(ex)(ex.args, xdata(
+				fpath=fpath, k=k, txt=self.txt, path=self.path, 
+				dfile=self.__def
+			))
 		
 		except BaseException as ast_ex:
 			# fallback on json, which will work for both "default" and
 			# for config files passed as the constructor argument.
 			try:
-				self.__obj = json.loads(txt)
+				self.__obj = json.loads(self.txt)
 			except BaseException as json_ex:
 				raise Exception ("config-read-error", xdata(
 					path = fpath, pathk = k,
