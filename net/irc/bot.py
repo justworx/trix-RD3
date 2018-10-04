@@ -18,11 +18,16 @@
 
 
 from . import *
-from .config import *      
 from ..client import *
 from ...app.jconf import *
 	
 BOT_CACHE_DIR = "~/.cache/trix/irc/bots/%s.json"
+
+# For building paths to default config files.
+IRC_CONFIG_DIR  = "trix/net/irc/config/"
+BOT_CONF_PLUGIN = "irc_plugin.conf"
+BOT_CONF_DEF    = "irc_config.conf"
+BOT_CONF_FORM   = "irc_config.conf"
 
 
 class Bot(Client):
@@ -30,6 +35,13 @@ class Bot(Client):
 	
 	# the type for new connection objects
 	DEF_TYPE = 'trix.net.irc.irc_connect'
+	
+	# debugging
+	Debugging = False
+	def dbg(self, *a, **k):
+		if self.Debugging:
+			irc.debug(self, *a, **k)
+	
 	
 	def __init__(self, botid):
 		"""
@@ -54,15 +66,21 @@ class Bot(Client):
 		# in the format '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
 		self.__botid = str(botid).lower()
+		self.dbg("BOTID", self.__botid)
 		
 		#
 		# Use the `trix.app.jconf` class to manage the config file.
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
-		self.__jconfig = jconf(BOT_CACHE_DIR % self.__botid)
+		self.__pconfig = BOT_CACHE_DIR % self.__botid
+		self.dbg("PCONFIG", self.__pconfig)
+		
+		self.__jconfig = jconf(self.__pconfig)
+		self.dbg("JCONFIG", self.__jconfig)
 		
 		# Keep track of the config in self.__config
 		self.__config = self.__jconfig.obj
+		self.dbg("JCONFIG-OBJ", self.__jconfig.obj)
 		
 		#
 		# The first time a botid is used, its config file will start
@@ -75,8 +93,13 @@ class Bot(Client):
 			# and an empty connection config dict.
 			#
 			self.__config['botid'] = botid
-			self.__config['plugins'] = DEF_PLUGIN_CONFIG
 			self.__config['connections'] = {}
+			self.__config['plugins'] = jconf(
+					IRC_CONFIG_DIR + "irc_plugin.conf"
+				).obj
+			
+			# make sure we get this far
+			self.dbg("CONFIG-1 - GENERATED", self.__config)
 			
 			#
 			# Every new botid requires at least one connection to run.
@@ -85,7 +108,7 @@ class Bot(Client):
 			#
 			conlist = self.__config.get('connections')
 			if not conlist:
-				self.conadd()
+				self.conadd(botid)
 	
 	
 	@property
@@ -96,9 +119,13 @@ class Bot(Client):
 	def config(self):
 		return self.__config
 	
+	@property
+	def jconfig(self):
+		return self.__jconfig
+	
 	
 	def conadd(self, botid):
-		self.__addconfig()
+		self.__addconfig(botid)
 	
 	
 	def __loadconfig(self):
@@ -109,10 +136,15 @@ class Bot(Client):
 			self.__addconfig()
 	
 	
-	def __addconfig(self):
-		self.__config['botid'] = self.__botid
-		self.__config['plugins'] = DEF_PLUGIN_CONFIG
-		self.__config['connections'] = {}
+	def __addconfig(self, botid):
+		cc = self.__config['connections']
+		fm = trix.nmodule("x.form")
+		fo = fm.Form(IRC_CONFIG_DIR + "irc_config.conf")
+		
+		self.config['connections'] = fo.fill()
+		self.jconfig.save()
+		#self.jconfig.obj['connections'] = scc
+		
 		
 		#
 		#
