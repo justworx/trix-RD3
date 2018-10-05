@@ -57,14 +57,13 @@ class Form(object):
 		
 		# tools
 		self.__lines = Lines()
-		#self.__
 		
 		# init properties
+		self.__prompt = config.get("prompt", "--> ")
 		self.__title = config.get("title", {})
 		self.__about = config.get("about", {})
 		self.__fields = config.get("fields", {})
 		self.__keys   = config.get("keys", sorted(config.keys()))
-		self.__prompt = config.get("prompt", "--> ")
 		self.__mode = config.get('mode', '')
 		self.__cancel = config.get('cancel', "Form Cancel.")
 	
@@ -74,6 +73,10 @@ class Form(object):
 	def lines(self):
 		return self.__lines
 	
+	
+	@property
+	def prompt(self):
+		return self.__prompt
 	
 	@property
 	def title(self):
@@ -90,10 +93,6 @@ class Form(object):
 	@property
 	def keys(self):
 		return self.__keys
-	
-	@property
-	def prompt(self):
-		return self.__prompt
 	
 	
 	
@@ -135,6 +134,12 @@ class Form(object):
 		if self.about:
 			self.lines.output(self.about, format="about")
 		
+		#
+		# Add '#' and skip a space.
+		#  - this needs to be handled by Lines :-/
+		#
+		print('#\n')
+		
 		# storage for addition of return values
 		r = {}
 		
@@ -154,12 +159,9 @@ class Form(object):
 			#
 			# -- the following definitely needs some Lines formatting --
 			#
-			
-			# skip a space
-			print('#\n')
 		
 			# show the Field Name / Description
-			print ("{0} ({1})\n - {2}".format(xf, xt, xd))
+			print ("{0} ({1})\n  - {2}".format(xf, xt, xd))
 			
 			x = xinput(self.prompt)
 			if 'json' in [self.__mode, xm]:
@@ -167,8 +169,11 @@ class Form(object):
 			elif xt != 'str':
 				xtype = trix.nvalue(xt)
 				x = xtype(x)
-			
 			r[key] = x
+			
+			print ('')
+		
+		
 		
 		return r
 	
