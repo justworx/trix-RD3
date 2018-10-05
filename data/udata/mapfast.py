@@ -162,7 +162,7 @@ class mapfast(object):
 			
 			# show it in a grid
 			if bp:
-				trix.display(bp, fmt='fmt.Grid', **k)
+				trix.display(bp, f='Grid', **k)
 
 
 

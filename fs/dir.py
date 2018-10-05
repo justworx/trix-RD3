@@ -204,8 +204,7 @@ class Dir(Path):
 	
 	def li(self):
 		"""Display items in grid."""
-		trix.display(self.ls(), fmt='fmt.List')
-		#trix.ncreate('fmt.grid.List').output(self.ls())
+		trix.display(self.ls(), f='List')
 	
 	def list(self):
 		"""Display items with detail."""
@@ -221,6 +220,7 @@ class Dir(Path):
 				size = ''
 			rr.append([pp.name, pp.pathtype, size])
 		
-		trix.ncreate('fmt.grid.Grid').output(rr)
+		# show output
+		trix.display(rr, f="Grid")
 	
 
