@@ -46,6 +46,15 @@ class trix(object):
 			return innerPath
 	
 	
+	# INNER F-PATH	
+	@classmethod
+	def innerfpath(cls, innerFPath=None):
+		ifp = cls.innerpath().split('.')
+		if innerFPath:
+			ifp.append(innerFPath)
+		return "/".join(ifp)
+	
+	
 	# MODULE
 	@classmethod
 	def module (cls, path):
@@ -414,14 +423,24 @@ class trix(object):
 	
 	# PATH
 	@classmethod
-	def path(cls, *a, **k):
-		"""Return a new fs.Path object with given args and kwargs."""
+	def path(cls, path=None, *a, **k):
+		"""Return an fs.Path object at `path`."""
 		try:
-			return cls.__FPath(*a, **k)
+			return cls.__FPath(path, *a, **k)
 		except:
 			# requires full module path, so pass through innerpath()
 			cls.__FPath = cls.module(cls.innerpath('fs')).Path
-			return cls.__FPath(*a, **k)
+			return cls.__FPath(path, *a, **k)
+	
+	
+	# N-PATH
+	@classmethod
+	def npath(cls, innerFPath=None, *a, **k):
+		"""
+		Return an fs.Path for a file-system object within the trix 
+		directory.
+		"""
+		return cls.path(cls.innerfpath(innerFPath), *a, *k)
 	
 	
 	
