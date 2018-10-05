@@ -438,8 +438,14 @@ class trix(object):
 	@classmethod
 	def formatter(cls, *a, **k):
 		"""Return `data` in display format."""
-		fmt = k.pop('fmt', 'fmt.JDisplay')
-		return cls.ncreate(fmt, *a, **k)
+		if 'f' in k:
+			f = k.pop("f", "JDisplay")
+			return cls.ncreate("fmt.%s"%f, *a, **k)
+		
+		else:
+			# DEPRECATED! Use f='<CLASSNAME>' for a class in trix.fmt
+			fmt = k.pop('fmt', 'fmt.JDisplay')
+			return cls.ncreate(fmt, *a, **k)
 	
 	
 	# DISPLAY - Util. JSON is the main data format within the package.
@@ -499,8 +505,9 @@ create    = trix.create
 debug     = trix.debug
 display   = trix.display
 innerpath = trix.innerpath
-jparse    = trix.jparse
+formatter = trix.formatter
 jconf     = trix.jconf
+jparse    = trix.jparse
 kcopy     = trix.kcopy
 kpop      = trix.kpop
 log       = trix.log

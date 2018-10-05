@@ -12,7 +12,11 @@ class Lines(FormatBase):
 	"""Format line width and output."""
 	
 	DefLength = 69
+	
 	DefFormats = {
+		None : {
+			'lines' : "{}"
+		},
 		"title" : {
 			'lines'  : "# {}",
 			'format' : "#\n{}\n#"
@@ -29,9 +33,11 @@ class Lines(FormatBase):
 	
 	
 	
-	def __init__(self, maxlen=None, formats=None, **k):
+	def __init__(self, **k):
 		"""
-		Pass max line-width and `formats` dict.
+		Pass `maxlen` and `formats` dict as keyword arguments that 
+		specify the maximum width of text lines and a replacement for
+		the Lines.DefFormats format dict.
 		
 		The `formats` dict defaults to (a copy of) self.DefFormats,
 		which defines a dict containing "title", "about", and "item" 
@@ -41,6 +47,10 @@ class Lines(FormatBase):
 		Add a "first" format to any format value (as "item" does) to
 		use different processing for the first line.
 		"""
+		
+		maxlen = k.get('maxlen')   # max line length (def: DefLength)
+		formats = k.get("formats") # format dict     (def: DefFormats)
+		fdefault = k.get("format") # default format  (def: None)
 		
 		# if no `formats` are given, copy the defaults
 		formats = formats or {}
@@ -52,6 +62,7 @@ class Lines(FormatBase):
 		FormatBase.__init__(self, maxlen, formats, **k)
 		self.__formats = formats
 		self.__maxlen  = maxlen or self.DefLength
+		self.__format  = fdefault
 		
 		# runtime
 		self.__flength = {}
@@ -67,12 +78,19 @@ class Lines(FormatBase):
 	
 	
 	
-	def format(self, fmt, text):
+	def format(self, text, **k):
 		"""
-		Pass format dict key `fmt`, and `text` to be formatted. Lines of
-		text are generated (by the 'line' key) and then embedded in the
-		format specified by the 'format' key.
+		Pass `text` to be formatted. Pass alternate format as keyword
+		`fmt` - default is the format passed to the constructor (or None
+		if no format was given to the constructor. 
+		
+		Lines of text are generated (by the 'line' key) and then embedded
+		in the format specified by the 'format' key of the format dict
+		supplied to the constructor (else the self.DefFormat dict).
 		"""
+		
+		# get format (as given by kwargs, or the default)
+		fmt = k.get('format', self.__format)
 		
 		# get array of lines in `text`, none longer than `self.maxlen`
 		lines = self.lines(text)
