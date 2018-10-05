@@ -101,7 +101,7 @@ class jconf(EncodingHelper):
 		if fmt == 'display':
 			conf = JDisplay().format(self.obj)
 		elif fmt == 'compact':
-			conf = JCompact.format(self.obj)
+			conf = JCompact().format(self.obj)
 		elif fmt in ['json', None]:
 			conf = JSON().format(self.obj)
 		else:
@@ -109,6 +109,8 @@ class jconf(EncodingHelper):
 					use1=["display", 'compact', 'json', None]
 				))
 		
+		# don't forget to actually save the file :-/
+		trix.path(self.path).wrapper(**self.ek).write(conf)
 		
 	
 	
