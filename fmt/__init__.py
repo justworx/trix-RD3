@@ -82,6 +82,7 @@ JSON     = NLoader("fmt.jformat", "JSON")
 List     = NLoader("fmt.grid", "List")
 Grid     = NLoader("fmt.grid", "Grid")
 Table    = NLoader("fmt.table", "Table")
+Lines    = NLoader("fmt.lines", "Lines")
 
 
 
