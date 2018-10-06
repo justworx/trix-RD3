@@ -3,38 +3,24 @@
 # This file is part of the trix project, distributed under the terms 
 # of the GNU Affero General Public License.
 #
-# UNDER CONSTRUCTION - DOES NOT WORK! - DO NOT USE! - DANGER W.R.!!!
-#
-#	 - This module is under construction. I need to push it so that I 
-#    can access it from a different location. (It's complicated.)
-#
-#  - USE OF THIS CODE MAY DAMAGE YOUR FILES, EQUIPMENT, SANITY!
-#
-
-#
-#  SERIOUSLY... DO NOT USE THIS MODULE YET!
-# 
-#raise BaseException ("DO NOT RUN THIS CODE!")
 
 
 from . import *
+from .irc_connect import *
 from ..client import *
 from ...app.jconf import *
-	
-BOT_CACHE_DIR = "~/.cache/trix/irc/bots/%s.json"
 
-# For building paths to default config files.
-IRC_CONFIG_DIR  = "trix/net/irc/config/"
-BOT_CONF_PLUGIN = "irc_plugin.conf"
-BOT_CONF_DEF    = "irc_config.conf"
-BOT_CONF_FORM   = "irc_config.conf"
+
+BOT_CACHE_DIR = "~/.cache/trix/irc/bots/%s.json"
+IRC_CONFIG_DIR  = trix.npath("net/irc/config").path
+
 
 
 class Bot(Client):
 	"""An irc bot object, containing zero or more irc connections."""
 	
 	# the type for new connection objects
-	DEF_TYPE = 'trix.net.irc.irc_connect'
+	DefType = trix.nvalue("net.irc.irc_connect", "IRCConnect")
 	
 	# debugging
 	Debugging = False
@@ -59,28 +45,22 @@ class Bot(Client):
 		
 		#
 		# BOT ID 
-		# Users give a name to each of their bots. Mine are:
-		#  - rebbot: the bot running on the best working version 
-		#  - botix : the bot I use to develop new features
+		# Users give a name to each of their bots.
 		# Every bot config file in .cache config is named for its botid
 		# in the format '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
 		self.__botid = str(botid).lower()
-		self.dbg("BOTID", self.__botid)
 		
 		#
 		# Use the `trix.app.jconf` class to manage the config file.
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
 		self.__pconfig = BOT_CACHE_DIR % self.__botid
-		self.dbg("PCONFIG", self.__pconfig)
-		
 		self.__jconfig = jconf(self.__pconfig)
-		self.dbg("JCONFIG", self.__jconfig)
+		self.__debug = 0
 		
 		# Keep track of the config in self.__config
 		self.__config = self.__jconfig.obj
-		self.dbg("JCONFIG-OBJ", self.__jconfig.obj)
 		
 		#
 		# The first time a botid is used, its config file will start
@@ -89,26 +69,69 @@ class Bot(Client):
 		#
 		if not self.__config.keys():
 			#
-			# Each new bot must start with config for all plugins, and an 
-			# and an empty connection config dict.
+			# Each new bot must start with a botid and an empty connection
+			# config dict.
 			#
 			self.__config['botid'] = botid
 			self.__config['connections'] = {}
-			self.__config['plugins'] = jconf(
-					IRC_CONFIG_DIR + "irc_plugin.conf"
-				).obj
-			
-			# make sure we get this far
-			self.dbg("CONFIG-1 - GENERATED", self.__config)
 			
 			#
 			# Every new botid requires at least one connection to run.
 			# If on connection exists, add one now using the interactive
-			# prompt in `self.conadd`.
+			# prompt in `self.configadd`.
 			#
 			conlist = self.__config.get('connections')
 			if not conlist:
-				self.conadd(botid)
+				self.configadd(botid)
+		
+		# Finally, init the superclass
+		Client.__init__(self, self.config)
+	
+	
+	def start(self):
+		"""
+		Start running all connections for this Bot.
+		"""
+		try:
+			# for except clause, in case it doesn't get far enough to 
+			# define one of these...
+			connid = None
+			config = None
+			
+			# get the connections dict from self.config
+			cconnections = self.config.get('connections', {})
+			
+			# loop through each connections key
+			for connid in cconnections:
+				
+				# get this connection's config
+				config = cconnections[connid]
+				
+				# if the connection is marked inactive, skip it
+				if not config.get("active", True):
+					continue
+				
+				#
+				# At this point, DefType is irc_config, and variables are:
+				#  * connid = the connection-dict's key
+				#  * config = the connection's value
+				#
+				self.connect(connid, config)
+				
+			#
+			# FINALLY - The connections are added to client.conlist and
+			#           it's time for the Bot (Client) to start calling
+			#           its io() method.
+			#
+			Client.start(self)
+		
+		
+		except Exception as ex:
+			self.stop()
+			raise type(ex)("err-bot-fail", xdata(detail="bot-start-fail",
+					connid=connid, conntype=self.DefType, config=config
+				))
+	
 	
 	
 	@property
@@ -123,10 +146,38 @@ class Bot(Client):
 	def jconfig(self):
 		return self.__jconfig
 	
+	@property
+	def debug (self):
+		return self.__debug
 	
-	def conadd(self, botid):
+	@debug.setter
+	def debug (self, i=1):
+		self.__debug = i
+	
+	
+	
+	# CONFIG-ADD
+	def configadd(self, botid):
 		self.__addconfig(botid)
 	
+	
+	# HANDLE-DATA
+	def handleio(self, conn):
+		if conn.debug:
+			# Call the connection object's `io()` method so that received
+			# text may be handled.
+			conn.io()
+	
+	# HANDLE-X (Exception)
+	def handlex(self, connid, xtype, xargs, xdata):
+		if connid in self.conlist:
+			conn = self[connid]
+			irc.debug("irc_client.handlex", xtype, xargs)
+
+	
+	#
+	# private methods
+	#
 	
 	def __loadconfig(self):
 		botid = self.__botid
@@ -135,82 +186,39 @@ class Bot(Client):
 		if not self.__config['connections']:
 			self.__addconfig()
 	
-	
+	#
+	#
+	# ADD CONFIG
+	#  - Create a new configuration file for a given `botid`
+	#
 	def __addconfig(self, botid):
-		cc = self.__config['connections']
-		fm = trix.nmodule("x.form")
-		fo = fm.Form(IRC_CONFIG_DIR + "irc_config.conf")
 		
-		self.config['connections'] = fo.fill()
+		# get the configuration directory
+		confdir = IRC_CONFIG_DIR
+		
+		cc = self.__config['connections']         # connections dict
+		fm = trix.nmodule("x.form")               # form entry module
+		fo = fm.Form(confdir + "irc_config.conf") # form object
+		
+		# use `fo` Form to get a connection configuration
+		condict = fo.fill()
+		
+		# save network name and configid for use below
+		network = condict.get('network')
+		configid = "%s-%s" % (network, botid)
+		
+		#
+		# LOAD FRESH PLUGIN CONFIG
+		#  - Add plugin config for each connection; plugin config must
+		#    be duplicated so that each connection retains fine-tuneable 
+		#    control over its own set of plugin objects.
+		#
+		condict['plugins'] = jconf(confdir + "/irc_plugin.conf").obj
+		
+		# add the connection for `botid`
+		self.config['connections'][configid] = condict
+		self.config['connections'][configid]['plugins'] = plugins
+		
 		self.jconfig.save()
-		#self.jconfig.obj['connections'] = scc
 		
-		
-		#
-		#
-		#
-		# YOU ARE HERE!
-		#  - generate and save a config from console
-		#  - i want to add a config param that lets me put the user
-		#    into an "config add" form.
-		#
-		#
-		#
-	
-	
-	"""
-	# HANDLE-DATA
-	def handleio(self, conn):
-		if conn.debug:
-			# Call the connection object's `io()` method so that received
-			# text may be handled.
-			conn.io()
-	
-	
-	def conadd(self):
-		
-		conlist=bc=xin=None
-		try:
-			# get the current exception list
-			conlist = self.config.get('connections', {})
-			
-			# bot-config - import the default config values config
-			bc = trix.nmodule('net.irc.config')
-			
-			# create a `trix.util.xinput.Form` object
-			form = trix.ncreate(
-					"util.xinput.Form", bc.CONNECTION_TEMPLATE
-				)
-			
-			# run the form
-			newcon = form.fill()
-			newcid = newcon['connid']
-			
-			# make sure the conid is valid and unique
-			if newcid in ['', None]:
-				raise Exception("Invalid Connection ID: '%s'" % newcid) 
-			if newcid in self.config['connections']:
-				raise Exception("Connection '%s' already Exists!" % newcid)
-			
-			newconfig = xin()
-			newconfig['port'] = int(newconfig['port'])
-			newconfig['pi_update'] = int(newconfig['pi_update'])
-			newconfig['pi_list'] = newconfig['pi_list'].split()
-			
-			# set connections values
-			self.config['connections'][newcid] = newconfig
-		
-		except Exception as ex:
-			raise type(ex)('err-config-fail', xdata(
-					connid=connid, config=self.config, xin=xin, bc=bc
-				))
-	
-	
-	
-	
-	# HANDLE-X (Exception)
-	def handlex(self, connid, xtype, xargs, xdata):
-		if connid in self.conlist:
-			conn = self[connid]
-			irc.debug("irc_client.handlex", xtype, xargs)
-	"""
+		return self.jconfig.obj
