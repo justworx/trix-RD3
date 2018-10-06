@@ -3,13 +3,17 @@
 #
 # UNDER CONSTRUCTION
 #
+
 TEST
 TODO
 data/vector/
 data/vector.py
 data/matrix.py
-dev/
 soxy/
+
+doc/
+wiki/
+
 
 
 # temporary backups
