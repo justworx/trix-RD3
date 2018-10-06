@@ -237,6 +237,8 @@ class IRCConnect(Connect):
 		# might be multiple lines (or empty).
 		try:
 			intext = self.read()
+		except SockFatal:
+			raise
 		except BaseException as e:
 			intext = ''
 			irc.debug(
@@ -404,7 +406,9 @@ class IRCConnect(Connect):
 	def ping(self, x=None):
 		x = x or time.time()
 		self.writeline("PING :%s" % x)
-
-
+	
+	def shutdown(self, msg='QUIT'):
+		self.writeline("QUIT %s" % msg)
+		Connect.shutdown(self)
 
 
