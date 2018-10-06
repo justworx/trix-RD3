@@ -102,7 +102,7 @@ class IRCEvent(TextEvent):
 				self.__irccmd = mm[1]
 			else:
 				irc.debug(
-					"Strange Line", "Strange Command", self.__line
+					"Strange Line", "Strange Command", self.line
 					)
 			if len(mm) > 2:
 				self.__target = mm[2]
