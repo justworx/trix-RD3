@@ -520,29 +520,30 @@ class trix(object):
 #
 # CONVENIENCE
 #
-create    = trix.create
-debug     = trix.debug
-display   = trix.display
-innerpath = trix.innerpath
-formatter = trix.formatter
-jconf     = trix.jconf
-jparse    = trix.jparse
-kcopy     = trix.kcopy
-kpop      = trix.kpop
-log       = trix.log
-module    = trix.module
-ncreate   = trix.ncreate
-nmodule   = trix.nmodule
-nprocess  = trix.nprocess
-nvalue    = trix.nvalue
-path      = trix.path
-pid       = trix.pid
-popen     = trix.popen
-process   = trix.process
-proxify   = trix.proxify
-start     = trix.start
-tracebk   = trix.tracebk
-value     = trix.value
+create     = trix.create
+debug      = trix.debug
+display    = trix.display
+innerpath  = trix.innerpath
+innerfpath = trix.innerfpath
+formatter  = trix.formatter
+jconf      = trix.jconf
+jparse     = trix.jparse
+kcopy      = trix.kcopy
+kpop       = trix.kpop
+log        = trix.log
+module     = trix.module
+ncreate    = trix.ncreate
+nmodule    = trix.nmodule
+nprocess   = trix.nprocess
+nvalue     = trix.nvalue
+path       = trix.path
+pid        = trix.pid
+popen      = trix.popen
+process    = trix.process
+proxify    = trix.proxify
+start      = trix.start
+tracebk    = trix.tracebk
+value      = trix.value
 
 
 
