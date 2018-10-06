@@ -2,9 +2,9 @@
 # This file is part of the trix project, distributed under the terms 
 # of the GNU Affero General Public License.
 
-from ..util.runner import *  # trix
 from .connect import Connect
-
+from ..util.runner import *  								# trix
+from ..util.sock.sockwrap import SockFatal, SockError
 
 class Client(Runner):
 	"""Client with multiple connections."""
@@ -17,6 +17,7 @@ class Client(Runner):
 		"""Pass config for Runner."""
 		Runner.__init__(self, config, **k)
 		self.__connections = {}
+		self.__removelist = []
 		self.__keepalive = self.config.get('keepalive', False)
 	
 	
@@ -116,39 +117,41 @@ class Client(Runner):
 		"""Check for (and handle) input for each connection."""
 		condict = self.__connections
 		if condict:
-			rmvlist = []
 			
-			# loop through each connection name 
-			for connid in condict:
-				try:
-					#
-					# If the connection exists, handle it's io. Otherwise, 
-					# remove it.
-					#
-					conn = condict.get(connid)
-					if conn:
-						self.handleio(conn)
-					else:
-						rmvlist.append(connid)
-				
-				#except BaseException as ex:
-				except Exception as ex:
-					#
-					# BIG CHANGE! 
-					#  - Prefix identity of connect object that threw the 
-					#    exception.
-					#  - The Client class has been around (and unused, at least
-					#    by me) for a long time. Neglecting to pass the connect
-					#    objct from which the excepption has been a fatal flaw
-					#    all along. This class has been unusable, or at least
-					#    extremely annoying, because of it.
-					#
-					self.handlex(connid, type(ex), ex.args, xdata())
-			
-			# Handle any connection removals, specified in `rmvlist` by
-			# connid string.
+			# Handle any removals before processing the list
+			rmvlist = self.__removelist
 			if rmvlist:
 				self.remove(rmvlist)
+			
+			# loop through each connection name 
+			conkeys = list(condict.keys())
+			for connid in conkeys:
+				try:
+					try:
+						#
+						# If the connection exists, handle it's io. Otherwise, 
+						# remove it.
+						#
+						conn = condict.get(connid)
+						if conn:
+							self.handleio(conn)
+						else:
+							rmvlist.append(connid)
+					
+					# if there's a fatal socket error, mark
+					except SockFatal as ex:
+						rmvlist.append(connid)
+						raise type(ex)("sock-fatal-err", xdata())
+				
+				except Exception as ex:
+					self.handlex(connid, type(ex), ex.args, xdata())
+			
+			#
+			# Handle any graceful connection removals that occurred
+			# during... wait - do we need to do this twice in a row?
+			#
+			#if rmvlist:
+			#	self.remove(rmvlist)
 	
 	
 	# STOP
@@ -168,7 +171,8 @@ class Client(Runner):
 					pass
 				
 				try:
-					del(self.__connections[cname])
+					if cname in self.__connections:
+						del(self.__connections[cname])
 				except:
 					pass
 		
@@ -181,9 +185,12 @@ class Client(Runner):
 	
 	# HANDLE-DATA
 	def handleio(self, conn):
-		x = conn.read()
-		if x:
-			print (x)
+		try:
+			x = conn.read()
+			if x:
+				print (x)
+		except SockFatal as ex:
+			self.__removelist.append(conn)
 	
 	
 	# HANDLE-X (Exception)
