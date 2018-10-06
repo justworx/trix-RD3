@@ -11,6 +11,9 @@ data/vector.py
 data/matrix.py
 soxy/
 
+
+
+# these shouldn't be posted with the project
 doc/
 wiki/
 
