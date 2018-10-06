@@ -12,8 +12,12 @@ class linedbg(object):
 		# title			
 		print ("\n#\n# DEBUG:")
 		
-		# items/lines
-		for item in a:
+		#
+		# ITEMS/LINES 
+		#  - Is this really needed? maybe we should check **k for args...
+		#    There's not much sense in duplicating it.
+		#
+		for item in list(a):
 			lines = str(item).splitlines()
 			for line in lines:
 				print ("# * %s" % str(line))
