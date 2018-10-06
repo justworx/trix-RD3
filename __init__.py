@@ -440,7 +440,7 @@ class trix(object):
 		Return an fs.Path for a file-system object within the trix 
 		directory.
 		"""
-		return cls.path(cls.innerfpath(innerFPath), *a, *k)
+		return cls.path(cls.innerfpath(innerFPath), *a, **k)
 	
 	
 	
