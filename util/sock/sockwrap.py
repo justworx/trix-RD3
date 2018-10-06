@@ -4,11 +4,16 @@
 # of the GNU Affero General Public License.
 #
 
+
 from ._sockconf import *
 from ..enchelp import *
 from ._sockprop import *
 from ... import * # trix
 import socket, select
+
+
+class SockError(OSError): pass
+class SockFatal(SockError): pass
 
 
 #
@@ -114,16 +119,15 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 			return ''
 		
 		if bdata:
-			return bdata.decode(**self.ek)
 			try:
 				return bdata.decode(**self.ek)
-			except UnicodeDecodeError:
-				print ("#")
-				print ("# sockwrap.read: UnicodeDecodeError; dt:" + time.strftime("%Y-%m-%d %H:%M:%S"))
-				print (b"# BYTES: " + bdata)
-				print ("#")
-				return ""
-		return bdata
+			except UnicodeDecodeError as ex:
+				raise SockError("err-read-fail", xdata(
+						reason = "unicode-decode-error",
+						oxtype = str(type(ex)), 
+						fmtdate = time.strftime("%Y-%m-%d %H:%M:%S"),
+						bytedata = bdata, python=str(ex)
+					))
 	
 	
 	#
@@ -144,18 +148,21 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 		"""
 		try:
 			if not self.socket:
-				raise Exception('err-send-fail', xdata(detail='socket-closed',
+				raise SockFatal('err-send-fail', xdata(
+						detail='send-error', reason='socket-closed',
 						config=self.config
 					))
 			
 			if data:
 				try:
 					return self.socket.send(data)
-				except (socket.timeout, socket.error):
-					raise
+				except (socket.timeout, socket.error) as ex:
+					raise SockError('err-send-fail', xdata(
+						reason='send-error', python=str(ex)
+					))
 				except Exception as ex:
-					raise Exception('err-send-fail', xdata(
-						reason='socket-send-error', python=str(ex)
+					raise SockError('err-send-fail', xdata(
+						reason='send-error', python=str(ex)
 					))
 		
 		except ReferenceError:
@@ -174,12 +181,18 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 		Return any received data, or None if no data has been received.
 		"""
 		if not self.socket:
-			raise Exception('err-recv-fail', xdata(detail='socket-closed',
+			raise SockFatal(xdata(error='err-recv-fail', 
+					detail="sock-receive-err", reason='socket-closed',	
 					config=self.config
 				))
 		
 		s = self.socket
 		if s:
+			
+			#
+			# Get next buffer of received data. If none arrives before
+			# timeout, then return an empty string ''.
+			#
 			try:
 				try:
 					# POLL - DON'T WAIT FOR TIMEOUT
@@ -195,19 +208,29 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 				if X:
 					raise SIOError(x)
 			
+			# timeout - return empty string.
 			except socket.timeout:
 				return ''
 			
-			
+			#
+			# If there's an actual error, repackage it as either SockError
+			# or SockFatal.
+			#
 			except socket.error as ex:
+				
+				# default error data
 				error = 'err-recv-fail'
 				errno = None
 				errstr = ''
 				xreason = ''
+				xfatal = False
+				
+				# package error data
 				try:
 					if isinstance(ex, basestring):
 						errstr = ex
 					else:
+						xfatal = True
 						errno = ex[0]
 						if errno == 10058:
 							errstr = "Recv attempt after peer disconnect."
@@ -219,6 +242,8 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 						elif errno == 10053:
 							errstr = "Connection forcibly closed by remote host."
 							xreason = 'host-closed-connection'
+						else:
+							xfatal = False
 				except:
 					pass
 				
@@ -231,12 +256,13 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 				except:
 					EX = ""
 				
-				# now we won't lose whatever `ex` was (if it was)
-				raise type(ex)(ex.args, xdata(
+				ARGS = [ex.args, xdata(
 						error=error, errno=errno, errstr=errstr, xreason=xreason, 
 						xtype=str(type(ex)), config=self.config, EX=EX
-					))
+					)
+				]
 				
-				
-			except Exception:
-				raise
+				if xfatal:
+					raise SockFatal(*ARGS)
+				else:
+					raise SockError(*ARGS)
