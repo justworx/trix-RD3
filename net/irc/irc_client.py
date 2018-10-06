@@ -27,5 +27,10 @@ class IRCClient(Client):
 	def handlex(self, connid, xtype, xargs, xdata):
 		if connid in self.conlist:
 			conn = self[connid]
-			irc.debug("irc_client.handlex", xtype, xargs)
+			
+			#
+			# DO WE REALLY NEED TO PASS THE XARGS HERE?
+			# DON'T THEY AUTOMATICALLY SHOW UP IN XDATA?
+			#
+			irc.debug("irc_client.handlex", xtype, list(xargs))
 
