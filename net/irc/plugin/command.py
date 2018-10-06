@@ -31,7 +31,7 @@ class IRCCommand(IRCPlugin):
 	# HANDLE COMMAND
 	#  - actual handling of commands
 	#
-	def handle_command( self, e):
+	def handle_command(self, e):
 		
 		try:
 			cmd = e.argvl[0]
@@ -42,6 +42,7 @@ class IRCCommand(IRCPlugin):
 					self.bot.writeline("PART %s" % e.argv[1])
 			elif cmd == 'quit':
 				self.bot.writeline("QUIT :%s" % " ".join(e.argv[1:]))
+				self.bot.shutdown()
 			elif cmd == 'nick':
 				self.bot.writeline("NICK %s" % " ".join(e.argv[1:]))
 			elif cmd == 'tell':
