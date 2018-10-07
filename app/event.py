@@ -51,6 +51,7 @@ class TextEvent(object):
 		Pass one line of text that is to be processed as a command. 
 		"""
 		self.__line = cline
+		self.__reply = None
 	
 	@property
 	def line(self):
@@ -118,3 +119,11 @@ class TextEvent(object):
 			'argvl'   : self.argvl
 		}
 	
+	
+	@property
+	def reply(self):
+		return self.__reply
+	
+	@reply.setter
+	def reply(self, data):
+		return self.__reply 
