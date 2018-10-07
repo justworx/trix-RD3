@@ -26,8 +26,9 @@ class EncodingHelper(object):
 		
 		# Make sure encoding and errors were given as unicode; any error
 		# still brings the correct result. (I think. I hope.)
-		enc = k.get('encoding')
-		err = k.get('errors')
+		enc = config.get('encoding')
+		err = config.get('errors')
+		
 		try:
 			enc = enc.decode()
 			err = err.decode()
@@ -44,8 +45,7 @@ class EncodingHelper(object):
 			err = config.get('errors')
 			if err:
 				self.__ek['errors'] = err
-	
-	
+		
 	@property
 	def ek(self):
 		"""
