@@ -111,12 +111,13 @@ class TextEvent(object):
 	def dict(self):
 		"""Debugging utility - returns dict."""
 		return {
-			'line'   : self.line,
-			'text'   : self.text,
-			'argc'   : self.argc,
-			'argv'   : self.argv,
-			'argvc'   : self.argvc,
-			'argvl'   : self.argvl
+			'line'  : self.line,
+			'text'  : self.text,
+			'argc'  : self.argc,
+			'argv'  : self.argv,
+			'argvc' : self.argvc,
+			'argvl' : self.argvl,
+			'reply' : self.reply
 		}
 	
 	
@@ -126,4 +127,4 @@ class TextEvent(object):
 	
 	@reply.setter
 	def reply(self, data):
-		return self.__reply 
+		self.__reply = data
