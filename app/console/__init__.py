@@ -170,7 +170,7 @@ class Console(EncodingHelper):
 			for p in self.__plugins:
 				self.__plugins[p].handle(e)
 				if e.reply:
-					print ("%s\n" % str(e.reply))
+					self.lines.output ("%s\n" % str(e.reply))
 			
 			# handle valid commands...
 			if e.argvl[0] == 'help':
