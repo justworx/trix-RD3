@@ -12,7 +12,10 @@ from ...util.convert import *
 
 
 class Calc(Plugin):
-	"""Useful commands for controlling the bot via privmsg/notify."""
+	"""
+	Calculate math expressions/temperature conversions; Encode/decode
+	b64/32/16.
+	"""
 	
 	def istempc(self, a1):
 		if len(a1)==3:
