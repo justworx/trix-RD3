@@ -4,19 +4,19 @@
 # of the GNU Affero General Public License.
 #
 
+
+#
+# I don't think this thing is very useful at all, but it's kinda
+# neat and cool and fun, so I'm going to keep it here a while.
+#
+
+
 import time
 from ..util.xinput import *
 
 
-
-
-
 DEF_PROMPT = '> '
 DEF_GUIDE = "Ctrl-c to exit."
-
-
-
-
 
 
 class Prompt(object):
