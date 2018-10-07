@@ -9,11 +9,11 @@ from trix.app.plugin import *
 
 
 class Dir(Plugin):
-	"""Useful commands for controlling the bot via privmsg/notify."""
+	"""Directory exploration via console."""
 	
 	COMMANDS = {
 		'ls' : lambda d,*a: d.ls(*a),
-		'cd' : lambda d,*a: d.cd(*a)		
+		'cd' : lambda d,*a: d.cd(*a) or d.path		
 	}
 	
 	def __init__(self, pname, owner, config, **k):

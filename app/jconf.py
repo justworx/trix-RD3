@@ -80,11 +80,25 @@ class jconf(EncodingHelper):
 		return self.__obj
 	
 	@property
+	def keys(self):
+		try:
+			return self.__obj.keys()
+		except:
+			return len(self.__obj)
+	
+	@property
 	def sel(self):
 		"""
 		Reference another object within the self.obj. See self.select().
 		"""
 		return self.__sel
+	
+	@property
+	def skeys(self):
+		try:
+			return self.__sel.keys()
+		except:
+			return len(self.__sel)
 	
 	
 	# RELOAD
