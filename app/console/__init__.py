@@ -67,7 +67,7 @@ class Console(EncodingHelper):
 		#
 		self.__title    = config.get('title', 'Console')
 		self.__about    = config.get('about', 'About')
-		self.__prompt   = config.get('prompt', '-->')
+		self.__prompt   = config.get('prompt', '@app/Console')
 		self.__help     = config.get('help', {})
 		self.__closing  = config.get('closing', 'Closing')
 		self.__messages = config.get('messages', {})
@@ -175,6 +175,8 @@ class Console(EncodingHelper):
 			# handle valid commands...
 			if e.argvl[0] == 'help':
 				self.handle_help (e)
+			elif e.argvl[0] == 'plugins':
+				self.lines.output(" ".join(self.plugins.keys()))
 			elif e.argvl[0] == 'exit':
 				self.__active = False
 			
@@ -183,14 +185,15 @@ class Console(EncodingHelper):
 				self.handle_error("invalid-command")
 	
 	
-	
+	"""
+	# maybe later
 	def _call_module(self, e):
 		trix.display(e.dict)
 		if e.argvl[0] == 'cq':
 			if e.argc > 1:
 				m = trix.nvalue('data.udata', "query")
 				m(text=e.argv[1][0])
-			
+	"""		
 	
 	
 	#
