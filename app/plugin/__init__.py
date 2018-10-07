@@ -30,13 +30,14 @@ class Plugin(EncodingHelper):
 		"""
 		self.__created = time.time()
 		
+		self.__config = config or {}
+		self.__config.update(k)
+		
 		self.__pname = pname
 		self.__owner = owner
-		self.__config = config
-		self.__config.update(k)
 		self.__debug = self.__config.get('debug', 0)
 		
-		EncodingHelper.__init__(self, self.config)
+		EncodingHelper.__init__(self, self.__config)
 	
 	
 	@property
