@@ -8,7 +8,7 @@ import time
 from ..event import *
 from ...util.xinput import *
 from ...util.enchelp import *
-from ...fmt import List
+from ...fmt import List, Lines
 
 
 #
@@ -25,28 +25,33 @@ class Console(EncodingHelper):
 	def __init__(self, config=None, **k):
 		"""
 		Pass config dict keys:
-		 * welcome  : A string with any message/description/info
-		 * prompt   : If set, replaces the default command prompt.
+		 * title    : The console's title, "Console".
+		 * about    : A string with any message/description/info
+		 * prompt   : If set, replaces the default command prompt
+		 * messages : A dict containing message key/value pairs
 		 * help     : A dict containing keywords/help messages
 		 * closing  : Message to print when exiting console
-		 * c_errors : A dict containing error-code:error-message strings
+		 * plugins  : A dict containing app.plugin config
 		
 		COMMANDS:
 		 * help : print help on the specified topic
 		 * exit : exit the console (returning to previous activity)
 		
 		EXTEND CONSOLE:
-		To extend the console class, add 'help' 
+		To extend the console class, add commands (and their 'help'). 
 		"""
 		
-		# because this is the default Console, it can have a default
-		# config path
+		#
+		# If no config is given, use a default config path. Subclasses
+		# must replace DefConf with their own path.
+		#
 		config = config or self.DefConf % self.DefLang
 		try:
 			# if config is a dict, update with kwargs it and continue
 			config.update(**k)
+			trix.display(config)
 		except AttributeError:
-			# otherwise, config must be the inner file path to a config
+			# ...otherwise, config must be the inner file path to a config
 			# file such as 'app/config/en.conf'.
 			confile = trix.innerfpath(config)
 			jconf   = trix.ncreate("app.jconf.jconf", confile)
@@ -54,34 +59,89 @@ class Console(EncodingHelper):
 		
 		EncodingHelper.__init__(self, config)
 		
+		# debugging - store config
+		self.__config = config
+		
+		#
 		# set member variables from config
-		self.__welcome = config.get('welcome', '')
-		self.__prompt  = config.get('prompt',  '')
-		self.__help    = config.get('help',    '')
-		self.__closing = config.get('closing', '')
-
-		self.__cerrors = config.get('cerrors',  '')
+		#
+		self.__title    = config.get('title', 'Console')
+		self.__about    = config.get('about', 'About')
+		self.__prompt   = config.get('prompt', '-->')
+		self.__help     = config.get('help', {})
+		self.__closing  = config.get('closing', 'Closing')
+		self.__messages = config.get('messages', {})
+		
+		pconf = config.get('plugins', {})
+		self.__plugins = {}
+		
+		perrors = {}
+		for p in pconf:
+			try:
+				cpath = pconf[p].get("plugin")
+				self.__plugins[p] = trix.create(
+						cpath, p, self, pconf[p], **self.ek
+					)
+			except Exception as ex:
+				perrors[p] = xdata(
+						pluginname=p, ncreatepath=cpath, pluginconf=pconf
+					)
+		
+		if perrors:
+			raise Exception("plugin-load-errors", xdata(errors=perrors))
+		
+		# for display of text
+		self.__lines = Lines()
 		
 		# prompt active
 		self.__active = False
-		
+	
+	
+	
+	@property
+	def lines(self):
+		return self.__lines	
+	
+	@property
+	def title(self):
+		return self.__title	
+	
+	@property
+	def about(self):
+		return self.__about	
+	
+	@property
+	def help(self):
+		return self.__help	
+	
+	@property
+	def closing(self):
+		return self.__closing	
+	
+	@property
+	def plugins(self):
+		return self.__plugins	
+	
+	
+	@property
+	def config(self):
+		return self.__config
 	
 	
 	#
-	# PROMPT
-	#  - call this to start the console
-	#
-	def prompt(self):
+	# CONSOLE - Start the console.
+	#  
+	def console(self):
 		"""Call this method to start a console session."""
 		
 		try:
-			self.banner(self.__welcome)
+			self.banner()
 			self.__active = True
 			while self.__active:
 				try:
 					cmd = xinput(self.__prompt)
 					evt = TextEvent(cmd)
-					self.handle_input(evt)
+					rsp = self.handle_input(evt)
 					if evt.argc and evt.argv[0]:
 						print ('')
 				
@@ -89,10 +149,11 @@ class Console(EncodingHelper):
 					self.__active = False
 				
 		except KeyboardInterrupt:
-			pass
+			# print a blank line so exit message won't be on the input line
+			print('')
 		
 		# close banner
-		self.banner(self.__closing)
+		print("%s\n" % self.closing)
 	
 	
 	
@@ -104,6 +165,12 @@ class Console(EncodingHelper):
 		"""Handle input event `e`."""
 		
 		if e.argc:
+			
+			# check plugins first
+			for p in self.__plugins:
+				self.__plugins[p].handle(e)
+				if e.reply:
+					print ("%s\n" % str(e.reply))
 			
 			# handle valid commands...
 			if e.argvl[0] == 'help':
@@ -117,6 +184,15 @@ class Console(EncodingHelper):
 	
 	
 	
+	def _call_module(self, e):
+		trix.display(e.dict)
+		if e.argvl[0] == 'cq':
+			if e.argc > 1:
+				m = trix.nvalue('data.udata', "query")
+				m(text=e.argv[1][0])
+			
+	
+	
 	#
 	# HANDLERS...
 	#  - Add a handler for each console command you want to implement.
@@ -128,8 +204,8 @@ class Console(EncodingHelper):
 	
 	
 	def handle_error(self, err):
-		if err in self.__cerrors:
-			print ("Error! %s" % self.__cerrors[err])
+		if err in self.__messages:
+			print ("Error! %s" % self.__messages[err])
 	
 	
 	
@@ -142,12 +218,9 @@ class Console(EncodingHelper):
 			print (line)
 	
 	
-	def banner(self, message):
-		lines = message.strip().splitlines()
-		print ("*")
-		for line in lines:
-			print ("* %s" % line)
-		print ("*")
-
+	def banner(self, *a):
+		self.lines.output(self.title, ff='title')
+		self.lines.output(self.about, ff='about')
+		print("#")
 	
 	
