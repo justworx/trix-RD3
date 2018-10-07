@@ -90,7 +90,7 @@ class Lines(FormatBase):
 		"""
 		
 		# get format (as given by kwargs, or the default)
-		fmt = k.get('format', self.__format)
+		fmt = k.get('format', k.get('ff', ''))
 		
 		# get array of lines in `text`, none longer than `self.maxlen`
 		lines = self.lines(text)
