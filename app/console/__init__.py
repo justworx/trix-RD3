@@ -8,6 +8,7 @@ import time
 from ..event import *
 from ...util.xinput import *
 from ...util.enchelp import *
+from ...util.linedbg import *
 from ...fmt import List, Lines
 
 
@@ -138,15 +139,22 @@ class Console(EncodingHelper):
 			self.banner()
 			self.__active = True
 			while self.__active:
+				cmd=evt=None
 				try:
 					cmd = xinput(self.__prompt)
 					evt = TextEvent(cmd)
 					rsp = self.handle_input(evt)
 					if evt.argc and evt.argv[0]:
+						# Handle_input prints response; just put a blank line
+						# after.
 						print ('')
 				
 				except EOFError:
 					self.__active = False
+				
+				except Exception as ex:
+					print('') # get off the "input" line
+					linedbg(self, ex.args, cmd=cmd, evt=evt.dict)
 				
 		except KeyboardInterrupt:
 			# print a blank line so exit message won't be on the input line
@@ -171,6 +179,7 @@ class Console(EncodingHelper):
 				self.__plugins[p].handle(e)
 				if e.reply:
 					self.lines.output ("%s\n" % str(e.reply))
+					return
 			
 			# handle valid commands...
 			if e.argvl[0] == 'help':
