@@ -12,8 +12,9 @@ class Dir(Plugin):
 	"""Directory exploration via console."""
 	
 	COMMANDS = {
-		'ls' : lambda d,*a: d.ls(*a),
-		'cd' : lambda d,*a: d.cd(*a) or d.path		
+		'cd'   : lambda d,*a: d.cd(*a),
+		'ls'   : lambda d,*a: d.ls(*a),
+		'mv'   : lambda d,*a: d.mv(*a),
 	}
 	
 	def __init__(self, pname, owner, config, **k):
@@ -33,6 +34,6 @@ class Dir(Plugin):
 			x = self.COMMANDS[cmd]
 			a = e.argv[1:]
 			r = x(self.__dir, *a)
-			self.reply(e, ", ".join(r))
-		
-		
+			if r:
+				self.reply(e, ", ".join(r))
+
