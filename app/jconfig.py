@@ -196,7 +196,8 @@ class JConfig(EncodingHelper):
 				))
 		
 		# don't forget to actually save the file :-/
-		trix.path(self.path).wrapper(**self.ek).write(conf)
+		f = trix.path(self.path).wrapper(**self.ek)
+		f.write(conf)
 	
 	
 	# RELOAD
