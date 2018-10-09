@@ -4,12 +4,16 @@
 # of the GNU Affero General Public License.
 #
 
-from ..jconfig import *
-from ..event import *
+#from ..jconfig import *
+#from ..event import *
 from ...util.xinput import *
 from ...util.enchelp import *
 from ...util.linedbg import *
 from ...fmt import List, Lines
+
+from trix.app.jconfig import *
+from trix.app.event import *
+
 
 #
 #
@@ -190,7 +194,7 @@ class Console(EncodingHelper):
 				self.handle_help(e)
 			elif e.argvl[0] == 'plugins':
 				self.lines.output(" ".join(self.plugins.keys()))
-			elif e.argvl[0] == 'config':
+			elif e.argvl[0] in ['jc','conf']:
 				self.handle_config (e)
 			elif e.argvl[0] == 'exit':
 				self.__active = False
@@ -228,11 +232,16 @@ class Console(EncodingHelper):
 	
 	def handle_config(self, e):
 		
+		# maybe conf is already open...
 		conf = self.__objects.get("config", None)
 		
-		cmd = e.argv[0]
-		args = e.argvl[1:]
-		print (args)
+		#
+		# REM: argv[0] is the intenal command - the word "config", 
+		#      given in the console
+		#
+		cmd = e.argvl[1]   # the internal command
+		args = e.argvl[2:] # case-insensitive args
+		Args = e.argv[2:]  # case-sensitive args
 		
 		if cmd in ["load","open"]:
 			if conf:
@@ -246,32 +255,56 @@ class Console(EncodingHelper):
 					"""
 				)
 			else:
-				# Always use `e.argv` for case-sensitive paths!
-				self.__objects["config"] = JConfig(e.argv[2], **self.ek)
+				# Use `Args[0]` (e.argv[2]) since paths are case-sensitive!
+				self.__objects["config"] = JConfig(Args[0], **self.ek)
 		
 		elif not conf:
-				# GET THIS INTO DEBUG MESSAGES!
-				self.lines(
-					"""
-					A config file not been opened. Enter "config open <PATH>".
-					"""
-				)
+			# GET THIS INTO DEBUG MESSAGES!
+			self.lines(
+				"""
+				No config file is open. Enter "config open <PATH>".
+				"""
+			)
+		
+		elif cmd in ["set","add"]:
+			try:
+				# rem Args[0] is the key to set/add/rmv
+				Args[1] = trix.jparse(" ".join(Args[1:]))
+				if cmd == 'set':
+					self.__objects["config"].set(*Args)
+				elif cmd == 'add':
+					self.__objects["config"].add(*Args)
+			except:
+				raise
+		
+		elif cmd == 'rmv':
+			self.__objects["config"].rmv(*Args)
+		
+		elif cmd == 'select':
+			self.__objects["config"].select(*Args)
+		elif cmd == 'deselect':
+			self.__objects["config"].deselect()
+		elif cmd == 'display':
+			self.__objects["config"].display()
+		elif cmd == 'show':
+			self.__objects["config"].show()
+		
+		elif cmd == 'type':
+			self.__objects["config"].type(*Args)
+		elif cmd == 'keys':
+			self.__objects["config"].keys(*Args)
+		elif cmd in ['skeys','selkeys']:
+			self.__objects["config"].keys(*Args)
+		elif cmd == 'path':
+			self.__objects["config"].path
 		
 		else:
-			
-			if args[0] == "display":
-				conf.display()
-			elif args[0] == "save":
-				conf.save()
-			elif args[0] == "reload":
-				conf.reload()
-			elif args[0] == "close":
-				self.__objects["config"] = None
-			
-			else:
-				print ("UNKNOWN COMMAND : %s" % cmd)
-				print (" - details      ", trix.display(e.argv))
+			print ("UNKNOWN COMMAND : %s" % cmd)
+			print (" -- details", trix.display(e.argv))
 		
+	
+	
+	
 	
 	#
 	# UTILITIES...
