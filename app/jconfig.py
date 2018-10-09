@@ -169,7 +169,7 @@ class JConfig(EncodingHelper):
 	
 	
 	def set(self, key, value):
-		self.sel[item] = value
+		self.sel[key] = value
 	
 	
 	def rmv(self, key):
