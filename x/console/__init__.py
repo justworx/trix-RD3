@@ -4,8 +4,8 @@
 # of the GNU Affero General Public License.
 #
 
-#from ..jconfig import *
-#from ..event import *
+#from ..jconf import * # jconf is deprecated!
+from getpass import *
 from ...util.xinput import *
 from ...util.enchelp import *
 from ...util.linedbg import *
@@ -45,6 +45,11 @@ class Console(EncodingHelper):
 		To extend the console class, add commands (and their 'help'). 
 		"""
 		
+		id_mod = self.__module__.split('.')[-2]
+		id_type = type(self).__name__
+		id_user = getuser()
+		self.ident = "%s@%s/%s" % (id_user, id_mod, id_type)
+		
 		#
 		# If no config is given, use a default config path. Subclasses
 		# must replace DefConf with their own path.
@@ -56,7 +61,7 @@ class Console(EncodingHelper):
 			trix.display(config)
 		except AttributeError:
 			# ...otherwise, config must be the inner file path to a config
-			# file such as 'app/config/en.conf'.
+			# file such as 'apps/config/en.conf'.
 			confile = trix.innerfpath(config)
 			jconf   = JConfig(confile)
 			
@@ -67,13 +72,14 @@ class Console(EncodingHelper):
 		
 		# debugging - store config
 		self.__config = config
+
+		self.__prompt = self.ident
 		
 		#
 		# set member variables from config
 		#
 		self.__title    = config.get('title', 'Console')
 		self.__about    = config.get('about', 'About')
-		self.__prompt   = config.get('prompt', '@app/Console')
 		self.__help     = config.get('help', {})
 		self.__closing  = config.get('closing', 'Closing')
 		self.__messages = config.get('messages', {})
@@ -149,7 +155,7 @@ class Console(EncodingHelper):
 			while self.__active:
 				cmd=evt=None
 				try:
-					cmd = xinput(self.__prompt)
+					cmd = xinput("%s: " % self.__prompt)
 					evt = TextEvent(cmd)
 					rsp = self.handle_input(evt)
 					if evt.argc and evt.argv[0]:
@@ -297,6 +303,9 @@ class Console(EncodingHelper):
 			self.__objects["config"].keys(*Args)
 		elif cmd == 'path':
 			self.__objects["config"].path
+		
+		elif cmd == 'save':
+			self.__objects["config"].save()
 		
 		else:
 			print ("UNKNOWN COMMAND : %s" % cmd)
