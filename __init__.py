@@ -358,7 +358,7 @@ class trix(object):
 	def jconfig(cls, filepath, **k):
 		"""
 		Pass string `filepath` to which a config file will be written. 
-		A `trix.app.jconf` object is returned.
+		A `JConfig` object is returned.
 		
 		NOTES:
 		 * Pass a `default` filepath string using keyword arguments.
@@ -401,7 +401,7 @@ class trix(object):
 			config.update(**k)
 		except AttributeError:
 			# by path...
-			jconf = cls.jconf(config, **k)
+			jconf = cls.jconfig(config, **k)
 			config = jconf.obj
 		return config
 	

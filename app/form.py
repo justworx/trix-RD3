@@ -4,9 +4,9 @@
 # of the GNU Affero General Public License.
 #
 
-from .jconf import *
 from ..util.xinput import *
 from ..fmt.lines import *
+
 
 class Form(object):
 	"""Command-line data entry form."""
@@ -45,15 +45,18 @@ class Form(object):
 		enclosed in "double-quotes", etc...
 		"""
 		
+		config = trix.nconfig(config, **k)
+		"""
 		config = config or {}
 		
 		try:
 			config.update(**k)
 		except AttributeError:
 			if config:
-				config = jconf(config, **k).obj
+				config = trix.jconfig(config, **k).obj
 			else:
 				config = k
+		"""
 		
 		# tools
 		self.__lines = Lines()

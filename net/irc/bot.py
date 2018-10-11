@@ -53,7 +53,7 @@ class Bot(Client):
 		self.__botid = str(botid).lower()
 		
 		#
-		# Use the `trix.app.jconf` class to manage the config file.
+		# Use the `trix.app.jconfig` class to manage the config file.
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
 		self.__pconfig = BOT_CACHE_DIR % self.__botid
@@ -182,7 +182,7 @@ class Bot(Client):
 	
 	def __loadconfig(self):
 		botid = self.__botid
-		self.__jconfig = jconf(BOT_CACHE_DIR % botid)
+		self.__jconfig = trix.jconfig(BOT_CACHE_DIR % botid)
 		self.__config = self.__jconfig.obj
 		if not self.__config['connections']:
 			self.__addconfig()
