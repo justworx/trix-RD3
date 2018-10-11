@@ -14,12 +14,15 @@ soxy/
 
 
 # these shouldn't be posted with the project
+doc
 doc/
+wiki
 wiki/
 
 
 
 # temporary backups
+bu
 bu/
 *.bu
 *.bu.py
