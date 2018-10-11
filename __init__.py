@@ -373,7 +373,39 @@ class trix(object):
 		"""
 		m = cls.nmodule("app.jconf")
 		return m.jconf(filepath, **k)
+	
+	# CONFIG
+	@classmethod
+	def config(cls, config=None, **k):
+		"""
+		If `config` is given as a dict, the dict is updated with any 
+		given keyword arguments and returned.
 		
+		If `config` is the path to a JSON or ast-parsable text file, the
+		file is parsed and the resulting structure is returned. In this
+		case, any keyword arguments are passed to the JConfig constructor
+		""" 
+		try:
+			# by dict 
+			config.update(**k)
+		except AttributeError:
+			# by path...
+			jconf = cls.jconf(config, **k)
+			config = jconf.obj
+		return config
+	
+	# NCONFIG
+	@classmethod
+	def nconfig(cls, innerFPath, **k):
+		"""
+		Pass string `innerFPath`, the partial path starting within the 
+		trix directory to a JSON or ast-parsable file.
+		"""
+		if isinstance(innerFPath, dict):
+			innerFPath.update(k)
+			return innerFPath
+		return cls.config(cls.innerfpath(innerFPath), **k)
+	
 	
 	# K-COPY
 	@classmethod
@@ -391,7 +423,6 @@ class trix(object):
 		except:
 			pass
 		return dict([[k,d[k]] for k in keys if k in d])
-	
 	
 	# K-POP
 	@classmethod
@@ -431,7 +462,6 @@ class trix(object):
 			# requires full module path, so pass through innerpath()
 			cls.__FPath = cls.module(cls.innerpath('fs')).Path
 			return cls.__FPath(path, *a, **k)
-	
 	
 	# N-PATH
 	@classmethod
@@ -520,6 +550,7 @@ class trix(object):
 #
 # CONVENIENCE
 #
+config     = trix.config
 create     = trix.create
 debug      = trix.debug
 display    = trix.display
@@ -532,6 +563,7 @@ kcopy      = trix.kcopy
 kpop       = trix.kpop
 log        = trix.log
 module     = trix.module
+nconfig    = trix.nconfig
 ncreate    = trix.ncreate
 nmodule    = trix.nmodule
 nprocess   = trix.nprocess
