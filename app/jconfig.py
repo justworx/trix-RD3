@@ -74,7 +74,7 @@ class JConfig(EncodingHelper):
 		
 		# start with selection object on self.__object
 		self.__sel = self.__object
-	
+		
 	
 	# ---- file/path properties -----
 	

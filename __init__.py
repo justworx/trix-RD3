@@ -361,18 +361,15 @@ class trix(object):
 		A `trix.app.jconf` object is returned.
 		
 		NOTES:
-		 * Pass a `default` file path string using keyword arguments.
+		 * Pass a `default` filepath string using keyword arguments.
 		   The default path should point to a static default config file
 		   (in ast or json format).
-		 * The jconf object always writes output as JSON, with encoding
-		   utf_8. If your default file encoding is something other than
-		   utf_8, you must pass that file's encoding as a keyword arg.
 		 * Be careful that your `default` filepath is not unintentionally
 		   set to the same path as the `filepath` argument, or the `save`
 		   method will overwrite the default config. 
 		"""
 		m = cls.nmodule("app.jconfig")
-		return m.jconfig(filepath, **k)
+		return m.JConfig(filepath, **k)
 	
 	# CONFIG
 	@classmethod
