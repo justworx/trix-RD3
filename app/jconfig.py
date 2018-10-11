@@ -243,6 +243,7 @@ class JConfig(EncodingHelper):
 	#
 	def __load(self, default=None, **k):
 		
+		TXT = None
 		try:
 		
 			#
@@ -261,10 +262,10 @@ class JConfig(EncodingHelper):
 			k = k or self.ek
 			
 			# 1 - read `path` file text; 'touch', if no such file.
-			self.txt = Path(self.path, affirm="touch").reader(**k).read()
+			TXT = Path(self.path, affirm="touch").reader(**k).read()
 			
 			# 2 - now there's a `path` file, but it may be empty
-			if not self.txt.strip():
+			if not TXT.strip():
 				#
 				# there's nothing in the config file...
 				#
@@ -278,24 +279,24 @@ class JConfig(EncodingHelper):
 				
 				else:
 					# A) read the default file's contents.
-					self.txt = File(self.default, encoding="utf_8").read()
+					TXT = File(self.default, encoding="utf_8").read()
 					
 					# B) write the default config to the file
 					outf = File(self.path, encoding="utf_8", affirm='touch')
-					outf.write(self.txt)
+					outf.write(TXT)
 					
 		
 			# 3 - load json to the data object, `self.__object`
 			# try with ast (in case loading a default given in ast).
 			try:
-				self.__object = ast.literal_eval(self.txt)
+				self.__object = ast.literal_eval(TXT)
 			except:
-				compile(self.txt, fpath, 'eval') #try to get a line number
+				compile(TXT, fpath, 'eval') #try to get a line number
 				raise
 		
 		except IsADirectoryError as ex:
 			raise type(ex)(ex.args, xdata(
-				fpath=fpath, k=k, txt=self.txt, path=self.path, 
+				fpath=fpath, k=k, txt=TXT, path=self.path, 
 				dfile=self.default
 			))
 		
@@ -303,10 +304,10 @@ class JConfig(EncodingHelper):
 			# fallback on json, which will work for both "default" and
 			# for config files passed as the constructor argument.
 			try:
-				self.__object = json.loads(self.txt)
+				self.__object = json.loads(TXT)
 			except BaseException as json_ex:
 				raise Exception ("config-read-error", xdata(
-					path = fpath, pathk = k,
+					path = fpath, pathk = k, txt=TXT, 
 					json = {"type" : type(json_ex), "args" : json_ex.args},
 					ast = {"type" : type(ast_ex), "args" : ast_ex.args}
 				))

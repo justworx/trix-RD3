@@ -353,9 +353,9 @@ class trix(object):
 			k.setdefault('encoding', DEF_ENCODE)
 			return json.loads(jsonstr.decode(**k))
 	
-	# J-CONF
+	# J-CONFIG
 	@classmethod
-	def jconf(cls, filepath, **k):
+	def jconfig(cls, filepath, **k):
 		"""
 		Pass string `filepath` to which a config file will be written. 
 		A `trix.app.jconf` object is returned.
@@ -371,8 +371,8 @@ class trix(object):
 		   set to the same path as the `filepath` argument, or the `save`
 		   method will overwrite the default config. 
 		"""
-		m = cls.nmodule("app.jconf")
-		return m.jconf(filepath, **k)
+		m = cls.nmodule("app.jconfig")
+		return m.jconfig(filepath, **k)
 	
 	# CONFIG
 	@classmethod
@@ -383,8 +383,22 @@ class trix(object):
 		
 		If `config` is the path to a JSON or ast-parsable text file, the
 		file is parsed and the resulting structure is returned. In this
-		case, any keyword arguments are passed to the JConfig constructor
-		""" 
+		case, any keyword args are passed to the JConfig constructor.
+		
+		TESTS:
+		config("test.conf")  # ~/dev/test.conf
+		config(None, x=9)
+		config({})
+		config(y='x')
+		config()
+		nconfig("test.conf") # ~/dev/trix/test.conf
+		nconfig(None, x=9)
+		nconfig({})
+		nconfig(y='x')
+		config()
+		"""
+		if config == None:
+			return dict(k)
 		try:
 			# by dict 
 			config.update(**k)
@@ -394,17 +408,19 @@ class trix(object):
 			config = jconf.obj
 		return config
 	
-	# NCONFIG
+	# N-CONFIG
 	@classmethod
-	def nconfig(cls, innerFPath, **k):
+	def nconfig(cls, config=None, **k):
 		"""
-		Pass string `innerFPath`, the partial path starting within the 
+		Pass string `config`, the partial path starting within the 
 		trix directory to a JSON or ast-parsable file.
 		"""
-		if isinstance(innerFPath, dict):
-			innerFPath.update(k)
-			return innerFPath
-		return cls.config(cls.innerfpath(innerFPath), **k)
+		if config == None:
+			return dict(k)
+		if isinstance(config, dict):
+			config.update(k)
+			return config
+		return cls.config(trix.innerfpath(config), **k)
 	
 	
 	# K-COPY
@@ -557,7 +573,7 @@ display    = trix.display
 innerpath  = trix.innerpath
 innerfpath = trix.innerfpath
 formatter  = trix.formatter
-jconf      = trix.jconf
+jconfig    = trix.jconfig
 jparse     = trix.jparse
 kcopy      = trix.kcopy
 kpop       = trix.kpop
