@@ -5,10 +5,11 @@
 #
 
 
+
 from . import *
 from .irc_connect import *
 from ..client import *
-from ...app.jconf import *
+
 
 
 BOT_CACHE_DIR = "~/.cache/trix/irc/bots/%s.json"
@@ -197,7 +198,7 @@ class Bot(Client):
 		confdir = IRC_CONFIG_DIR
 		
 		cc = self.__config['connections']         # connections dict
-		fm = trix.nmodule("x.form")               # form entry module
+		fm = trix.nmodule("app.form")             # form entry module
 		fo = fm.Form(confdir + "irc_config.conf") # form object
 		
 		# use `fo` Form to get a connection configuration
