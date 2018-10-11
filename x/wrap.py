@@ -11,24 +11,20 @@ from trix import *
 class Wrap(object):
 	"""Wrap an object."""
 	
-	@classmethod
-	def create(cls, path, *a, **k):
-		return cls(trix.create(path, *a, **k))
-	
-	@classmethod
-	def ncreate(cls, innerPath, *a, **k):
-		return cls(trix.ncreate(innerPath, *a, **k))
-	
 	def __init__(self, o, **k):
 		"""Pass an object, or pass a 'create' or 'ncreate' kwarg."""
 		
 		self.__obj = o
 		self.__dir = {}
 		
+		# you can specify a set of attributes to wrap using attrs=[...]
 		attrs = k.get('attrs', dir(o))
+		
+		# otherwise, it's all methods and instancemethods
 		for n in attrs:
 			if not ("__" in n):
 				attr = getattr(o, n)
+				self.dir[n] = attr
 				if type(attr).__name__ in ['method', 'instancemethod']:
 					self.dir[n] = attr
 	
@@ -49,4 +45,14 @@ class Wrap(object):
 	@property
 	def keys(self):
 		return self.__dir.keys()
+	
+	"""
+	def _alt_load(self, o):
+		attrs = k.get('attrs', dir(o))
+		for n in attrs:
+			b = (n[:2] == "__" in n) and (n[-2:] == "__")
+			if b or not ("__" in n):
+				attr = getattr(o, n)
+				self.dir[n] = attr
+	"""	
 	
