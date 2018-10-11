@@ -57,7 +57,7 @@ class Bot(Client):
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
 		self.__pconfig = BOT_CACHE_DIR % self.__botid
-		self.__jconfig = jconf(self.__pconfig)
+		self.__jconfig = trix.jconfig(self.__pconfig)
 		self.__debug = 0
 		
 		# Keep track of the config in self.__config
@@ -214,7 +214,7 @@ class Bot(Client):
 		#    be duplicated so that each connection retains fine-tuneable 
 		#    control over its own set of plugin objects.
 		#
-		condict['plugins'] = jconf(confdir + "/irc_plugin.conf").obj
+		condict['plugins'] = trix.jconfig(confdir + "/irc_plugin.conf").obj
 		
 		# add the connection for `botid`
 		self.config['connections'][configid] = condict
