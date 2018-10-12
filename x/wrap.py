@@ -12,7 +12,7 @@ class Wrap(object):
 	"""Wrap an object."""
 	
 	def __init__(self, o, **k):
-		"""Pass an object, or pass a 'create' or 'ncreate' kwarg."""
+		"""Pass an object."""
 		
 		self.__obj = o
 		self.__dir = {}
@@ -24,35 +24,26 @@ class Wrap(object):
 		for n in attrs:
 			if not ("__" in n):
 				attr = getattr(o, n)
-				self.dir[n] = attr
-				if type(attr).__name__ in ['method', 'instancemethod']:
-					self.dir[n] = attr
+				self.__dir[n] = attr
+				
+				#if type(attr).__name__ in ['method', 'instancemethod']:
+				#	self.__dir[n] = attr
+	
 	
 	def __call__(self, key, *a, **k):
-		return self[key](*a, **k)
+		return self.__dir[key](*a, **k)
+	
 	
 	def __getitem__(self, key):
-		return self.dir[key]
+		return self.__dir[key]
 	
-	@property
-	def obj(self):
-		return self.__obj
 	
-	@property
 	def dir(self):
 		return self.__dir
 	
-	@property
 	def keys(self):
-		return self.__dir.keys()
+		return self.__keys
 	
-	"""
-	def _alt_load(self, o):
-		attrs = k.get('attrs', dir(o))
-		for n in attrs:
-			b = (n[:2] == "__" in n) and (n[-2:] == "__")
-			if b or not ("__" in n):
-				attr = getattr(o, n)
-				self.dir[n] = attr
-	"""	
-	
+	def obj(self):
+		return self.__obj
+

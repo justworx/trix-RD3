@@ -113,7 +113,7 @@ class JConfig(EncodingHelper):
 		config object is a list, the number	of items in that list).
 		""" 
 		try:
-			return self.__object.keys()
+			return list(self.__object.keys())
 		except:
 			return len(self.__object)
 	

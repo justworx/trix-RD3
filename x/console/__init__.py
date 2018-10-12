@@ -11,8 +11,10 @@ from ...util.enchelp import *
 from ...util.linedbg import *
 from ...fmt import List, Lines
 
+# the following will need to be changed when this moves to trix.app
 from trix.app.jconfig import *
 from trix.app.event import *
+from trix.x.wrap import *
 
 
 #
@@ -22,6 +24,8 @@ from trix.app.event import *
 #
 class Console(EncodingHelper):
 	"""Base class for an interactive terminal-based user interface."""
+	
+	dv = {}
 	
 	DefLang = 'en'
 	DefConf = "x/console/config/%s.conf"  # REM: Change x to app!
@@ -65,7 +69,7 @@ class Console(EncodingHelper):
 			if "nconfig" in k:
 				config = trix.nconfig(config['nconfig'], **k)
 			elif "config" in k:
-				config = trix.config(config['nconfig'], **k)
+				config = trix.config(config['config'], **k)
 			else:
 				config = trix.nconfig(config, **k)
 			
@@ -240,7 +244,7 @@ class Console(EncodingHelper):
 					xdata(config=wconf)
 				)
 		
-		trix.display(wconf),
+		#trix.display(wconf)
 		
 		return Wrapper(wconf)
 		
@@ -287,7 +291,8 @@ class Console(EncodingHelper):
 					#
 					print('') # get off the "input" line
 					event_dict = evt.dict if evt else None
-					linedbg().dbg(self, ex.args, cmd=cmd, evt=event_dict)
+					linedbg().dbg(self, args=ex.args, edict=event_dict)
+					#linedbg().dbg(self) #, *ex.args)
 				
 		except KeyboardInterrupt:
 			print('')
@@ -376,7 +381,7 @@ class Console(EncodingHelper):
 				
 				# the entire config must be passed
 				w = Wrapper(wrap_conf, *wrap_args)
-				# w.console()
+				w.console()
 		
 			#
 			# CHECK FIRST ARG!
@@ -424,6 +429,7 @@ class Wrapper(Console):
 	
 	def __init__(self, config, *a, **k):
 		
+		conf = None
 		try:
 			#
 			# Load this wrapper's config file
@@ -433,26 +439,81 @@ class Wrapper(Console):
 			else:
 				conf = trix.nconfig(config['nconfig'])
 			
-			#trix.display (["wrapper config", config])
-			#print('')
+			# get the wrapped object's config
+			if 'ncreate' in conf:
+				self.__wrapped = trix.ncreate(conf['ncreate'], *a)
+			else:
+				self.__wrapped = trix.create(conf['create'], *a)
 			
-			Console.__init__(self, config, *a, **k).console()
-			#trix.display([2, self.config])
+			self.__obj = self.__wrapped.obj
+				
+			# create the wrapped object, passing args received on the
+			# command line.
+			self.__wrap = Wrap(self.__obj)
+			
+			# INIT CONSTRUCTOR
+			Console.__init__(self, conf, **k)
+			
+			# ADD A DEBUG VARIABLE
+			Console.dv["Wrapper"] = self           # DEBUG VAR
+			Console.dv["wrapped"] = self.__wrapped # DEBUG VAR
+			Console.dv["wrap"] = self.__wrap       # DEBUG VAR
+			Console.dv["obj"] = self.__obj         # DEBUG VAR
+			
 		except Exception as ex:
-			raise type(ex)(xdata(config=self.config, given=conf, a=a, k=k))
+			raise type(ex)(xdata(a=a, conf=conf))
 	
-	def console(self):
-		print ("Hello")
-		pass
 	
 	
 	@property
 	def id_suffix(self):
-		return type(self.__wrap.obj).__name__
+		return type(self.__wrapped).__name__
+	
+	
+	@property
+	def obj(self):
+		return self.__wrap.obj
+	
+	@property
+	def wrap(self):
+		return self.__wrap
+	
+	@property
+	def wrapped(self):
+		return self.__wrapped
+	
+	
+	def resultformat(self, r):
+		if r:
+			if isinstance(r, (str,int,float,bool)):
+				return str(r)
+			else:
+				try: # is it dict-like?
+					return trix.formatter(f='JDisplay').format(dict(r))
+				except Exception as ex:
+					pass
+				
+				try: # list-like?
+					return trix.formatter(f='JDisplay').format(list(r))
+				except Exception as ex:
+					pass
+				
+				try: # list-like?
+					return str(r)
+				except Exception as ex:
+					pass
+		return r
+	
 	
 	
 	def handle_input(self, e):
-		r = self.__wrapped(*e.args)
-		print ("r", r)
-		e.reply(r)
-
+		
+		cmd = e.argv[0]
+		args = e.argv[1:]
+		wrap = self.__wrap
+		
+		trix.display(['handle_input', cmd, args])
+		
+		result = wrap(cmd, *args)
+		e.reply = self.resultformat(result)
+		print( e.reply )
