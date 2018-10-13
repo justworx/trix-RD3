@@ -23,7 +23,7 @@ class trix(object):
 	"""Utility, debug, import; object, thread, and process creation."""
 	
 	__m  = __module__
-	__mm = {}
+	__mm = mm = sys.modules
 	
 	Logging = 0 #-1=print; 0=None; 1=log-to-file
 	
@@ -63,45 +63,12 @@ class trix(object):
 		external to the package in which this class is defined.
 		"""
 		try:
-			# If the `path` module has already been imported, return it.
 			return cls.__mm[path]
 		
 		except KeyError:
-			
-			# import the module and add it to cls.__mm
-			mod = __import__(path)
-			
-			# split the module path into a list
-			pathList = path.split('.')
-			
-			# accumulate module heirarchy p1.p2.p3...
-			# ...preset the first item.
-			pa = [pathList[0]]
-			
-			# The root module should be preset in cls.__mm before beginning
-			# the loop.
-			cls.__mm[pathList[0]] = cur = mod
-			
-			# append each additional path element's module
-			for pe in pathList[1:]:
+			__import__(path)
+			return cls.__mm[path]
 				
-				# Append each path element to pa list. The first time through
-				# pe will be "p1.p2" (because p1 is already preset, above).
-				# Each additional pass will add the next path element.
-				pa.append(pe)
-				
-				# Reset the `cur`	variable to the module named by the current
-				# path element `pe`. 
-				cur = cur.__dict__[pe]
-				
-				# Now set the current accumulated path (pa) as a dot-separated
-				# string key in the cls.__mm dict, with the current module as
-				# the value.
-				if not pe in cls.__mm:
-					cls.__mm[".".join(pa)] = cur
-			
-			# return the module
-			return cur	
 	
 	
 	# N-MODULE
@@ -322,14 +289,7 @@ class trix(object):
 		Start executable object `x` in a new thread, passing any given 
 		*args and **kwargs.
 		"""
-		try:
-			thread.start_new_thread(x, a, k)
-		except:
-			try:
-				import thread
-			except:
-				import _thread as thread 
-			thread.start_new_thread(x, a, k)
+		thread.start_new_thread(x, a, k)
 	
 	
 	# ---- general -----
@@ -556,39 +516,6 @@ class trix(object):
 				except:
 					cls.__log = cls.ncreate('util.loglet.Loglet', cls.__m)
 					cls.__log(*a, **k)
-		
-
-
-
-#
-# CONVENIENCE
-#
-config     = trix.config
-create     = trix.create
-debug      = trix.debug
-display    = trix.display
-innerpath  = trix.innerpath
-innerfpath = trix.innerfpath
-formatter  = trix.formatter
-jconfig    = trix.jconfig
-jparse     = trix.jparse
-kcopy      = trix.kcopy
-kpop       = trix.kpop
-log        = trix.log
-module     = trix.module
-nconfig    = trix.nconfig
-ncreate    = trix.ncreate
-nmodule    = trix.nmodule
-nprocess   = trix.nprocess
-nvalue     = trix.nvalue
-path       = trix.path
-pid        = trix.pid
-popen      = trix.popen
-process    = trix.process
-proxify    = trix.proxify
-start      = trix.start
-tracebk    = trix.tracebk
-value      = trix.value
 
 
 
