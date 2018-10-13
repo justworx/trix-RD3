@@ -49,6 +49,10 @@ class JConfig(EncodingHelper):
 		REMEMBER:
 		 * The object loads both json and ast, but can only write JSON.
 		 * The default file is never written to by this class.
+		
+		ALSO:
+		 * Be sure to pass affirm='touch' for new config files.
+		
 		"""
 		
 		k.setdefault('encoding', DEF_ENCODE)
@@ -262,7 +266,7 @@ class JConfig(EncodingHelper):
 			k = k or self.ek
 			
 			# 1 - read `path` file text; 'touch', if no such file.
-			TXT = Path(self.path, affirm="touch").reader(**k).read()
+			TXT = Path(self.path, **k).reader(**k).read()
 			
 			# 2 - now there's a `path` file, but it may be empty
 			if not TXT.strip():
@@ -285,7 +289,6 @@ class JConfig(EncodingHelper):
 					outf = File(self.path, encoding="utf_8", affirm='touch')
 					outf.write(TXT)
 					
-		
 			# 3 - load json to the data object, `self.__object`
 			# try with ast (in case loading a default given in ast).
 			try:
@@ -293,6 +296,12 @@ class JConfig(EncodingHelper):
 			except:
 				compile(TXT, fpath, 'eval') #try to get a line number
 				raise
+		
+		except FileNotFoundError as ex:
+			raise type(ex)(xdata(
+				path=self.path, affirm=k.get('affirm'),
+				suggest="affirm='touch'"
+			))
 		
 		except IsADirectoryError as ex:
 			raise type(ex)(ex.args, xdata(
