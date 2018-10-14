@@ -92,9 +92,9 @@ class trix(object):
 	
 	# CREATE
 	@classmethod
-	def create(cls, path, *a, **k):
+	def create(cls, modpath, *a, **k):
 		"""
-		Create and return an object specified by argument `path`. 
+		Create and return an object specified by argument `modpath`. 
 		
 		The dot-separated path must start with the path to the desired
 		module. It must be suffixed with a name of a class defined in the
@@ -105,7 +105,7 @@ class trix(object):
 		
 		>>> sock = trix.create("socket.socket")
 		"""
-		p = path.split(".")
+		p = modpath.split(".")
 		m = p[:-1] # module
 		o = p[-1]  # object
 		
@@ -117,14 +117,14 @@ class trix(object):
 				T = __builtins__[o]
 		
 		except KeyError:
-			raise KeyError('create-fail', xdata(path=path,
+			raise KeyError('create-fail', xdata(path=modpath,
 					mod=".".join(m), obj=o
 				))
 		
 		try:
 			return T(*a, **k)
 		except BaseException as ex:
-			raise type(ex)(xdata(path=path, a=a, k=k, obj=o))
+			raise type(ex)(xdata(path=modpath, a=a, k=k, obj=o))
 		
 	
 	# N-CREATE - create an object given path from inside trix
