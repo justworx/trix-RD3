@@ -35,7 +35,7 @@ class IRCConnect(Connect):
 		
 		# client sets the connid, the key from the config dict, which
 		# is also the bot's id.
-		self.__botid = config.get('connid')
+		self.__botname = config.get('connid')
 		
 		# store config for plugin load/unload
 		self.pconfig = config.get('plugins', {})
@@ -125,8 +125,8 @@ class IRCConnect(Connect):
 	
 	
 	@property
-	def botid(self):
-		return self.__botid
+	def botname(self):
+		return self.__botname
 	
 	
 	
