@@ -4,73 +4,108 @@
 # the terms of the GNU Affero General Public License.
 #
 
-
 import inspect
-
+import trix
 
 class Inspect(object):
-	"""Covers the python `inspect` module."""
+	"""
+	Covers the python `inspect` module.
+	
+	UNDER CONSTRUCTION!
+	This class is *way* under construction. It could change a lot.
+	
+	NOTES
+	I guess the important thing to remember here is that the object
+	you pass to init determines the values that are available in
+	Inspect results. If you pass a module, all its functions and
+	classes and methods will be available; If you want only the 
+	functions and methods of a specific object/class, you must pass,
+	only that.
+	
+	python3
+	>>> from trix.x.xinspect import *
+	>>> from trix.app.form import *
+	>>> ii = Inspect(form.Form())
+	>>> ii.methods
+	>>> ii.properties
+	"""
 	
 	def __init__(self, o):
+		"""Pass an object, module, class, etc..."""
 		self.__o = o
+		self.__d = {}
 	
-	def get(self, predicate=None):
-		return inspect.getmembers(self.__o, predicate)
+	@property
+	def object(self):
+		"""Return the object passed to the constructor."""
+		return self.__o
 	
-	def functions(self):
-		return self.get(inspect.isfunction)
-	
+	@property
 	def classes(self):
-		return self.get(inspect.isclass)
-	
+		"""Return a dict containing class information."""
+		try:
+			return self.__classes
+		except:
+			r = self.__classes = {}
+			for cls in self.get(inspect.isclass):
+				typeString = str(cls[0])
+				classObj   = cls[1]
+				modulePath = classObj.__module__
+				className  = classObj.__name__
+				fullPath   = "%s.%s" % (modulePath, className)
+				
+				r[className] = dict(
+						typestring = typeString, 
+						modulepath = modulePath, 
+						modulename = className, 
+						fullmodpath = fullPath, 
+						classobject = classObj
+					)
+			return self.__classes
+		
+	@property
 	def methods(self):
-		return self.get(inspect.ismethod)
+		"""Return a dict containing method information."""
+		try:
+			return self.__methods
+		except:
+			r = self.__methods = {}
+			for m in self.get(inspect.ismethod):
+				methodName = m[0]
+				methodType = m[1]
+				r[methodName] = methodType
+			return self.__methods
 	
+	@property
 	def properties(self):
-		r = {}
-		classes = self.classes()
-		for cls in classes:
-			ts = str(cls[0])          # type string
-			md = cls[1].__module__    # module path
-			nm = cls[1].__name__      # class name
-			fp = "%s.%s" % (md, nm)   # full mod/class path
-			
-			# inspect for properties in c1 using lambda
-			lx = lambda o: isinstance(o,property)
-			pp = inspect.getmembers(cls[1], lx)
-			
-			# turn the `pp` pairs into key=values in a dict
-			pd = {}
-			for item in pp:
-				pd[item[0]] = item[1]
-			
-			# add class to the return dict
-			r[nm] = dict(
-					typestring = ts, 
-					modulepath = md, 
-					modulename = nm, 
-					fullmodpath= fp, 
-					properties = pd,
-					classobject= cls[1]
-				)
-		return r
+		"""Return a dict containing properties."""
+		try:
+			return self.__properties
+		except:
+			r = self.__properties = {}
+			for cls in self.get(inspect.isclass):
+				lx = lambda o: isinstance(o,property)
+				pp = inspect.getmembers(cls[1], lx)
+				for item in pp:
+					r[item[0]] = item[1]
+			return self.__properties
 	
-	def generators(self):
-		return self.get(inspect.isgenerator)
+	@property
+	def functions(self):
+		"""Returns a dict containing the functions of self.object."""
+		try:
+			return self.__functions
+		except:
+			r = self.__functions = {}
+			for f in self.get(inspect.isfunction):
+				r[f[0]] = f[1]
+			return self.__functions
 	
-"""
-python3
-from trix.x.xinspect import *
-from trix.app.form import *
-
-obj = Form({}, about="Testing!")
-ii = Inspect(obj)
-pp = ii.properties()
-trix.display(pp)
-
-po = pp['Form']['pp'][0][1]
-po.fget(obj)
-
-#trix.display(ii.methods())
-
-"""
+	# GET
+	def get(self, predicate=None):
+		"""
+		Utility. Calls inspect.getmembers, passing self.object as the
+		first argument. You must provide the predicate if you call this
+		method directly.
+		"""
+		return inspect.getmembers(self.__o, predicate)
