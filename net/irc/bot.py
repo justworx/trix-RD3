@@ -30,33 +30,33 @@ class Bot(Client):
 			irc.debug(self, *a, **k)
 	
 	
-	def __init__(self, botid):
+	def __init__(self, botname):
 		"""
-		Pass string `botid` - the bot's name. The bot will be started if
-		its config file exists in BOT_CACHE_DIR.  Otherwise, a new config 
-		for the given `botid` must be generated, so a series of questions
-		will appear in the terminal.
+		Pass string `botname` - the bot's name. The bot will be started 
+		if its config file exists in BOT_CACHE_DIR.  Otherwise, a new 
+		config for the given `botname` must be generated, so a series of 
+		questions will appear in the terminal.
 		
 		NOTES: 
-		 * The botid value is always reset to lower-case. 
+		 * The botname value is always reset to lower-case. 
 		 * The BOT_CACHE_DIR is: "~/.cache/trix/irc/bots/";
-		   The config file will be saved as <botid>.json, where <botid>
-		   is the `botid` string given as the constructor.
+		   The config file will be saved as <botname>.json, where 
+		   <botname> is the `botname` string given as the constructor.
 		"""
 		
 		#
 		# BOT ID 
 		# Users give a name to each of their bots.
-		# Every bot config file in .cache config is named for its botid
+		# Every bot config file in .cache config is named for its botname
 		# in the format '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
-		self.__botid = str(botid).lower()
+		self.__botname = str(botname).lower()
 		
 		#
 		# Use the `trix.app.jconfig` class to manage the config file.
 		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
 		#
-		self.__pconfig = BOT_CACHE_DIR % self.__botid
+		self.__pconfig = BOT_CACHE_DIR % self.__botname
 		self.__jconfig = trix.jconfig(self.__pconfig)
 		self.__debug = 0
 		
@@ -64,26 +64,26 @@ class Bot(Client):
 		self.__config = self.__jconfig.obj
 		
 		#
-		# The first time a botid is used, its config file will start
+		# The first time a botname is used, its config file will start
 		# as an empty dict. That dict must be filled with defaults 
 		# from `irc.config`.
 		#
 		if not self.__config.keys():
 			#
-			# Each new bot must start with a botid and an empty connection
-			# config dict.
+			# Each new bot must start with a botname and an empty
+			# connection config dict.
 			#
-			self.__config['botid'] = botid
+			self.__config['botname'] = botname
 			self.__config['connections'] = {}
 			
 			#
-			# Every new botid requires at least one connection to run.
+			# Every new botname requires at least one connection to run.
 			# If on connection exists, add one now using the interactive
 			# prompt in `self.configadd`.
 			#
 			conlist = self.__config.get('connections')
 			if not conlist:
-				self.configadd(botid)
+				self.configadd(botname)
 		
 		# Finally, init the superclass
 		Client.__init__(self, self.config)
@@ -136,8 +136,8 @@ class Bot(Client):
 	
 	
 	@property
-	def botid (self):
-		return self.__botid
+	def botname (self):
+		return self.__botname
 	
 	@property
 	def config(self):
@@ -158,8 +158,8 @@ class Bot(Client):
 	
 	
 	# CONFIG-ADD
-	def configadd(self, botid):
-		self.__addconfig(botid)
+	def configadd(self, botname):
+		self.__addconfig(botname)
 	
 	
 	# HANDLE-DATA
@@ -181,8 +181,8 @@ class Bot(Client):
 	#
 	
 	def __loadconfig(self):
-		botid = self.__botid
-		self.__jconfig = trix.jconfig(BOT_CACHE_DIR % botid)
+		botname = self.__botname
+		self.__jconfig = trix.jconfig(BOT_CACHE_DIR % botname)
 		self.__config = self.__jconfig.obj
 		if not self.__config['connections']:
 			self.__addconfig()
@@ -190,9 +190,9 @@ class Bot(Client):
 	#
 	#
 	# ADD CONFIG
-	#  - Create a new configuration file for a given `botid`
+	#  - Create a new configuration file for a given `botname`
 	#
-	def __addconfig(self, botid):
+	def __addconfig(self, botname):
 		
 		# get the configuration directory
 		confdir = IRC_CONFIG_DIR
@@ -206,7 +206,7 @@ class Bot(Client):
 		
 		# save network name and configid for use below
 		network = condict.get('network')
-		configid = "%s-%s" % (network, botid)
+		configid = "%s-%s" % (network, botname)
 		
 		#
 		# LOAD FRESH PLUGIN CONFIG
@@ -216,7 +216,7 @@ class Bot(Client):
 		#
 		condict['plugins'] = trix.jconfig(confdir + "/irc_plugin.conf").obj
 		
-		# add the connection for `botid`
+		# add the connection for `botname`
 		self.config['connections'][configid] = condict
 		self.config['connections'][configid]['plugins'] = plugins
 		
