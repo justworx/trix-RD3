@@ -63,11 +63,11 @@ class Form(object):
 		
 		# init properties
 		self.__prompt = config.get("prompt", "--> ")
-		self.__title = config.get("title", {})
-		self.__about = config.get("about", {})
+		self.__title = config.get("title", "")
+		self.__about = config.get("about", "")
 		self.__fields = config.get("fields", {})
 		self.__keys   = config.get("keys", sorted(config.keys()))
-		self.__mode = config.get('mode', '')
+		self.__mode = config.get('mode', "")
 		self.__cancel = config.get('cancel', "Form Cancel.")
 	
 	
@@ -96,6 +96,10 @@ class Form(object):
 	@property
 	def keys(self):
 		return self.__keys
+	
+	@property
+	def cancel(self):
+		return self.__cancel
 	
 	
 	
@@ -176,9 +180,8 @@ class Form(object):
 			
 			print ('')
 		
-		
-		
 		return r
-	
-	
+
+
+
 
