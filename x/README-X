@@ -1,23 +1,11 @@
 
-The `x` package contains experimental code.
+X - Experimental Code/Files
 
-I'm removing `x` from the .gitignore file because I spend too much
-time looking for these items in backups - I'd rather have them here,
-available, secure on this very very secure server.
+The `x` package is meant to contain files/code that 
+ * are experimental and may or may not become part of trix 
+ * are under construction and may take a long time to update
+ * may be useful later but is not currently needed
 
-That said...
-
-DO NOT RELY ON ANY OF THIS CODE! 
-It's very likely incomplete, buggy, dangerous, explosive, horrific, 
-pshchodelic, lame, or otherwise not good. 
-
-Remember also that, in the event it turns out to be none of those 
-awful thinkgs, stable(ish) modules will be moved from `x` to a more
-appropriate location in the trix (or possibly some other) package.
-
-The `x` subpackage is intended ONLY for experimental and/or "under
-construction" modules. Chances are, most of it will never become 
-part of the trix package because I'm just throwing any old random 
-thing in here - for in case I need it eventually sometime in the 
-future, past, or never.
+Basically it's a shared staging area, backed up on the git server,
+identifiably volatile, experimental content and structure.
 

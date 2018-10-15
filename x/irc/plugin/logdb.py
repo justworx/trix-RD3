@@ -18,6 +18,7 @@ class LogDB(IRCPlugin):
 		IRCPlugin.__init__(self, pname, bot, config, *a, **k)
 		
 		# create the database object
+		config = trix.nconfig("x/irc/plugin/logdb.conf")
 		self.__db = trix.ncreate("data.database.Database", self.config)
 	
 	
