@@ -4,17 +4,16 @@
 # of the GNU Affero General Public License.
 #
 
-#from ..jconf import * # jconf is deprecated!
 from getpass import *
 from ...util.xinput import *
 from ...util.enchelp import *
 from ...util.linedbg import *
+from ...util.wrap import *
 from ...fmt import List, Lines
 
 # the following will need to be changed when this moves to trix.app
 from trix.app.jconfig import *
 from trix.app.event import *
-from trix.x.wrap import *
 
 
 #
