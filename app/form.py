@@ -46,17 +46,6 @@ class Form(object):
 		"""
 		
 		config = trix.nconfig(config, **k)
-		"""
-		config = config or {}
-		
-		try:
-			config.update(**k)
-		except AttributeError:
-			if config:
-				config = trix.jconfig(config, **k).obj
-			else:
-				config = k
-		"""
 		
 		# tools
 		self.__lines = Lines()
