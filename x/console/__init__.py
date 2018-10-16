@@ -5,22 +5,22 @@
 #
 
 from getpass import *
+from ...fmt import List, Lines
 from ...util.xinput import *
 from ...util.enchelp import *
 from ...util.linedbg import *
 from ...util.wrap import *
-from ...fmt import List, Lines
 
 # the following will need to be changed when this moves to trix.app
 from trix.app.jconfig import *
 from trix.app.event import *
 
 
-#
+# ------------------------------------------------------------------
 #
 # CONSOLE CLASS
 #
-#
+# ------------------------------------------------------------------
 class Console(EncodingHelper):
 	"""Base class for an interactive terminal-based user interface."""
 	
@@ -29,6 +29,9 @@ class Console(EncodingHelper):
 	DefLang = 'en'
 	DefConf = "x/console/config/%s.conf"  # REM: Change x to app!
 	
+	#
+	# ---- INIT -----
+	#
 	def __init__(self, config=None, **k):
 		"""
 		Pass config dict keys:
@@ -43,11 +46,6 @@ class Console(EncodingHelper):
 		 * help : print help on the specified topic
 		 * exit : exit the console (returning to previous activity)
 		"""
-		#
-		# ident
-		#
-		id_mod = self.__module__.split('.')[-2]
-		self.__ident_prefix = "%s@%s" % (getuser(), id_mod)
 		
 		#
 		# If no config is given, use a default config path. Subclasses
@@ -58,60 +56,35 @@ class Console(EncodingHelper):
 			# if config is a dict, update with kwargs it and continue
 			config.update(**k)
 		except AttributeError:
-			#
-			# otherwise config is given by the `config` argument or by 
-			# a 'config' or 'nconfig' kwargs (which take precedence over 
-			# the `config` argument).
-			#
-			
-			# at this point, config is a file path
+			# otherwise, it's some kind of file path
 			if "nconfig" in k:
 				config = trix.nconfig(config['nconfig'], **k)
 			elif "config" in k:
 				config = trix.config(config['config'], **k)
 			else:
 				config = trix.nconfig(config, **k)
-			
-		# -- now config is a dict --
 		
+		# store config
+		self.__config = config
+		
+		# init superclass
 		EncodingHelper.__init__(self, config)
 		
-		
-		# debugging - store config
-		self.__config = config
-
-		
-		#
-		# set member variables from config
-		#
+		# Set member variables from config
 		self.__title    = config.get('title'   , 'Console')
 		self.__about    = config.get('about'   , 'Hello.' )
 		self.__closing  = config.get('closing' , 'Closing')
 		self.__help     = config.get('help'    , {}       )
 		self.__messages = config.get('messages', {}       )
 		
-		# exerimental - probably going away
-		self.__objects = {}
-		
-		#
-		# alternate experiment
-		#  - Console can open one "subconsole" - Typically a Wrap object
-		#    that calls some object's methods as directed by a line of
-		#    input.
-		#
+		# WRAPPERS - For "sub-prompts".
 		self.__wrappers = config.get('wrappers', {})
-		self.__object = None
-		
 		
 		#
 		# PLUGINS
 		#
-		
-		# plugin config
 		pconf = config.get('plugins', {})
 		self.__plugins = {}
-		
-		# plugin load
 		perrors = {}
 		for p in pconf:
 			try:
@@ -123,7 +96,6 @@ class Console(EncodingHelper):
 				perrors[p] = xdata(
 						pluginname=p, ncreatepath=cpath, pluginconf=pconf
 					)
-		
 		if perrors:
 			raise Exception("plugin-load-errors", xdata(errors=perrors))
 		
@@ -158,7 +130,13 @@ class Console(EncodingHelper):
 		typically a class name, but potentially some other name 
 		representative of the function the prompt intends to perform.
 		"""
-		return self.__ident_prefix
+		try:
+			return self.__ident_prefix
+		except:
+			id_mod = self.__module__.split('.')[-2]
+			self.__ident_prefix = "%s@%s" % (getuser(), id_mod)
+			return self.__ident_prefix
+			
 	
 	@property
 	def id_suffix(self):
@@ -226,7 +204,9 @@ class Console(EncodingHelper):
 		"""A dict of wrappers available for use by this console."""
 		return self.__wrappers
 	
-	
+	#
+	# WRAPPER
+	#
 	def wrapper(self, wrapperid, *a):
 		"""
 		Return the wrapper from self.wrappers whose key matches
@@ -242,32 +222,10 @@ class Console(EncodingHelper):
 			raise ValueError("Config Requires config or nconfig path.",
 					xdata(config=wconf)
 				)
-		
-		#trix.display(wconf)
-		
 		return Wrapper(wconf)
-		
-		# load the wrapper config
-		#wconfig = 
-		
-		"""
-		#
-		# CREATE
-		#  - Use the creation method specified in the config file.
-		#
-		if 'ncreate' in wconf:
-			obj = trix.ncreate(wconf['ncreate'], *a)
-		elif 'create' in wconf:
-			obj = trix.create(wconf['create'], *a)
-		
-		wrap = trix.ncreate("x.wrap.Wrap", obj)
-		self.w = wrap
-		self.o = obj
-		"""
 	
-	#
+	
 	# CONSOLE - Start the console.
-	#  
 	def console(self):
 		"""Call this method to start a console session."""
 		
@@ -308,13 +266,18 @@ class Console(EncodingHelper):
 	#
 	# UTILITIES...
 	#
+	
+	# DISPLAY
 	def display(self, message):
+		"""Display text formatted to fit within a preconfigured width."""
 		lines = message.splitlines()
 		for line in lines:
 			print (line)
 	
 	
+	# BANNER
 	def banner(self, *a):
+		"""Display text as a title/about banner combo."""
 		self.lines.output(self.title, ff='title')
 		self.lines.output(self.about, ff='about')
 		print("#")
@@ -323,8 +286,8 @@ class Console(EncodingHelper):
 	
 	#
 	# HANDLERS...
-	#  - Add a handler for each console command you want to implement.
-	#  - Override these if you need to change behavior/output.
+	#  - Help, Errors, and Input handlers.
+	#  - Subclasses may override these to change behavior/output.
 	#
 	
 	# HANDLE HELP
@@ -335,6 +298,7 @@ class Console(EncodingHelper):
 	
 	# HANDLE ERROR
 	def handle_error(self, err, *a):
+		"""Print an error message and display arguments."""
 		if err in self.__messages:
 			print ("Error! %s" % self.__messages[err])
 		else:
@@ -396,6 +360,11 @@ class Console(EncodingHelper):
 
 
 
+# ------------------------------------------------------------------
+#
+# WRAPPER CLASS
+#
+# ------------------------------------------------------------------
 class Wrapper(Console):
 	"""
 	A Wrapper is a Console that holds a "wrapped" python object and 
@@ -426,13 +395,14 @@ class Wrapper(Console):
 	   
 	"""
 	
+	#
+	# INIT WRAPPER
+	#
 	def __init__(self, config, *a, **k):
 		
 		conf = None
 		try:
-			#
 			# Load this wrapper's config file
-			#
 			if 'config' in config:
 				conf = trix.config(config['config'])
 			else:
@@ -443,12 +413,14 @@ class Wrapper(Console):
 				self.__wrapped = trix.ncreate(conf['ncreate'], *a)
 			else:
 				self.__wrapped = trix.create(conf['create'], *a)
-			
 			self.__obj = self.__wrapped.obj
+			
 				
 			# create the wrapped object, passing args received on the
 			# command line.
-			self.__wrap = Wrap(self.__obj)
+			self.__wrap = Wrap(self.__wrapped)
+			
+			
 			
 			# INIT CONSTRUCTOR
 			Console.__init__(self, conf, **k)
@@ -460,7 +432,7 @@ class Wrapper(Console):
 			Console.dv["obj"] = self.__obj         # DEBUG VAR
 			
 		except Exception as ex:
-			raise type(ex)(xdata(a=a, conf=conf))
+			raise type(ex)(xdata(a=a))
 	
 	
 	
@@ -507,12 +479,17 @@ class Wrapper(Console):
 	
 	def handle_input(self, e):
 		
+		trix.display(self.wrap(*e.argv))
+		"""
 		cmd = e.argv[0]
 		args = e.argv[1:]
 		wrap = self.__wrap
 		
 		trix.display(['handle_input', cmd, args])
 		
-		result = wrap(cmd, *args)
+		#result = wrap(cmd, *args)
+		result = self.wrapped(cmd, *args)
+		
 		e.reply = self.resultformat(result)
 		print( e.reply )
+		"""
