@@ -5,17 +5,14 @@
 #
 
 import inspect
-import trix
+
 
 class Inspect(object):
 	"""
 	Covers the python `inspect` module.
 	
-	UNDER CONSTRUCTION!
-	This class is *way* under construction. It could change a lot.
-	
 	NOTES
-	I guess the important thing to remember here is that the object
+	I guess an important thing to remember here is that the object
 	you pass to init determines the values that are available in
 	Inspect results. If you pass a module, all its functions and
 	classes and methods will be available; If you want only the 
