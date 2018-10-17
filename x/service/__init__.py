@@ -125,6 +125,7 @@ class Service(ServiceIO):
 		self.__starttime = time.time()
 		self.__serviceid = serviceid
 		self.__object = sobject
+		self.__wrapper = Wrap(sobject)
 		self.__qpairs = []
 	
 	
@@ -177,12 +178,15 @@ class Service(ServiceIO):
 		arg = request[2]
 		krg = request[3]
 		
-		if cmd == 'info':
+		# if there's no command, return a somewhat random info dict
+		if not cmd:
 			return dict(
 					service=self.serviceid, uptime=self.uptime, 
 					target=repr(self.__object)
 				)
-
+		
+		return self.__wrapper(cmd, *arg, **krg)
+			
 
 
 #
