@@ -98,8 +98,7 @@ class Services(Runner):
 		
 		# create and return a ServiceConnect object
 		return ServiceConnect(s.serviceid, realQPair)
-	
-	
+
 
 
 
@@ -125,7 +124,7 @@ class Service(ServiceIO):
 		self.__starttime = time.time()
 		self.__serviceid = serviceid
 		self.__object = sobject
-		self.__qpairs = []
+		self.__qpairs =                 self.qpairs  = []
 	
 	
 	@property
@@ -138,17 +137,15 @@ class Service(ServiceIO):
 	
 	
 	# SERVICE - ADD QUEUES
-	def addqueues(self, qproxypair):
+	def addqueues(self, qpair):
 		"""To be called by the owning Services object."""
-		self.__qpairs.append(qproxypair)
+		self.__qpairs.append(qpair)
 	
 	
 	# SERVICE - HANDLE IO
 	def handle_io(self):
 		"""To be called only by the owning Services object."""
-		
 		for queues in self.__qpairs:
-			request=[]
 			try:
 				qin, qout = queues
 				
@@ -158,15 +155,14 @@ class Service(ServiceIO):
 				# send the request list back with the result appended
 				request.append(result)
 				
+				trix.display (["SERVICE - HANDLE IO", "result appended", 
+					result, {'request':request}])
+				
 				# send the result back in the out-queue (which is the 
 				# client's in-queue) with the result appended.
 				qout.put(request)
 			except Empty:
 				pass
-			except ReferenceError:
-				self.__qpairs.remove(queues)
-			except Exception:
-				request.append(xdata(qin=qin,qout=qout,request=request))
 	
 	
 	# SERVICE - HANDLE REQUEST
@@ -176,6 +172,8 @@ class Service(ServiceIO):
 		cmd = request[1]
 		arg = request[2]
 		krg = request[3]
+		
+		print ("SERVICE - HANDLE REQUEST", cmd, arg, krg)
 		
 		if cmd == 'info':
 			return dict(
@@ -194,13 +192,17 @@ class ServiceConnect(ServiceIO):
 	def __init__(self, serviceid, queues):
 		ServiceIO.__init__(self)
 		
-		#
-		# The same queues in the opposite order; what's in for the 
-		# service is out for the client (and vice versa). These are
-		# the real queues - Service only holds proxies.
-		#
+		# the same queues in the opposite order; what's in for the 
+		# service is out for the client (and vice versa)
 		self.__qout, self.__qin = queues
 		self.__sid = serviceid
+		
+		self.qpairs = queues
+	
+	# temp debug
+	@property
+	def qp(self):
+		return [self.__qout, self.__qin]
 	
 	@property
 	def serviceid(self):
@@ -229,7 +231,9 @@ class ServiceConnect(ServiceIO):
 		And... what happens with errors?
 		"""
 		req_args = [time.time(), command, a, k]
+		trix.display(["ServiceConnect", "request", req_args])
 		self.__qout.put(req_args)
+		#trix.display(dict(s=self, o=self.__qout, n=self.__qin)) # debug
 	
 	
 	# SERVICE-CONNECT - REPLIES
@@ -245,11 +249,33 @@ class ServiceConnect(ServiceIO):
 	
 	
 	
-	#
-	# DEBUGGING! REMOVE THIS METHOD!!!
-	#
-	@property
-	def qp(self):
-		return {'qout':str(self.__qout), 'qin': str(self.__qin)}
 	
 	
+	
+	
+	
+	
+	
+	
+	"""
+	#
+	# SERVICE-REPLY
+	#
+	class ServiceRequest(object):
+		def __init__(self, command, *a, **k):
+			self.cmd = command
+			self.args = a
+			self.krgs = k
+			self.time = time.time()
+			self.error = {}
+			self.result = None
+	
+	
+	#
+	# SERVICE-REPLY
+	#
+	class ServiceReply(object):
+		def __init__(self, singleReplyList):
+			pass
+	
+	"""
