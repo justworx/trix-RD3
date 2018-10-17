@@ -163,6 +163,7 @@ class ServiceConnect(object):
 		return self.__sid
 	
 	
+	# REQUEST
 	def request(self, command, *a, **k):
 		"""
 		Send a request to the Service object.
@@ -186,6 +187,7 @@ class ServiceConnect(object):
 		self.__qout.put([time.time(), command, a, k])
 	
 	
+	# REPLIES
 	def replies(self):
 		"""Return a list of reply objects."""
 		r = []
