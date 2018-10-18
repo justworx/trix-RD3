@@ -265,6 +265,9 @@ class JConfig(EncodingHelper):
 			# written to a newly created version of the config. 
 			k = k or self.ek
 			
+			# make sure there's a file at the target location.
+			k.setdefault('affirm', 'touch')
+			
 			# 1 - read `path` file text; 'touch', if no such file.
 			TXT = Path(self.path, **k).reader(**k).read()
 			
