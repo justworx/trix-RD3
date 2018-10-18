@@ -41,8 +41,10 @@ class Announce(IRCPlugin):
 					info = None
 				
 				if info:
-					self.bot.writeline("PRIVMSG %s : -- %s" % (targ, info))
-					self.prior = info
+					if len(info) < 256:
+						# don't let screwy websites cause the bot to flood
+						self.bot.writeline("PRIVMSG %s : -- %s" % (targ, info))
+						self.prior = info
 		except:
 			if not self.is_channel_name(e.target):
 				self.reply(e, xdata(err="URLInfo Lookup Fail"))
