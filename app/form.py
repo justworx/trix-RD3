@@ -4,6 +4,13 @@
 # of the GNU Affero General Public License.
 #
 
+"""
+from trix.app.form import *
+f = Form("x/irc/config/irc_config.conf")
+f.fill()
+
+"""
+
 from ..util.xinput import *
 from ..fmt.lines import *
 
@@ -113,7 +120,7 @@ class Form(object):
 		"""
 		try:
 			return self.__fill()
-		except EOFError:
+		except (EOFError, KeyboardInterrupt):
 			if self.__cancel:
 				print ("\n%s\n" % self.__cancel)
 			return None
@@ -146,26 +153,44 @@ class Form(object):
 		for key in self.keys:
 			
 			# single field-entry values
-			xf = f.get(key)['field']             # field name
-			xd = f.get(key).get('desc')          # field desc
-			xm = f.get(key).get('mode', '')      # field mode
-			xt = f.get(key).get('type', 'str')   # field type
+			fdict = f.get(key)
+			xf = xfield   = fdict['field']             # field name
+			xd = xdesc    = fdict.get('desc')          # field desc
+			xm = xmode    = fdict.get('mode', '')      # field mode
+			xt = xtype    = fdict.get('type', 'str')   # field type
+			xr = xrequire = fdict.get('require', 0)    # required?
+			xx = xdefault = fdict.get('default')       # default
 			
-			
-			#
-			# -- the following definitely needs some Lines formatting --
-			#
-		
-			# show the Field Name / Description
-			print ("{0} ({1})\n  - {2}".format(xf, xt, xd))
-			
-			x = xinput(self.prompt)
-			if 'json' in [self.__mode, xm]:
-				x = trix.jparse(x)
-			elif xt != 'str':
-				xtype = trix.nvalue(xt)
-				x = xtype(x)
-			r[key] = x
+			while not key in r:
+				# show the Field Name / Description
+				
+				xxd = "; default='%s'"%xdefault if xdefault else ''
+				xrr = "; required" if (xr and not xxd) else ''
+				
+				print ("{} ({}{}{})\n  * {}".format(xf, xt, xrr, xxd, xd))
+				
+				try:
+					# get user input
+					x = xinput(self.prompt)
+					
+					# set default if no value given
+					if xx and not x.strip():
+						x = xx
+					
+					if (xr and (not str(x).strip())):
+						raise ValueError("Field '%s' is required." % key)
+					
+					if 'json' in [self.__mode, xm]:
+						x = trix.jparse(x)
+					elif xt != 'str':
+						xtype = trix.nvalue(xt)
+						x = xtype(x)
+					
+					r[key] = x
+					
+				except ValueError as ex:
+					print ("; ".join(ex.args))
+					print ("Ctrl-c to cancel.\n")
 			
 			print ('')
 		
