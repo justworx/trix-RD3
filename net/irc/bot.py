@@ -12,8 +12,8 @@ from ..client import *
 
 
 
-BOT_CACHE_DIR = "~/.cache/trix/irc/bots/%s.json"
-IRC_CONFIG_DIR  = trix.npath("net/irc/config").path
+BOT_CONFIG = "~/.config/trix/irc/bots/" # real config files
+BOT_NCONFIG = "net/irc/config"          # conf templates
 
 
 
@@ -33,31 +33,39 @@ class Bot(Client):
 	def __init__(self, botname):
 		"""
 		Pass string `botname` - the bot's name. The bot will be started 
-		if its config file exists in BOT_CACHE_DIR.  Otherwise, a new 
+		if its config file exists in BOT_CONFIG.  Otherwise, a new 
 		config for the given `botname` must be generated, so a series of 
 		questions will appear in the terminal.
 		
 		NOTES: 
 		 * The botname value is always reset to lower-case. 
-		 * The BOT_CACHE_DIR is: "~/.cache/trix/irc/bots/";
+		 * The BOT_CONFIG is: "~/.config/trix/irc/bots/";
 		   The config file will be saved as <botname>.json, where 
-		   <botname> is the `botname` string given as the constructor.
+		   <botname> is the `botname` string given to the constructor.
 		"""
 		
 		#
 		# BOT ID 
 		# Users give a name to each of their bots.
 		# Every bot config file in .cache config is named for its botname
-		# in the format '~/.cache/trix/irc/bots/<BOTID>.json'
+		# in the format '~/.config/trix/irc/bots/<BOTID>.json'
 		#
 		self.__botname = str(botname).lower()
 		
 		#
 		# Use the `trix.app.jconfig` class to manage the config file.
-		#	Load the config file at '~/.cache/trix/irc/bots/<BOTID>.json'
+		#	Load the config file at '~/.config/trix/irc/bots/<BOTID>.json'
 		#
-		self.__pconfig = BOT_CACHE_DIR % self.__botname
+		self.__pconfig = BOT_CONFIG + "%s.json" % self.__botname
+		
+		#
+		# Path to the actual config file in "~/.config/trix/irc/bots".
+		# This needs to be stored so that any edits to configuration 
+		# can be saved.
+		#
 		self.__jconfig = trix.jconfig(self.__pconfig)
+		
+		# debug level zero
 		self.__debug = 0
 		
 		# Keep track of the config in self.__config
@@ -126,7 +134,6 @@ class Bot(Client):
 			#
 			Client.start(self)
 		
-		
 		except Exception as ex:
 			self.stop()
 			raise type(ex)("err-bot-fail", xdata(detail="bot-start-fail",
@@ -140,12 +147,16 @@ class Bot(Client):
 		return self.__botname
 	
 	@property
-	def config(self):
-		return self.__config
+	def pconfig(self):
+		return self.__pconfig
 	
 	@property
 	def jconfig(self):
 		return self.__jconfig
+	
+	@property
+	def config(self):
+		return self.__config
 	
 	@property
 	def debug (self):
@@ -182,9 +193,9 @@ class Bot(Client):
 	
 	def __loadconfig(self):
 		botname = self.__botname
-		self.__jconfig = trix.jconfig(BOT_CACHE_DIR % botname)
+		self.__jconfig = trix.jconfig(self.__pconfig)
 		self.__config = self.__jconfig.obj
-		if not self.__config['connections']:
+		if not self.__config.get('connections'):
 			self.__addconfig()
 	
 	#
@@ -194,19 +205,22 @@ class Bot(Client):
 	#
 	def __addconfig(self, botname):
 		
-		# get the configuration directory
-		confdir = IRC_CONFIG_DIR
+		# connections dict
+		cc = self.__config.get('connections')
 		
-		cc = self.__config['connections']         # connections dict
-		fm = trix.nmodule("app.form")             # form entry module
-		fo = fm.Form(confdir + "irc_config.conf") # form object
+		# load the form module and fill out the form
+		fmod = trix.nmodule("app.form")
+		fcnf = BOT_NCONFIG+"/irc_config.conf"
+		form = fmod.Form(fcnf)
 		
 		# use `fo` Form to get a connection configuration
-		condict = fo.fill()
+		condict = form.fill()
 		
 		# save network name and configid for use below
 		network = condict.get('network')
 		configid = "%s-%s" % (network, botname)
+		
+		trix.display(condict)
 		
 		#
 		# LOAD FRESH PLUGIN CONFIG
@@ -214,12 +228,13 @@ class Bot(Client):
 		#    be duplicated so that each connection retains fine-tuneable 
 		#    control over its own set of plugin objects.
 		#
-		condict['plugins'] = trix.jconfig(confdir + "/irc_plugin.conf").obj
+		plugin_config = trix.nconfig("%s/irc_plugin.conf" % BOT_NCONFIG)
 		
 		# add the connection for `botname`
 		self.config['connections'][configid] = condict
-		self.config['connections'][configid]['plugins'] = plugins
+		self.config['connections'][configid]['plugins'] = plugin_config
 		
+		# save the configuration
 		self.jconfig.save()
 		
 		return self.jconfig.obj
