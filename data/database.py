@@ -112,15 +112,15 @@ class Database(object):
 	
 	
 	
-	
-	
-	
-	
 	def __del__(self):
 		"""Close this database if open."""
-		self.close()
-		
-		
+		try:
+			self.close()
+		except:
+			pass	
+	
+	
+	
 	@property
 	def active (self):
 		return True if self.__con else False
