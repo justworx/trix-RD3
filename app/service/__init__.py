@@ -8,6 +8,10 @@
 from ...util.runner import *
 from ...util.xqueue import *
 from ...util.wrap import *
+from ...app.event import *
+
+
+SERVICES_NCONFIG = "app/service/service.conf"
 
 
 #
@@ -24,7 +28,7 @@ class Services(Runner):
 	# INIT
 	def __init__(self, config=None, **k):
 		
-		config = config or trix.nconfig("x/service/service.conf")
+		config = config or trix.nconfig(SERVICES_NCONFIG)
 		if not config:
 			raise Exception ("Services: Config required.")
 		
@@ -32,17 +36,12 @@ class Services(Runner):
 		
 		self.__services = {}
 		
-		
-		# DEBUG
-		self.servicedict = self.__services
-		
-		
 		serviceConfDict = config['services']
 		for sid in serviceConfDict:
 			s = serviceConfDict[sid]
 			
 			# get the object config and create the object
-			sconfig = s['nconfig']
+			sconfig = s.get('nconfig')
 			screate = s['ncreate']
 			
 			# create the Service object's contained object
@@ -112,6 +111,7 @@ class ServiceIO(object):
 
 
 
+
 #
 # --------- SERVICE -----------------
 #
@@ -149,44 +149,46 @@ class Service(ServiceIO):
 		"""To be called only by the owning Services object."""
 		
 		for queues in self.__qpairs:
-			request=[]
 			try:
 				qin, qout = queues
 				
-				request = qin.get_nowait()
-				result = self.handle_request(request)
+				# pop an event request from the Queue
+				e = qin.get_nowait()
 				
-				# send the request list back with the result appended
-				request.append(result)
+				# execute the command
+				e.reply = self.handle_request(e)
 				
-				# send the result back in the out-queue (which is the 
-				# client's in-queue) with the result appended.
-				qout.put(request)
+				# Set the reply and return the event to the caller via the
+				# out-queue (which is the client's in-queue).
+				qout.put(e)
+			
 			except Empty:
 				pass
 			except ReferenceError:
 				self.__qpairs.remove(queues)
 			except Exception:
-				request.append(xdata(qin=qin,qout=qout,request=request))
+				e.error = xdata(qin=qin,qout=qout,e=e.dict)
 	
 	
 	# SERVICE - HANDLE REQUEST
-	def handle_request(self, request):
-		
-		# remember: req[0] is time()
-		cmd = request[1]
-		arg = request[2]
-		krg = request[3]
+	def handle_request(self, e):
 		
 		# if there's no command, return a somewhat random info dict
-		if not cmd:
+		if not e.argc:
 			return dict(
 					service=self.serviceid, uptime=self.uptime, 
 					target=repr(self.__object)
 				)
 		
-		return self.__wrapper(cmd, *arg, **krg)
-			
+		try:
+			return self.__wrapper(*e.argv, **e.kwargs)
+		except Exception as ex:
+			raise type(ex) ('err-service-fail', xdata(
+					message="service-request-fail", event=e.dict
+				))
+
+
+
 
 
 #
@@ -214,31 +216,23 @@ class ServiceConnect(ServiceIO):
 	# SERVICE-CONNECT - REQUEST
 	def request(self, command, *a, **k):
 		"""
-		Send a request to the Service object.
-		
-		Each request is a list with time, command, args list and kwargs
-		dict, to be passed to the Service's object - the method named
-		by `command` will receive a the passed list of arguments and the
-		dict of keyword arguments.
-		
-		#
-		# UNDER CONSTRUCTION... BUT FOR NOW...
-		#
-		The result (or None) will be appended to the list and returned
-		in ServiceConnect.__qin.
-		
-		It's possible the result should be left out if there is none,
-		and the dict should be checked each time.
-		
-		And... what happens with errors?
+		Send a request to the Service object. Retrieve results from 
+		command.reply;
 		"""
-		req_args = [time.time(), command, a, k]
-		self.__qout.put(req_args)
+		#
+		# queue an event whose result will eventually be set by a call
+		# to Service.handle_io; the result can be retrieved by calling
+		# self.replies.
+		#
+		c = Event(command, *a, **k)
+		self.__qout.put(c)
 	
 	
 	# SERVICE-CONNECT - REPLIES
 	def replies(self):
-		"""Return a list of reply objects."""
+		"""
+		Return a list of event objects; Check their reply for results.
+		"""
 		r = []
 		try:
 			while True:
@@ -246,14 +240,3 @@ class ServiceConnect(ServiceIO):
 		except Empty:
 			pass
 		return r
-	
-	
-	
-	#
-	# DEBUGGING! REMOVE THIS METHOD!!!
-	#
-	@property
-	def qp(self):
-		return {'qout':str(self.__qout), 'qin': str(self.__qin)}
-	
-	
