@@ -50,7 +50,7 @@ class Console(EncodingHelper):
 		try:
 			# if config is a dict, update with kwargs it and continue
 			config.update(**k)
-			trix.display(config)
+			#trix.display(config)
 		except AttributeError:
 			# ...otherwise, config must be the inner file path to a config
 			# file such as 'app/config/en.conf'.
