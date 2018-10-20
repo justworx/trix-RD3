@@ -19,6 +19,23 @@ class irc(object):
 	"""Common top-level irc classmethods."""
 	
 	@classmethod
+	def bot(cls, botname):
+		"""
+		Pass a bot name. The named bot config file will be generated on
+		first init; subsequent calls will use the saved config. (If you
+		Ctrl-c out of the config form, an exception is raised and no bot
+		is returned.)
+		
+		Returns an IRC Bot object.
+		
+		>>> from trix.net.irc import *
+		>>> b = irc.bot("mybot") # expect config entry form on first call
+		>>> b.start()
+		"""
+		return trix.ncreate("net.irc.bot.Bot", botname)
+	
+	
+	@classmethod
 	def config(cls, config, **k):
 		"""
 		Pass config dict or string path to config json file. Connects to 

@@ -58,45 +58,72 @@ class Bot(Client):
 		#
 		self.__pconfig = BOT_CONFIG + "%s.json" % self.__botname
 		
-		#
-		# Path to the actual config file in "~/.config/trix/irc/bots".
-		# This needs to be stored so that any edits to configuration 
-		# can be saved.
-		#
-		self.__jconfig = trix.jconfig(self.__pconfig)
-		
 		# debug level zero
 		self.__debug = 0
 		
-		# Keep track of the config in self.__config
-		self.__config = self.__jconfig.obj
-		
 		#
-		# The first time a botname is used, its config file will start
-		# as an empty dict. That dict must be filled with defaults 
-		# from `irc.config`.
+		# LOAD CONFIG
+		#  - This creates the self.__jconfig and self.__config members.
+		#  - This also generates a new config file for `botname` if none
+		#    currently exists.
 		#
-		if not self.__config.keys():
-			#
-			# Each new bot must start with a botname and an empty
-			# connection config dict.
-			#
-			self.__config['botname'] = botname
-			self.__config['connections'] = {}
-			
-			#
-			# Every new botname requires at least one connection to run.
-			# If on connection exists, add one now using the interactive
-			# prompt in `self.configadd`.
-			#
-			conlist = self.__config.get('connections')
-			if not conlist:
-				self.configadd(botname)
+		try:
+			self.__loadconfig()
+		except KeyboardInterrupt:
+			raise Exception("Bot configuration was canceled.")
 		
 		# Finally, init the superclass
 		Client.__init__(self, self.config)
 	
 	
+	
+	
+	@property
+	def botname (self):
+		"""Return the bot name, as given to the Bot constructor."""
+		return self.__botname
+	
+	@property
+	def pconfig(self):
+		"""Return the config path."""
+		return self.__pconfig
+	
+	@property
+	def jconfig(self):
+		"""
+		Return the JConfig object for this config file. This object can
+		be used to edit config files. Once edited, the files may be seved
+		by calling `JConfig.save()`.
+		"""
+		return self.__jconfig
+	
+	@property
+	def config(self):
+		"""Return the bot configuration dict, as loaded on init."""
+		return self.__config
+	
+	@property
+	def debug (self):
+		"""Return the current debug level."""
+		return self.__debug
+	
+	@debug.setter
+	def debug (self, i):
+		"""
+		Set the debug level to the given value. Any integer larger than
+		zero causes debug messages to be displayed in terminal output.
+		Debug value of 0 restricts terminal output.
+		"""
+		self.__debug = i
+	
+	
+	
+	
+	#
+	# --------- override methods -----------------
+	#
+	
+	#	START
 	def start(self):
 		"""
 		Start running all connections for this Bot.
@@ -121,8 +148,8 @@ class Bot(Client):
 					continue
 				
 				#
-				# At this point, DefType is irc_config, and variables are:
-				#  * connid = the connection-dict's key
+				# At this point, DefType is irc_connect, and variables are:
+				#  * connid = the connection-dict's key (network-botid)
 				#  * config = the connection's value
 				#
 				self.connect(connid, config)
@@ -141,38 +168,6 @@ class Bot(Client):
 				))
 	
 	
-	
-	@property
-	def botname (self):
-		return self.__botname
-	
-	@property
-	def pconfig(self):
-		return self.__pconfig
-	
-	@property
-	def jconfig(self):
-		return self.__jconfig
-	
-	@property
-	def config(self):
-		return self.__config
-	
-	@property
-	def debug (self):
-		return self.__debug
-	
-	@debug.setter
-	def debug (self, i=1):
-		self.__debug = i
-	
-	
-	
-	# CONFIG-ADD
-	def configadd(self, botname):
-		self.__addconfig(botname)
-	
-	
 	# HANDLE-DATA
 	def handleio(self, conn):
 		if conn.debug:
@@ -187,16 +182,32 @@ class Bot(Client):
 			irc.debug("irc_client.handlex", xtype, xargs)
 
 	
+	
+	
 	#
-	# private methods
+	# --------- private methods -----------------
 	#
 	
+	#
+	# LOAD CONFIG
+	#  - This creates the self.__jconfig and self.__config members.
+	#  - This also generates a new config file for `botname` if none
+	#    currently exists.
+	#
 	def __loadconfig(self):
+		"""
+		Load a this bot's config file from ~/.config/trix/irc/bots (or
+		wherever BOT_NCONFIG says).
+		
+		If no config file exists at for this bot, a Form object will
+		present a list of questions that allow the bot config to be
+		generated with one connection.
+		"""
 		botname = self.__botname
 		self.__jconfig = trix.jconfig(self.__pconfig)
 		self.__config = self.__jconfig.obj
 		if not self.__config.get('connections'):
-			self.__addconfig()
+			self.__addconfig(botname)
 	
 	#
 	#
@@ -205,22 +216,24 @@ class Bot(Client):
 	#
 	def __addconfig(self, botname):
 		
-		# connections dict
-		cc = self.__config.get('connections')
+		#
+		self.__config.setdefault('botname', botname)
+		self.__config.setdefault('connections', {})
+		
 		
 		# load the form module and fill out the form
 		fmod = trix.nmodule("app.form")
 		fcnf = BOT_NCONFIG+"/irc_config.conf"
 		form = fmod.Form(fcnf)
 		
-		# use `fo` Form to get a connection configuration
+		# use Form to get a connection configuration
 		condict = form.fill()
-		
+		if not condict:
+			raise KeyboardInterrupt()
+			
 		# save network name and configid for use below
 		network = condict.get('network')
 		configid = "%s-%s" % (network, botname)
-		
-		trix.display(condict)
 		
 		#
 		# LOAD FRESH PLUGIN CONFIG
@@ -238,3 +251,27 @@ class Bot(Client):
 		self.jconfig.save()
 		
 		return self.jconfig.obj
+	
+	
+	
+	
+	#
+	# --------- UNDER CONSTRUCTION -----------------
+	#
+	
+	# CONSOLE - UNDER CONSTRUCTION
+	def console(self):
+		"""
+		UNDER CONSTRUCTION!
+		
+		This doesn't really work yet, and it's probably not a good idea
+		to use it at the moment since there's nothing preventing received
+		irc lines from appearing intermingled with the Console output.
+		"""
+		try:
+			self.__console.prompt()
+		except:
+			self.__console = trix.ncreate(
+				"net.irc.bot_console.BotConsole", self
+			)
+			self.__console.prompt()
