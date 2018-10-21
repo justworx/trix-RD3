@@ -24,7 +24,7 @@ from trix.app.event import *
 class Console(EncodingHelper):
 	"""Base class for an interactive terminal-based user interface."""
 	
-	dv = {}
+	dv = {} # Wrap debugging values
 	
 	DefLang = 'en'
 	DefConf = "x/console/config/%s.conf"  # REM: Change x to app!
@@ -311,7 +311,7 @@ class Console(EncodingHelper):
 	def handle_input(self, e):
 		"""Handle input event `e`."""
 		
-		if e.argc:
+		if e.argc and e.argv[0]:
 			
 			# check plugins first
 			for p in self.__plugins:
