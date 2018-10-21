@@ -20,29 +20,6 @@ class Scanner(object):
 	Ident = lambda ci: (ci.cat[0]=='L') or (ci.cat=='Nd') or (ci.cat=='_')
 	
 	
-	# NEW
-	def parse(self):
-		r = []
-		c = self.cc
-		if c.bidi == 'ON':
-			if c.cat in ['Ps','Pe','Po']:
-				r.append(self.parseto(c.bracket[1]))
-		
-		# don't forget str, int, etc here....
-		
-		return r
-	
-	
-	def parseto(self, x):
-		pass
-		#self.parse()
-		
-		#
-		# YOU ARE HERE
-		#
-	
-	
-	
 	def __init__(self, iterable_text, **k):
 		"""Pass anything iterable that produces unicode characters."""
 		self.__escape = k.get('escape', self.Escape)
@@ -91,6 +68,7 @@ class Scanner(object):
 	
 	# SCAN DIGITS
 	def scandig(self):
+		"""Collect the next sequence of digits."""
 		return self.collect(lambda ci: ci.dig)
 	
 	# SCAN IDENTIFIER
@@ -146,18 +124,93 @@ class Scanner(object):
 		Collect each character that matches the criteria of `fn`. The 
 		pointer is left directly after the last matching character.
 		"""
-		b = Buffer(mode='r', max_size=self.__bufsz)
+		b = Buffer(mode='r', max_size=self.bufsz)
 		w = b.writer()
 		try:
 			while fn(self.c):
 				if self.c.c != self.__escape:
 					w.write(self.c.c)
 				else:
-					w.write(self.c.cc) # it IS an escape char; get next char.
+					w.write(self.cc.c) # it IS an escape char; get next char.
 				self.cc
 		except StopIteration:
 			pass
 		
 		# read/return the whole buffer
 		return b.read()
+	
+	
+	
+	# SCAN BIDI
+	def scanbidi(self):
+		"""
+		Scan recursively through bidi open/close characters, until the
+		first bidi character is matched.
+		"""
+		b = Buffer(mode='r', max_size=self.bufsz)
+		w = b.writer()
+		
+		self.passwhite() # i'm not sure whether this should be here..
+		
+		#print ("FIRST: %s" % (self.c))
+		#print ("BREAK: %s" % (self.c.linebreak))
+		
+		try:
+			
+			dbg = []
+			
+			#
+			# BRACKET/BRACE/ETC...
+			#
+			if self.c.bracket:
+				
+				# keep count of the number of unclosed brackets
+				ct = 1
+				
+				# Get the first character (an open bracket) and write it to
+				# the result buffer.
+				br = self.char
+				
+				#dbg.append(br)
+				#print (" -- :", ''.join(dbg), ';', str(ct))
+				
+				# Store the ending (close bracket) in `end`
+				end = self.c.bracket[1]
+				#print ("BR/END:", br, '/', end)
+				
+				try:
+					while (ct > 0):
+						w.write(self.c.c)
+						ci = self.cc
+						
+						#dbg.append(ci.c)
+						#print (" -- :", ''.join(dbg), ';', str(ct))
+						
+						if ci.c == br:
+							ct += 1
+						elif ci.c == end:
+							ct -= 1
+							if not ct > 0:
+								w.write(self.c.c)
+								return b.read()
+				
+				except StopIteration:
+					return b.read()
+			
+			#
+			# Quotation
+			#
+			elif self.c.linebreak == "QU": 
+				return self.scantoc()
+		
+		except StopIteration:
+			pass
+	
+	
+	
+	# SCAN TO C
+	def scantoc(self):
+		"""Collect all text to the given codepoint `c`."""
+		c = self.c
+		return self.collect(lambda ci: ci.c != c)
 
