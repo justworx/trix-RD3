@@ -31,8 +31,9 @@ class charinfo(xiter):
 	def __str__(self):
 		"""Return the current character as a string."""
 		return self.c
-
-
+	
+	def __repr__(self):
+		return "<trix.data.udata.charinfo.charinfo '%s'>" % self.c
 	#
 	# unicodedata
 	#
