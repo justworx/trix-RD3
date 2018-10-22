@@ -27,11 +27,6 @@ class Scanner(object):
 	# CHARACTERS
 	#
 	@property
-	def char(self):
-		"""Return the current character."""
-		return self.c.c
-	
-	@property
 	def c(self):
 		"""Return current character info object."""
 		if self.eof:
@@ -50,6 +45,15 @@ class Scanner(object):
 			self.__cinfo = charinfo(self.__itext)
 			return self.__cinfo.next()
 	
+	@property
+	def char(self):
+		"""Return the current character."""
+		return self.c.c
+	
+	@property
+	def eof(self):
+		"""False until end of text is reached."""
+		return self.__eof
 	
 	#
 	# CONFIG PROPERTIES
@@ -60,14 +64,11 @@ class Scanner(object):
 		return self.__bufsz
 	
 	@property
-	def eof(self):
-		"""False until end of text is reached."""
-		return self.__eof
-	
-	@property
 	def esc(self):
 		"""The escape character. Default: '\' (backslash)."""
 		return self.__escape
+	
+	
 	
 	
 	#
@@ -75,7 +76,6 @@ class Scanner(object):
 	#  - These always start from self.c (the current character) and
 	#    end one character AFTER the last-scanned character.
 	#
-	
 	
 	# COLLECT
 	def collect(self, fn):
@@ -128,6 +128,101 @@ class Scanner(object):
 		except StopIteration:
 			self.__eof = True
 	
+	
+	
+	
+	#
+	# CONVENIENCE METHODS
+	#  - These all rely on the Base Methods above.
+	#
+	
+	# --- ignoring characters ---
+	
+	# PASS LINE-ENDING
+	def passend(self):
+		"""Pass existing white space, then any endlines."""
+		self.passwhite()
+		self.ignore(lambda c: c.lineend)
+	
+	# PASS WHITE
+	def passwhite(self):
+		"""Pass any white space."""
+		self.ignore(lambda ci: ci.space)
+	
+	
+	# --- collecting characters ---
+	
+	# SCAN DIGITS
+	def scandigits(self):
+		"""Scan numeric digits."""
+		return self.collect(lambda ci: ci.dig)
+	
+	# SCAN IDENTIFIER
+	def scanid(self):
+		"""
+		Collect the next sequence of characters that match the rules for 
+		an "identifier". The default rules are: a letter followed by any
+		number of letters, digits, or underscores (cat=='Pc').
+		"""
+		self.passwhite()
+		if not self.c.digit:
+			return self.collect(lambda ci: ci.alphanum or ci.connector)
+	
+	# SCAN TO
+	def scanto(self, c):
+		"""Collect all text to the given codepoint `c`."""
+		return self.collect(lambda ci: ci.c != c)
+	
+	# SCAN TO C
+	def scantoc(self):
+		"""Collect all text to the given codepoint `c`."""
+		c = self.c
+		return self.collect(lambda ci: ci.c != c)
+	
+	
+	
+	
+	#
+	# COMPLEX METHODS
+	#  - These all rely on the Base Methods above.
+	#
+	
+	# SCAN
+	def scan(self):
+		"""
+		Pass white space then scan one item - either bidi/quote or a 
+		single string that contains no space characters.
+		"""
+		self.passwhite()
+		
+		# Try bidi first - this will capture full "quoted strings", dict,
+		# list, or sets.
+		b = self.scanbidi()
+		if b:
+			return b
+		
+		# This should capture individual space-separated elements.
+		else:
+			return self.collect(lambda ci: ci.cat != "Zs")
+	
+	
+	# SPLIT
+	def split(self):
+		"""
+		Split text on white characters, excpet those included in a bidi
+		enclosure or quotes, where whitespace is included in the result.
+		"""
+		self.passwhite()
+		r = []
+		try:
+			v = True
+			while v:
+				v = self.scan()
+				if v:
+					r.append(v)
+		except StopIteration:
+			self.__eof = True
+		return r
 	
 	
 	# SCAN BIDI
@@ -203,88 +298,3 @@ class Scanner(object):
 		
 		except StopIteration:
 			pass
-	
-	
-	
-	
-	#
-	# CONVENIENCE METHODS
-	#  - These all rely on the Base Methods above.
-	#
-	
-	# --- ignoring characters ---
-	
-	# PASS LINE-ENDING
-	def passend(self):
-		"""Pass existing white space, then any endlines."""
-		self.passwhite()
-		self.ignore(lambda c: c.lineend)
-	
-	# PASS WHITE
-	def passwhite(self):
-		"""Pass any white space."""
-		self.ignore(lambda ci: ci.space)
-	
-	
-	# --- collecting characters ---
-	
-	# SCAN DIGITS
-	def scandigits(self):
-		"""Scan numeric digits."""
-		return self.collect(lambda ci: ci.dig)
-	
-	# SCAN IDENTIFIER
-	def scanid(self):
-		"""
-		Collect the next sequence of characters that match the rules for 
-		an "identifier". The default rules are: a letter followed by any
-		number of letters, digits, or underscores (cat=='Pc').
-		"""
-		self.passwhite()
-		if not self.c.digit:
-			return self.collect(lambda ci: ci.alphanum or ci.connector)
-	
-	# SCAN TO
-	def scanto(self, c):
-		"""Collect all text to the given codepoint `c`."""
-		return self.collect(lambda ci: ci.c != c)
-	
-	# SCAN TO C
-	def scantoc(self):
-		"""Collect all text to the given codepoint `c`."""
-		c = self.c
-		return self.collect(lambda ci: ci.c != c)
-	
-	
-	def scan(self):
-		
-		# Try bidi first - this will capture full "quoted strings", dict,
-		# list, or sets.
-		b = self.scanbidi()
-		if b:
-			return b
-		
-		# This should capture individual space-separated elements.
-		else:
-			return self.collect(lambda ci: ci.cat != "Zs")
-	
-	
-	#
-	# SPLIT - EXPERIMENTAL - UNDER CONSTRUCTION
-	#
-	def split(self):
-		#
-		# DOES NOT WORK - too sleepy to fix it now
-		#
-		self.passwhite()
-		r = []
-		try:
-			v = True
-			while v:
-				v = self.scan()
-				if v:
-					r.append(v)
-				self.passwhite()
-		except StopIteration:
-			self.__eof = True
-		return r
