@@ -82,15 +82,56 @@ class Event(object):
 			return self.__argc
 	
 	@property
+	def argvc(self):
+		"""Arg-v strings converted to all-caps."""
+		try:
+			return self.__argvc
+		except:
+			self.__argvc = []
+			for a in self.argv:
+				try:
+					self.__argvc.append(a.upper())
+				except AttributeError:
+					self.__argvc.append(a)
+			
+			return self.__argvc
+	
+	@property
+	def argvl(self):
+		"""
+		Arg-v strings converted to lowercase. Non-string objects are
+		left unchanged.
+		"""
+		try:
+			return self.__argvl
+		except:
+			self.__argvl = []
+			for a in self.argv:
+				try:
+					self.__argvl.append(a.lower())
+				except AttributeError:
+					self.__argvl.append(a)
+			return self.__argvl
+	
+	@property
 	def kwargs(self):
 		"""Returns any keyword arguments received by the constructor."""
 		return self.__k
 
-	
 	@property
 	def dict(self):
 		"""Debugging utility - returns dict."""
 		return self.getdict()
+	
+	
+	
+	def arg(self, i, default=None):
+		"""Return existing arg at offset `i`, or `default`."""
+		try:
+			return self.argv[i]
+		except:
+			return default
+	
 	
 	def getdict(self):
 		return {
@@ -99,6 +140,12 @@ class Event(object):
 			'reply' : self.reply,
 			'error' : self.error
 		}
+	
+	
+	# debugging
+	def display(self):
+		trix.format(self.dict)
+
 
 
 
@@ -157,19 +204,14 @@ class TextEvent(Event):
 	
 	@property
 	def text(self):
-		"""The full line of text, as given to the constructor."""
+		"""
+		The full line of text, as given to the constructor. 
+		
+		Subclasses may alter this in cases where formatting or other 
+		data - data not thought of as "part of the text" - need to be
+		removed.
+		"""
 		return self.__line
-	
-	@property
-	def argc(self):
-		"""
-		Argument count. (The number of space-separated words in `text`.)
-		"""
-		try:
-			return self.__argc
-		except:
-			self.__argc = len(self.argv)
-			return self.__argc
 	
 	@property
 	def argv(self):
@@ -181,28 +223,6 @@ class TextEvent(Event):
 		except:
 			self.__argv = self.text.split(' ')
 			return self.__argv
-	
-	@property
-	def argvc(self):
-		"""Arg-v all-caps."""
-		try:
-			return self.__argvc
-		except:
-			self.__argvc = []
-			for a in self.argv:
-				self.__argvc.append(a.upper())
-			return self.__argvc
-	
-	@property
-	def argvl(self):
-		"""Arg-v all lowercase."""
-		try:
-			return self.__argvl
-		except:
-			self.__argvl = []
-			for a in self.argv:
-				self.__argvl.append(a.lower())
-			return self.__argvl
 	
 	@property
 	def dict(self):

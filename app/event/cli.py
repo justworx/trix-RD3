@@ -55,6 +55,7 @@ class CLIEvent(Event):
 				r.append(self.argparse(x))
 			
 			Event.__init__(self, *r, **k)
+		
 		except Exception as ex:
 			raise type(ex)(xdata(line=commandline, args=a, r=r))
 

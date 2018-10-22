@@ -269,9 +269,9 @@ class Bot(Client):
 		irc lines from appearing intermingled with the Console output.
 		"""
 		try:
-			self.__console.prompt()
+			self.__console.console()
 		except:
 			self.__console = trix.ncreate(
 				"net.irc.bot_console.BotConsole", self
 			)
-			self.__console.prompt()
+			self.__console.console()
