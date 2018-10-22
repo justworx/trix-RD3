@@ -31,19 +31,22 @@ class BotConsole(Console):
 		if e.argc:
 			
 			# handle valid commands...
-			if e.argvl[0] == "quit":
-				msg = "https://github.com/justworx/trix/"
-				self.bot.writeline("QUIT", msg)
+			if e.argvl[0] == 'test':
+				pass
 			
-			if e.argvl[0] == 'edit':
+			elif e.argvl[0] == "quit":
+				msg = "Bye!"
+				self.bot.writeline("QUIT :%s" % msg)
+			
+			elif e.argvl[0] == 'edit':
 				if e.argc > 2:
 					pass ("not yet implemented")
 			
-			if e.argvl[0] == 'add':
+			elif e.argvl[0] == 'add':
 				if e.argc > 2 and e.arglv[1] == 'bot':
 					trix.display(self.__bot.configadd(e.argv[2]))
 				else:
-					print (" - add bot 'botname'")
+					print ("try: add bot 'botname'")
 					#print (" - add connection 'connection-name'")
 			
 			
