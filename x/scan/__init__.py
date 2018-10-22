@@ -136,13 +136,16 @@ class Scanner(object):
 		Scan recursively through bidi open/close characters, until the
 		first bidi character is matched.
 		"""
+		DEBUG = False
+		
 		b = Buffer(mode='r', max_size=self.bufsz)
 		w = b.writer()
 		
 		self.passwhite() # i *think* this should be here
 		
-		#print ("FIRST: %s" % (self.c))
-		#print ("BREAK: %s" % (self.c.linebreak))
+		if DEBUG:
+			print ("FIRST: %s" % (self.c))
+			print ("BREAK: %s" % (self.c.linebreak))
 		
 		try:
 			
@@ -160,20 +163,24 @@ class Scanner(object):
 				# the result buffer.
 				br = self.char
 				
-				#dbg.append(br)
-				#print (" -- :", ''.join(dbg), ';', str(ct))
+				if DEBUG:
+					dbg.append(br)
+					print (" -- :", ''.join(dbg), ';', str(ct))
 				
 				# Store the ending (close bracket) in `end`
 				end = self.c.bracket[1]
-				#print ("BR/END:", br, '/', end)
+				
+				if DEBUG:
+					print ("BR/END:", br, '/', end)
 				
 				try:
 					while (ct > 0):
 						w.write(self.c.c)
 						ci = self.cc
 						
-						#dbg.append(ci.c)
-						#print (" -- :", ''.join(dbg), ';', str(ct))
+						if DEBUG:
+							dbg.append(ci.c)
+							print (" -- :", ''.join(dbg), ';', str(ct))
 						
 						if ci.c == br:
 							ct += 1
@@ -185,6 +192,7 @@ class Scanner(object):
 								return b.read()
 				
 				except StopIteration:
+					self.__eof = True
 					return b.read()
 			
 			#
@@ -246,32 +254,9 @@ class Scanner(object):
 		"""Collect all text to the given codepoint `c`."""
 		c = self.c
 		return self.collect(lambda ci: ci.c != c)
-
-	
-	"""
-	#
-	# EXPERIMENTAL - UNDER CONSTRUCTION
-	#
-	
-	def split(self):
-		#
-		# DOES NOT WORK - too sleepy to fix it now
-		#
-		self.passwhite()
-		r = []
-		try:
-			v = True
-			while v:
-				v = self.scanpart()
-				if v:
-					r.append(v)
-				self.passwhite()
-		except StopIteration:
-			self.__eof = True
-		return r
 	
 	
-	def scanpart(self):
+	def scan(self):
 		
 		# Try bidi first - this will capture full "quoted strings", dict,
 		# list, or sets.
@@ -282,4 +267,24 @@ class Scanner(object):
 		# This should capture individual space-separated elements.
 		else:
 			return self.collect(lambda ci: ci.cat != "Zs")
-	"""
+	
+	
+	#
+	# SPLIT - EXPERIMENTAL - UNDER CONSTRUCTION
+	#
+	def split(self):
+		#
+		# DOES NOT WORK - too sleepy to fix it now
+		#
+		self.passwhite()
+		r = []
+		try:
+			v = True
+			while v:
+				v = self.scan()
+				if v:
+					r.append(v)
+				self.passwhite()
+		except StopIteration:
+			self.__eof = True
+		return r
