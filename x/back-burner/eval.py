@@ -1,4 +1,6 @@
 	
+class eval(object):
+	"""just an idea..."""
 	
 	# EVAL
 	@classmethod
