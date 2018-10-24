@@ -31,7 +31,7 @@ class Wrap(object):
 	and properties using strings - particularly for use by command line
 	interfaces. However, as a convenience it implements - in addition
 	to __init__ - __call__, __getattr__, __getitem__, and __setitem__. 
-	Therefore, the wrapped object can in some cases be called using dot
+	Therefore, the wrapped object can in many cases be called using dot
 	notation and list and dict objects may be used to a degree as well.
 	
 	>>> w = Wrap([1,2,3])
