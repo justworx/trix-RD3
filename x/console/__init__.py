@@ -13,7 +13,7 @@ from ...util.wrap import *
 
 # the following will need to be changed when this moves to trix.app
 from trix.app.jconfig import *
-from trix.app.event import *
+from trix.app.event.cli import *
 
 
 # ------------------------------------------------------------------
@@ -235,7 +235,10 @@ class Console(EncodingHelper):
 			while self.__active:
 				cmd=evt=None
 				try:
-					evt = TextEvent(xinput(self.prompt))
+					# get input, create Event
+					evt = self.create_event(xinput(self.prompt))
+					
+					# handle the event
 					self.handle_input(evt)
 				
 				except EOFError:
@@ -261,6 +264,9 @@ class Console(EncodingHelper):
 		# close banner
 		print("%s\n" % self.closing)
 	
+	
+	def create_event(self, commandLineText):
+		return TextEvent(commandLineText)
 	
 	
 	#
