@@ -1,5 +1,5 @@
 	
-class eval(object):
+class JustAnIdea(object):
 	"""just an idea..."""
 	
 	# EVAL
