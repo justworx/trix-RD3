@@ -8,7 +8,7 @@ import ast
 from . import *
 from ...data.scan import *
 
-class CLIEvent(Event):
+class LineEvent(Event):
 	"""A Command-based event; Splits arguments using Scanner."""
 	
 	ARGPARSE = [
@@ -59,4 +59,10 @@ class CLIEvent(Event):
 
 
 
+#
+# Deprecated
+#  - I just don't like the name CLIEvent.
+#
+class CLIEvent(LineEvent):
+	pass
 
