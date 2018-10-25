@@ -24,6 +24,7 @@ class Event(object):
 	
 	@property
 	def reply(self):
+		"""The reply sepecified by whatever is handling this event."""
 		return self.__reply
 	
 	@reply.setter
@@ -34,6 +35,7 @@ class Event(object):
 	
 	@property
 	def error(self):
+		"""Error during processing; eg, xdata()"""
 		return self.__error
 	
 	@error.setter
@@ -43,14 +45,17 @@ class Event(object):
 	
 	@property
 	def requesttime(self):
+		"""Request time (set on __init__) - time.time()"""
 		return self.__trequest
 	
 	@property
 	def replytime(self):
+		"""Reply time - time.time()"""
 		return self.__treply
 	
 	@property
 	def processtime(self):
+		"""Time in microseconds between object creation and reply."""
 		if self.replytime and self.requesttime:
 			return self.replytime - self.requesttime
 		return None
@@ -143,8 +148,9 @@ class Event(object):
 	
 	
 	# debugging
-	def display(self):
-		trix.format(self.dict)
+	def display(self, x=None, **k):
+		"""This event's `self.dict`, printed in json display format."""
+		trix.display(x or self.dict, **k)
 
 
 

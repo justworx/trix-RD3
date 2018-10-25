@@ -12,7 +12,7 @@ class CLIEvent(Event):
 	"""A Command-based event; Splits arguments using Scanner."""
 	
 	ARGPARSE = [
-		lambda x: int(float(x)) if (float(x)==int(float(x))) else float(x),
+		lambda x: int(float(x)) if float(x)==int(float(x)) else float(x),
 		lambda x: trix.jparse(x),
 		lambda x: ast.literal_eval(x),
 		lambda x: str(x)
@@ -20,6 +20,10 @@ class CLIEvent(Event):
 	
 	@classmethod
 	def argparse(cls, x):
+		"""
+		Type cast string `x` to int, float, dict, or list, if possible,
+		or return the original string.
+		"""
 		errors = []
 		for L in cls.ARGPARSE:
 			try:
@@ -33,16 +37,12 @@ class CLIEvent(Event):
 	
 	def __init__(self, commandline, **k):
 		"""
-		Pass full command line text, plus optional kwargs.
+		Pass full command line text, plus optional kwargs. The command
+		line is scanned for string, int, float, list, and dict structures
+		and an array of type-cast values is returned.
 		
-		This is basically just an Event created with different arguments.
-		Each argument is cast as entered on `commandline`. The difference
-		is that scanner is used to split arguments so JSON structures
-		such as list or dict will each come out as a single argument 
-		despite any internal spacing.
-		
-		Otherwise, it's just like Event, with the command as the first of
-		`argv` and the rest of argv being individual arguments.
+		Otherwise, it's just like Event, with first argument being the
+		command, followed by individual arguments.
 		"""
 		
 		s = Scanner(commandline)
