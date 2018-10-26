@@ -16,6 +16,18 @@ from trix.app.jconfig import *
 from trix.app.event.cli import *
 
 
+
+def ConsoleError(Exception):
+	"""
+	UNDER CONSTRUCTION! This may change a lot.
+	"""
+	DEBUG = False
+	def __init__(self, message, xdata):
+		self.args = [message]
+		self.more = xdata
+
+
+
 # ------------------------------------------------------------------
 #
 # CONSOLE CLASS
@@ -233,13 +245,16 @@ class Console(EncodingHelper):
 			self.banner()
 			self.__active = True
 			while self.__active:
-				cmd=evt=None
+				evt=None
 				try:
 					# get input, create Event
-					evt = self.create_event(xinput(self.prompt))
+					line = xinput(self.prompt).strip()
 					
-					# handle the event
-					self.handle_input(evt)
+					# make sure there's some text to parse
+					if line:
+						# get and handle event
+						evt = self.create_event(line)
+						self.handle_input(evt)
 				
 				except EOFError:
 					# Ctrl-C exits this prompt
@@ -252,7 +267,6 @@ class Console(EncodingHelper):
 					print('') # get off the "input" line
 					event_dict = evt.dict if evt else None
 					linedbg().dbg(self, args=ex.args, edict=event_dict)
-					#linedbg().dbg(self) #, *ex.args)
 				
 		except KeyboardInterrupt:
 			print('')
@@ -266,7 +280,8 @@ class Console(EncodingHelper):
 	
 	
 	def create_event(self, commandLineText):
-		return TextEvent(commandLineText)
+		"""Returns a TextEvent."""
+		return LineEvent(commandLineText)
 	
 	
 	#
@@ -361,7 +376,6 @@ class Console(EncodingHelper):
 			#
 			elif e.argvl[0]:
 				self.handle_error("unknown-command", *e.argv)
-	
 
 
 
@@ -421,7 +435,6 @@ class Wrapper(Console):
 				self.__wrapped = trix.create(conf['create'], *a)
 			self.__obj = self.__wrapped.obj
 			
-				
 			# create the wrapped object, passing args received on the
 			# command line.
 			self.__wrap = Wrap(self.__wrapped)
@@ -436,9 +449,15 @@ class Wrapper(Console):
 			Console.dv["wrapped"] = self.__wrapped # DEBUG VAR
 			Console.dv["wrap"] = self.__wrap       # DEBUG VAR
 			Console.dv["obj"] = self.__obj         # DEBUG VAR
-			
+		
+		
+		# ...but this one shows way to much stuff...
 		except Exception as ex:
-			raise type(ex)(xdata(a=a))
+			try:
+				o = str(self.__wrapped.obj)
+			except:
+				o = None
+			raise ConsoleError(str(ex), xdata(a=a, o=o))
 	
 	
 	
@@ -460,7 +479,16 @@ class Wrapper(Console):
 		return self.__wrapped
 	
 	
+	def handle_input(self, e):
+		
+		if e.argc and e.argv[0] not in ['', None]:
+			r = self.wrap(*e.argv)
+			if r:
+				trix.display(r)
+	
+	
 	def resultformat(self, r):
+		#print (" - r in:", r)
 		if r:
 			if isinstance(r, (str,int,float,bool)):
 				return str(r)
@@ -471,31 +499,13 @@ class Wrapper(Console):
 					pass
 				
 				try: # list-like?
-					return trix.formatter(f='JDisplay').format(list(r))
+					return trix.formatter(f='JSON').format(list(r))
 				except Exception as ex:
 					pass
 				
-				try: # list-like?
+				try: # if all else fails, convert to string
 					return str(r)
 				except Exception as ex:
 					pass
+		#print (" - r out:", r)
 		return r
-	
-	
-	
-	def handle_input(self, e):
-		
-		trix.display(self.wrap(*e.argv))
-		"""
-		cmd = e.argv[0]
-		args = e.argv[1:]
-		wrap = self.__wrap
-		
-		trix.display(['handle_input', cmd, args])
-		
-		#result = wrap(cmd, *args)
-		result = self.wrapped(cmd, *args)
-		
-		e.reply = self.resultformat(result)
-		print( e.reply )
-		"""
