@@ -31,6 +31,9 @@ class Database(object):
 		optional kwargs specifying the other params.
 		"""
 		
+		# path might be None for some DBMS
+		path = None
+		
 		# store args for opening database
 		self.__args = a
 		
@@ -108,7 +111,7 @@ class Database(object):
 		#    in the `sql` parameter's content.
 		#  - An `sql` value must exist, or autoinit will remain False.
 		#
-		self.__autoinit = conf.get('auto', False) and self.__sql
+		self.__autoinit =  self.__sql and conf.get('auto', False)
 	
 	
 	
@@ -123,30 +126,37 @@ class Database(object):
 	
 	@property
 	def active (self):
+		"""True if the database is open/connected."""
 		return True if self.__con else False
 	
 	@property
 	def con (self):
+		"""Return the DB connection object."""
 		return self.__con
 	
 	@property
 	def mod (self):
+		"""Return the DB module object."""
 		return self.__mod
 	
 	@property
 	def modname (self):
+		"""Return the DB module name."""
 		return self.__modname
 	
 	@property
 	def path (self):
+		"""Return the DB module name. (It may be None for some DBMS.)"""
 		return self.__path
 	
 	@property
 	def sql(self):
+		"""Return the full config sql dict."""
 		return self.__sql
 	
 	@property
 	def sop(self):
+		"""Return the preconfigured SQL Operations dict `op`."""
 		return self.__op
 	
 	
@@ -155,7 +165,7 @@ class Database(object):
 		"""
 		Returns the named SQL query category as a list or a dict as 
 		defined in configuration: Queries in the 'create' category are
-		list; those in op are dict.
+		list; those in 'op' are dict.
 		"""
 		return self.__sql[cat]
 		
@@ -220,6 +230,7 @@ class Database(object):
 	
 	# CLOSE
 	def close(self):
+		"""Close the database connection."""
 		try:
 			if self.__con and self.active:
 				self.__con.close()
@@ -230,18 +241,23 @@ class Database(object):
 	
 	# EXEC
 	def execute(self, *args):
+		"""Execute a query with given args. Returns a cursor."""
 		return self.__con.execute(*args)
 	
 	def executemany(self, *args):
+		"""Execute multiple queries with given args. Returns a cursor."""
 		return self.__con.executemany(*args)
 	
 	def cursor(self):
+		"""Returns a cursor."""
 		return self.__con.cursor()
 	
 	def commit(self):
+		"""Commit a transaction."""
 		self.__con.commit()
 	
 	def rollback(self):
+		"""Rollback a transaction."""
 		self.__con.rollback()
 	
 	
@@ -276,7 +292,7 @@ class Database(object):
 	
 	# Q-MANY
 	def qmany(self, sql, *args):
-		"""Just like query, but uses executemany."""
+		"""Just like `self.query`, but uses executemany."""
 		try:
 			return self.executemany(sql, *args)
 		except Exception:
@@ -319,6 +335,14 @@ class Database(object):
 		applies to op values that are lists of queries to execute.
 		On error, rollback.
 		"""
+		#
+		# I THINK THERE'S A PROBLEM HERE...
+		#  - The transaction should start before the for-loop and should
+		#    rollback on an exception!
+		#  - I need to think about this when I'm not so sleepy. Soon! 
+		#
+		#  - REM: For this, I need to use execute() rather than query()
+		#
 		try:
 			xq = len(self.__op[qname])
 			xa = len(args)
@@ -330,7 +354,7 @@ class Database(object):
 				else:
 					self.query(sql)
 		except:
-			raise Exception(self.xdata())
+			raise Exception(self.xdata(qname=qname, qargs=args))
 	
 	
 	def xdata(self, **k):
@@ -338,6 +362,6 @@ class Database(object):
 		d = dict(module=self.__modname, active=self.active)
 		if self.path:
 			d['path'] = self.path
-		
-		# this is the pyro __init__ xdata() function
 		return xdata(d, **k)
+
+
