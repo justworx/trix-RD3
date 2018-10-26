@@ -166,6 +166,7 @@ class JConfig(EncodingHelper):
 	
 	
 	def add(self, key, value):
+		"""Add `value` to selected structure at `key`."""
 		try:
 			self.sel.insert(key, value) # works for list
 		except AttributeError:
@@ -173,10 +174,12 @@ class JConfig(EncodingHelper):
 	
 	
 	def set(self, key, value):
+		"""Set `value` to selected structure at `key`."""
 		self.sel[key] = value
 	
 	
 	def rmv(self, key):
+		"""Remove `key` from selected structure."""
 		del(self.sel[key])
 	
 	
