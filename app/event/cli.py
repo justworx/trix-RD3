@@ -43,6 +43,10 @@ class LineEvent(Event):
 		
 		Otherwise, it's just like Event, with first argument being the
 		command, followed by individual arguments.
+		
+		>>> e = LineEvent('do [1, "two", {3:{4: "the number four"}}]')
+		>>> e.arg(0)          # 'do'
+		>>> e.arg(1)[2][3][4] # 'the number four'
 		"""
 		
 		s = Scanner(commandline)
@@ -61,7 +65,7 @@ class LineEvent(Event):
 
 #
 # Deprecated
-#  - I just don't like the name CLIEvent.
+#  - I just don't like the name `CLIEvent`.
 #
 class CLIEvent(LineEvent):
 	pass
