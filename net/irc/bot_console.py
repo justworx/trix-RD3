@@ -12,7 +12,11 @@ BOTCONSOLE_NCONFIG = "net/irc/config/irc_console.conf"
 
 
 class BotConsole(Console):
+	"""
 	
+	   EXTREMELY SERIOUSLY DEATH-DEFYINGLY **UNDER CONSTRUCTION**
+	
+	"""
 	
 	
 	def __init__(self, bot):
@@ -49,8 +53,25 @@ class BotConsole(Console):
 			
 			#
 			# now i need to:
-			#  * get Console to use CLIEvent instead of TextEvent
-			#  * get a 'pause' feature going in the bot
+			#  * get a 'pause' feature going in the bot so that it can
+			#    continue receiving and responding to at very least pings
+			#    while the console is running.
+			#
+			#  * MAYBE the Console should be based on Runner so that it
+			#    can be started... but output from the Bot would still
+			#    need to be silenced while the console's operating.
+			#
+			#  ADDITIONALLY....
+			#
+			#   * Quit is fine for killing all connections and ending the
+			#     bot and its client, but we also need a command to end
+			#     single connections. I guess `close` is the command...
+			#   
+			#   * Could this be a Wrapper?
+			#     Considering the fact that Console is now using LineEvent,
+			#     and there's nothing here (at the moment, anyway) of any
+			#     use at all... couldn't I just add some well-named methods
+			#     to the bot and use a console.Wrapper for Bot config?
 			#
 			"""
 			# handle valid commands...
@@ -71,7 +92,11 @@ class BotConsole(Console):
 			"""
 	
 	
-	
+	#
+	# Console is now using LineEvent, so this doesn't need to be here.
+	#
 	def create_event(self, commandLineText):
-		return CLIEvent(commandLineText)
-		
+		"""We need Console to call for custom event types."""
+		return LineEvent(commandLineText)
+
+
