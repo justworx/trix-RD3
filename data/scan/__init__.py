@@ -177,7 +177,6 @@ class Scanner(object):
 	# SCAN TO
 	def scanto(self, char):
 		"""Collect all text to the given codepoint `c`."""
-		#print (char)
 		return self.collect(lambda ci: ci.c != char)
 	
 	# SCAN TO C
@@ -264,7 +263,8 @@ class Scanner(object):
 			#
 			if self.c.bracket:
 				
-				print ("BRACKET")
+				if self.Debug:
+					print ("BRACKET")
 				
 				# keep count of the number of unclosed brackets
 				ct = 1
