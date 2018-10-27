@@ -156,7 +156,8 @@ class JConfig(EncodingHelper):
 		object (the entire config file). 
 		"""
 		if len(a):
-			self.__sel = self.__sel[a[0]]
+			for d in a:
+				self.__sel = self.__sel[d]
 		else:
 			self.__sel = self.obj
 	
