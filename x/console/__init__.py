@@ -18,9 +18,6 @@ from trix.app.event.cli import *
 
 
 def ConsoleError(Exception):
-	"""
-	UNDER CONSTRUCTION! This may change a lot.
-	"""
 	DEBUG = False
 	def __init__(self, message, xdata):
 		self.args = [message]
@@ -39,7 +36,7 @@ class Console(EncodingHelper):
 	dv = {} # Wrap debugging values
 	
 	DefLang = 'en'
-	DefConf = "x/console/config/%s.conf"  # REM: Change x to app!
+	DefConf = "app/config/console/%s.conf"
 	
 	#
 	# ---- INIT -----
