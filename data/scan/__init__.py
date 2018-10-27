@@ -11,6 +11,7 @@ from trix.util.stream.buffer import *
 class Scanner(object):
 	"""Scan unicode text one character at a time."""
 	
+	Debug = False
 	Escape = "\\"
 	BufSize = 2048
 	
@@ -60,7 +61,14 @@ class Scanner(object):
 	#
 	@property
 	def bufsz(self):
-		"""The size of a buffer used to scan text. Default: 2048."""
+		"""
+		The size of a buffer used to scan text. The default is 2048, but
+		scans will not fail if that is exceeded (though they may be a 
+		bit slower). If you expect larger scan chunks, it may improve
+		performance if you specify a larger buffer size integer via the
+		bufsz keyword argument. (I haven't tested this - it may be just
+		the same or worse.)
+		"""
 		return self.__bufsz
 	
 	@property
@@ -129,8 +137,6 @@ class Scanner(object):
 			self.__eof = True
 	
 	
-	
-	
 	#
 	# CONVENIENCE METHODS
 	#  - These all rely on the Base Methods above.
@@ -169,9 +175,10 @@ class Scanner(object):
 			return self.collect(lambda ci: ci.alphanum or ci.connector)
 	
 	# SCAN TO
-	def scanto(self, c):
+	def scanto(self, char):
 		"""Collect all text to the given codepoint `c`."""
-		return self.collect(lambda ci: ci.c != c)
+		#print (char)
+		return self.collect(lambda ci: ci.c != char)
 	
 	# SCAN TO C
 	def scantoc(self):
@@ -195,7 +202,13 @@ class Scanner(object):
 		"""
 		self.passwhite()
 		
-		# Try bidi first - this will capture full "quoted strings", dict,
+		# Quoted strings will probably be more common than brackets,
+		# so try that first.
+		q = self.scanquote()
+		if q:
+			return q
+		
+		# Try bidi - this will capture full "quoted strings", dict,
 		# list, or sets.
 		b = self.scanbidi()
 		if b:
@@ -212,11 +225,11 @@ class Scanner(object):
 		Split text on white characters, excpet those included in a bidi
 		enclosure or quotes, where whitespace is included in the result.
 		"""
-		self.passwhite()
 		r = []
 		try:
 			v = True
 			while v:
+				self.passwhite()
 				v = self.scan()
 				if v:
 					r.append(v)
@@ -236,9 +249,9 @@ class Scanner(object):
 		b = Buffer(mode='r', max_size=self.bufsz)
 		w = b.writer()
 		
-		self.passwhite() # i *think* this should be here
+		self.passwhite()
 		
-		if DEBUG:
+		if self.Debug:
 			print ("FIRST: %s" % (self.c))
 			print ("BREAK: %s" % (self.c.linebreak))
 		
@@ -251,6 +264,8 @@ class Scanner(object):
 			#
 			if self.c.bracket:
 				
+				print ("BRACKET")
+				
 				# keep count of the number of unclosed brackets
 				ct = 1
 				
@@ -258,14 +273,14 @@ class Scanner(object):
 				# the result buffer.
 				br = self.char
 				
-				if DEBUG:
+				if self.Debug:
 					dbg.append(br)
 					print (" -- :", ''.join(dbg), ';', str(ct))
 				
 				# Store the ending (close bracket) in `end`
 				end = self.c.bracket[1]
 				
-				if DEBUG:
+				if self.Debug:
 					print ("BR/END:", br, '/', end)
 				
 				try:
@@ -273,7 +288,7 @@ class Scanner(object):
 						w.write(self.c.c)
 						ci = self.cc
 						
-						if DEBUG:
+						if self.Debug:
 							dbg.append(ci.c)
 							print (" -- :", ''.join(dbg), ';', str(ct))
 						
@@ -289,12 +304,60 @@ class Scanner(object):
 				except StopIteration:
 					self.__eof = True
 					return b.read()
-			
-			#
-			# Quotation
-			#
-			elif self.c.linebreak == "QU": 
-				return self.scantoc()
 		
 		except StopIteration:
-			pass
+			self.__eof = True
+			return b.read()
+	
+	
+	# SCAN QUOTE
+	def scanquote(self):
+		"""
+		Scan recursively through bidi open/close characters, until the
+		first bidi character is matched.
+		"""
+		
+		b = Buffer(mode='r', max_size=self.bufsz)
+		w = b.writer()
+		
+		self.passwhite()
+		
+		if self.Debug:
+			print ("FIRST: %s" % (self.c))
+			print ("BREAK: %s" % (self.c.linebreak))
+		
+		try:
+			
+			dbg = []
+			
+			if self.c.linebreak == "QU":
+				if self.Debug:
+					print ("QUOTE")
+				
+				q = self.c.c
+				if self.Debug:
+					print (" -  q:", q)
+				
+				w.write(q)
+				self.cc # move one ahead
+				cn = self.scanto(q)
+				w.write(cn)
+				cz = self.c.c
+				
+				if self.Debug:
+					print (" - cz:", cz)
+				
+				# write the closing quote before chancing the self.cc!
+				w.write(cz)
+				
+				# must end on the character following the closing quote!
+				self.cc
+				
+				return b.read()
+		
+		except StopIteration:
+			self.__eof = True
+			return b.read()
+
+
+
