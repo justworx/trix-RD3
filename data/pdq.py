@@ -4,12 +4,32 @@
 # the terms of the GNU Affero General Public License.
 #
 
+#
+# This class is suboptimal. Use the Cursor class for such queries,
+# particularly for parsing large files.
+#
 
 from .param import *
 
 class Query(object):
+	"""
+	This python data Query class is good for exploring data in python
+	objects (particularly lists) and files. The `head`, `grid`, and
+	`peek` methods let you fine-tune queries to get the results and
+	conversions you need.
+	
+	The pdq module is superceeded by the data.cursor module, which can
+	handle large files much faster and more efficiently but lacks the
+	exploration tools (head, peek, etc...) of pdq.Query.
+	"""
 
 	def __init__(self, data=None, **k):
+		"""
+		Pass a `data` object (eg, list), or use the 'file' keyword args
+		to specify a data file path and encoding. The 'stream' keyword
+		argument is also available for reading objects with a read()
+		method.
+		"""
 
 		# encoding; used only if data is text
 		self.__encoding = k.get('encoding', None)
@@ -48,14 +68,19 @@ class Query(object):
 	
 	@property
 	def type(self):
+		"""Return the type of the data object."""
 		return type(self.__data)
 	
 	@property
 	def data(self):
+		"""Return the data object."""
 		return self.__data
 	
 	@data.setter
 	def data(self, d):
+		"""
+		Set the data object. (Use undo to return to previous selection.)
+		"""
 		if d == self: raise ValueError('pdq-data-invalid')
 		self.__undo = self.__data
 		self.__data = d
