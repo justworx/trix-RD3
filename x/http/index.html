@@ -1,29 +1,39 @@
 <html><head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<title>trix</title>
-	<link rel="icon" type="image/png" href="/img/ai-favicon.png" />
-	<link rel="stylesheet" href="/index.css">
+	<link rel="icon" type="image/png" href="/favicon.ico" />
+	<link rel="stylesheet" href="/index.css" />
 	<script src="/jquery-1.11.1.min.js"></script>
-	<script src="/index.js"></script>
+	<script src="/app.js"></script>
 </head>
 <body>
 <div id="Heading">
 	<div id="NavTop">
-		NavTop
+		*** Place Top Navigation Here ***
 	</div>
 	<h1 id="PageTitle">trix</h1>
-	<div id="NavMid"><!-- mid-info --></div>
+	<div id="NavMid"></div>
 </div>
-<div id="Content"></div>
-<div id="Footer">
-	<form id="Command">
-		<div class="cell">
-			<input type="submit" value="Send" style="float:left;"/>
-		</div>
-		<div class="cell" style="width: 100%">
-			<input type="text" id="cmd" name="cmd" style="width: 99%;"/>
-		</div>
-	</form>
+<div id="Tabs"></div>
+<div id="ContentBox"><div id="Content">
+	<div id="Offline" class="hide">
+		<h3>Offline</h3>
+		<p>The server software has stopped.</p>
+	</div>
+</div></div>
+<div id="Status">
+	<div id="status_version" class="left" title="status_version"></div>
+	<div id="status_connection" class="left" title="status_connection">Offline</div>
+	<div id="status_notice" class="left" title="status_notice"></div>
+	<div id="status_account" class="right">
+		<span id="status_user" class="hide x_onses"
+			><b class="x_username"></b>&nbsp;<a class="click" 
+				onclick="app.command('auth logout');"
+			>Log&nbsp;Out</a></span>
+		<a id="status_nouser" class="hide x_noses click"
+			onclick="app.show('#Home');$('#Home_login').show();"
+		>Log&nbsp;In</a>
+	</div>
 </div>
 </body>
 </html>

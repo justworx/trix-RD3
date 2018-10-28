@@ -1,9 +1,33 @@
 
+body {margin: 0; padding: 0;}
+
+.click {text-decoration: underline; cursor: pointer; color: #333;}
+.hide {display: none;}
+.info {padding: 0 12px;}
+.left {float:left;}
+.right {float: right;}
+.prompt {color: #aaa;}
+.inprompt {color: #bbb;}
+.authcredentials {color: black;}
+
+h3 {
+	border-bottom: solid 1px #eee; padding: 17px 3px 2px 3px;
+	margin: 0;
+}
+h4 {
+	border-bottom: solid 1px #ddd; margin: 12px 3px 2px 3px;
+	padding: 0;
+}
+
+input.auth {width: 99px;}
+
+
 #Heading {
 	position: fixed; top: 0px; left: 0px; z-index: 99;
-	width: 100%; height: 45px; background-color: white;
-	border-bottom: solid 1px #999; margin-bottom: 5px;
+	width: 100%; height: 48px; background-color: white;
+	border-bottom: solid 1px #aaa;
 }
+
 #Heading h1 {
 	margin: 2px; padding: 1px;
 }
@@ -25,41 +49,25 @@
 	height: 24px; width: 24px;
 }
 
-#Content {
-	margin: 2px; margin-top: 55px; padding:2px; padding-bottom:64px;
-	border-left: solid 1px #eee;
+#Tabs {
+	position: fixed; top: 0px; left: 0px; z-index: 99;
+	width: 100%; height: 24px; margin: 0px; margin-top: 49px; 
+	background-color: #e9e9e9; border-bottom: solid 1px #aaa;
+}
+#Tabs a {
+	color: black; padding: 2px 9px; display: inline-block;
 }
 
-#Footer {
-	position: fixed; bottom: 0px; left: 0px; z-index: 99;
-	font-size: small; color: #555; background-color: #fff;
-	width: 100%; border-top: solid 1px #aaa; opacity: 0.90;
+#ContentBox {
+	margin: 0px 0px 40px 0px; padding: 80px 2px 0px 2px;
 }
 
 #Status {
-	height: 14px; padding: 2px; color: #222;
-	border: inset 3px; background-color: #eee;
+	position: fixed; bottom: 0px; left: 0px; z-index: 99; 
+	height: 14px; width: 100%; padding: 2px; color: #222;
+	border-top: solid 1px #ccc; background-color: #eee;
+	font-size: small;
 }
-
-#Content .cmd {font-weight: bold;}
-
-form#Command {
-	margin:1px;
+#Status div {
+	padding: 0px 9px; border-left: solid 1px #ccc;
 }
-
-pre.resp {
-	margin: 1px; padding: 1px;
-}
-
-pre.resp i {
-	color: #bbb;
-}
-
-.cell {
-	display: table-cell; vertical-align: top; padding:2px;
-}
-
-.prompt {
-	color: #aaa;
-}
-

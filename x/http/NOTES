@@ -1,0 +1,25 @@
+
+To open trix as an application with the web browser as an interface,
+we'll need a cline handler that does the following:
+
+* Check whether the HttpUI server is running.
+   - If it is, add the getpass.username/key combo directly to a
+     list maintained by the HttpUI server object;
+   - Otherwise, start up the HttpUI server to handle browser 
+     requests and add the new username/key combo.
+
+* Open a web browser to the (localhost only!) address of the web
+  server, sending the key in the url.
+
+* Webbrowser must set the key as a cookie. That's the authentication
+  method for the "logged-in" user.
+  
+* All requests must be checked, so that the system user account can
+  be access only his own data.
+
+
+... I'm pretty sleepy atm - Need to go over this carefully to mae
+    sure there are no holes in my logic.
+
+
+

@@ -1,0 +1,121 @@
+<div id="Home">
+
+<div id="Home_online" class="info">
+	<h3>Home</h3>
+	<p>
+		This is the home page for the trix project's web interface.
+		Click the links described below to control and use the trix 
+		server.
+	</p>
+	<ul>
+		<li>
+			<a class="click" onclick="app.show('#Command');return 0;"
+				>Command</a> - Use the Command panel, which works	basically
+				the same as in previous versions.
+		</li>
+		<li>
+			<a class="click" onclick="app.show('#Service');return 0;"
+				>Service</a> - See what services are running and check their
+				status.
+		</li>
+		<li class="x_onses">
+			<b onclick="javascript:app.command('auth logout');"
+				class="click">Log Out</b>
+		</li>
+		<li class="x_noses">
+			<b onclick="javascript:$('#Home_login').toggle();"
+				class="click">Log In</b>
+		</li>
+	</ul>
+	
+	<div id="Home_login" class="x_noses x_noauth_hide">
+		<h3>Log In</h3>
+		<p>
+			<span class="x_onses">
+				You are logged in as <b class="x_username"/>,
+				but you may log into a different account.
+			</span>
+			<span class="x_noses">
+				Log in to a user account.
+			</span>
+		</p>
+		<form id="login_form" name="login" class="auth">
+			<input type="text" id='login_user' value="Username" 
+				class="auth inprompt username x_focus" />
+			<input type="text" id='login_pass' value="Password" 
+				class="auth inprompt password" />
+			<input type="submit" value="Log In" />
+		</form>
+	</div>
+	
+	<div id="Home_firstuser" class="auth x_noauth">
+		<h3>First User</h3>
+		<p>
+			There's not much you can do without being logged in,
+			so create the first user account now.
+		</p>
+		<form id="firstuser_form" class="auth" name="firstuser">
+			<input type="text" id='firstuser_user' value="Username" 
+				class="auth inprompt username x_focus" />
+			<input type="text" id='firstuser_pass' value="Password" 
+				class="auth inprompt password" />
+			<input type="submit" value="Create" />
+		</form>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+$(function() {
+	
+	// these are the same for login and firstuser forms
+	$(".inprompt").on('focus', function() {
+		$(".inprompt").each(function() {
+			$(this).attr('name',$(this).val());
+			$(this).val('');
+		});
+		$(".password").each(function() {
+			$(this).attr('type', 'password');
+		});
+		$(this).removeClass("inprompt").addClass('authcredentials');
+	})
+	
+	// do this for both forms
+	$("#login_form,#firstuser_form").on('submit', function(e) {
+		
+		e.preventDefault();
+		$(this).find('.authcredentials').each(function () {
+			if ($(this).val() == '') {
+				app.notify($(this).attr('name')+' required!')
+			}
+		})
+		
+		var n = $(this).attr('name');
+		var u = $(this).find(".username").val();
+		var p = $(this).find(".password").val();
+		
+		APP = app;
+		app.command(['auth', n, u, p])
+		.done(function(data, stat) {
+			if (data.Result != null) {
+				$(".authcredentials").each(function() {
+					$(this).val('');
+				})
+		
+				// force full update to reload status and
+				// update element visibility by x_class
+				app.update(true)
+				app.show('#Home_login')
+				
+			}
+			else
+				APP.notify(data.Error, "Error", data.Message);
+		})
+		
+		return false;
+	})
+})
+</script>
+
+
+</div>

@@ -1,0 +1,75 @@
+<div id="Command">
+	
+<style>
+#Command {
+	margin: 2px; margin-top: 15px; border-left: solid 1px #eee;
+	padding:2px; padding-bottom:56px;
+}
+#Command .Footer {
+	position: fixed; bottom: 6; left: 0px; z-index: 99;
+	font-size: small; color: #555; background-color: #fff;
+	width: 100%; border-top: solid 1px #aaa;
+}
+
+#Command #Content .cmd {font-weight: bold;}
+#Command pre.resp {margin: 1px; padding: 1px;}
+#Command pre.resp i {color: #bbb;}
+#Command .cell {display: table-cell; vertical-align: top; padding:2px;}
+</style>
+
+<div id="Command_content"></div>
+<div>
+	<div class="Footer">
+		<form id="Command_form">
+			<div class="cell">
+				<input type="submit" value="Send" style="float:left;"/>
+			</div>
+			<div class="cell" style="width: 100%">
+				<input type="text" id="Command_cmd" name="cmd" 
+					style="width: 99%;" class="x_focus"
+				/>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script type="text/javascript">
+	$('#Command_form').submit(function(e) {
+		
+		e.preventDefault();
+		
+		cmd = $('#Command_cmd').val();
+		if ($.trim(cmd) == '') {
+			$('#Command_content').append("<br/>");
+		}
+		else {
+			$('#Command_cmd').val("").focus();
+			
+			// create a div to show the command and its response
+			tm = new Date().getTime();
+			id = "c_"+tm;
+			dc = "<div class='cmd'>"+cmd+"</div>";
+			dr = "<pre class='resp'><i>...</i></pre>"
+			dd = "<div id='"+id+"'>"+dc+dr+"</div>";
+			
+			// add the new entry to display and scroll-top
+			$('#Command_content').append(dd);
+			
+			// send command to server and insert response
+			app.command(cmd)
+			.done(function(data, stat) {
+				json = JSON.stringify(data, null, 2);
+				$("#"+id).find('.resp').text(json);
+			})
+			.fail(function(x, stat, err) {
+				xx = JSON.stringify(x)
+				$("#"+id).find('.resp').text(stat+': '+err+'; '+xx);
+			})
+			.always(function() {
+			$("html,body").animate({scrollTop: $(document).height()},99)})
+		}
+		return false
+	});
+
+</script>
+</div>

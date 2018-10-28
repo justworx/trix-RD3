@@ -1,0 +1,90 @@
+<div id="Data">
+	
+<style>
+#Data {
+	margin: 2px; margin-top: 15px; border-left: solid 1px #eee;
+	padding:2px; padding-bottom:56px;
+}
+#Data .Footer {
+	position: fixed; bottom: 6; left: 0px; z-index: 99;
+	font-size: small; color: #555; background-color: #fff;
+	width: 100%; border-top: solid 1px #aaa;
+}
+
+#Data table {font-size: small;}
+
+#Data pre.resp {margin: 1px; padding: 1px;}
+#Data pre.resp i {color: #bbb;}
+#Data .cell {display: table-cell; vertical-align: top; padding:2px;}
+</style>
+
+
+<div id="Data_content"></div>
+<div>
+	<table id="results"></table>
+	<div class="Footer">
+		<form id="Data_form">
+			<div class="cell">
+				<input type="submit" value="Send" style="float:left;"/>
+			</div>
+			<div class="cell" style="width: 100%">
+				<input type="text" id="Data_sql" 
+					style="width: 99%;" class="x_focus"
+					
+					value="select * from sqlite_master"
+				/>
+			</div>
+		</form>
+	</div>
+</div>
+
+
+
+<script type="text/javascript">
+	$('#Data_form').submit(function(e) {
+		
+		e.preventDefault();
+		
+		sql = $('#Data_sql').val();
+		if ($.trim(sql) == '') {
+			// ignore this for now
+		}
+		else {
+			// send command to server and insert response
+			app.command(
+				"service data.ai query "+sql
+			)
+			.done(function(data, stat) {
+				$("#results").empty();
+				if (data.Error) {
+					xx = JSON.stringify(data.Error)
+					$("#results").text("<pre>"+stat+': '+err+'; '+xx+"</pre>");
+				}
+				else {
+					r = data.Result
+					for (var x in r) {
+						row = "<tr>";
+						for (var y in r[x]) {
+							row = row + "<td>" + r[x][y] + "</td>"
+						}
+						row = row + "</tr>"
+						$("#results").append(row)
+					}
+					if (!x) {
+						$("#results").append("<tr><td>no-records</td></tr>");
+					}
+				}
+			})
+			.fail(function(x, stat, err) {
+				alert('fail')
+				xx = JSON.stringify(x)
+				$("#results").text(stat+': '+err+'; '+xx);
+			})
+		}
+		return false
+	});
+
+</script>
+
+
+</div>
