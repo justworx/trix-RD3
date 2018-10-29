@@ -11,9 +11,9 @@ from .. import *
 class Database(object):
 	"""Wrapper for DB-API 2.0 database access."""
 	
-	def __init__(self, config=None, *a, **k):
+	def __init__(self, conf=None, *a, **k):
 		"""
-		Pass a config dict and/or kwargs with keys:
+		Pass config dict `conf` and/or kwargs with keys:
 		 - module: a db-api-2 module or module name (default: "sqlite3")
 		 - args  : arguments to be passed to the open() method.
 		 - path  : file path to the db file (if applicable); if included,
@@ -37,14 +37,22 @@ class Database(object):
 		# store args for opening database
 		self.__args = a
 		
+		if 'nconfig' in k:
+			conf = trix.nconfig(k['nconfig'])
+		elif 'config' in k:
+			conf = trix.config(k['config'])
+		
 		# get the configuration
-		conf = config or {}
+		conf = conf or {}
 		try:
 			conf.update(k)
+			"""
+			# this was a mistake.. some dbms don't require a path
 			if not 'path' in conf:
 				raise ValueError('db-init-fail', xdata(detail='path-required',
 						reason='db-path-required', config=conf, k=k, a=a
 					))
+			"""
 			path = conf.get('path')
 		
 		except AttributeError:
@@ -65,6 +73,8 @@ class Database(object):
 			path = trix.path(path, affirm='makepath').path
 			a = list(a)
 			a.insert(0, path)
+		
+		# store path; Might be None for some dbms.
 		self.__path = path
 		
 		# store args
@@ -130,6 +140,11 @@ class Database(object):
 		return True if self.__con else False
 	
 	@property
+	def config (self):
+		"""True if the database is open/connected."""
+		return self.__config
+	
+	@property
 	def con (self):
 		"""Return the DB connection object."""
 		return self.__con
@@ -188,9 +203,8 @@ class Database(object):
 		self.commit()
 	
 	
-	
 	# OPEN
-	def open(self, **kwargs):
+	def open(self, **k):
 		"""
 		Open database using preconfigured arguments and optional kwargs.
 		"""
@@ -202,11 +216,10 @@ class Database(object):
 				))
 		
 		try:
-			self.__con = self.mod.connect(*self.__args, **kwargs)
-			
+			self.__con = self.mod.connect(*self.__args, **k)
 		except BaseException as ex:
 			raise type(ex)('db-open-fail', self.xdata(
-				python=str(ex), args=self.__args, kwargs=kwargs
+				python=str(ex), args=self.__args, kwargs=k
 			))
 		
 		# auto-init
@@ -224,7 +237,11 @@ class Database(object):
 					raise Exception('db-autoinit', self.xdata())
 			finally:
 				self.__autoinit = False
-		
+	
+	# opens (open, return self)
+	def opens(self, **k):
+		"""Open database connection; return self."""
+		self.open(**k)
 		return self
 	
 	
@@ -240,20 +257,28 @@ class Database(object):
 	
 	
 	# EXEC
-	def execute(self, *args):
+	def execute(self, *a):
 		"""Execute a query with given args. Returns a cursor."""
-		return self.__con.execute(*args)
+		return self.__con.execute(*a)
 	
-	def executemany(self, *args):
+	def executemany(self, *a):
 		"""Execute multiple queries with given args. Returns a cursor."""
-		return self.__con.executemany(*args)
+		return self.__con.executemany(*a)
 	
 	def cursor(self):
 		"""Returns a cursor."""
 		return self.__con.cursor()
 	
 	def commit(self):
-		"""Commit a transaction."""
+		"""
+		Commit a transaction.
+		
+		IMPORTANT:
+		The calling code is responsible for commiting transactions. If
+		you're running insert queries and they're not showing up, you
+		should look through your code to make sure db.commit() is being
+		called at all the appropriate places.
+		"""
 		self.__con.commit()
 	
 	def rollback(self):
@@ -280,10 +305,14 @@ class Database(object):
 	#
 	
 	# QUERY
-	def query(self, sql, *args):
-		"""Execute query with given args; Rollback on error."""
+	def query(self, sql, *a):
+		"""
+		Execute query with given args; Rollback on error.
+		
+		On success, the calling code must commit (if/when appropriate).
+		"""
 		try:
-			return self.execute(sql, *args)
+			return self.execute(sql, *a)
 		except Exception as ex:
 			if not self.active:
 				raise Exception('db-inactive', self.xdata())
@@ -291,19 +320,27 @@ class Database(object):
 			raise Exception('db-query-err', self.xdata(sql=sql))
 	
 	# Q-MANY
-	def qmany(self, sql, *args):
-		"""Just like `self.query`, but uses executemany."""
+	def qmany(self, sql, *a):
+		"""
+		Just like `self.query`, but uses executemany.
+		
+		On success, the calling code must commit (if/when appropriate).
+		"""
 		try:
-			return self.executemany(sql, *args)
+			return self.executemany(sql, *a)
 		except Exception:
 			if not self.active:
 				raise Exception('db-inactive', self.xdata())
 			self.__rollback()
-			raise Exception('db-query-err', self.xdata(sql=sql))
+			raise Exception('db-query-err', self.xdata(sql=sql, args=a))
 	
 	# Q-LIST
 	def qlist(self, queries, cursor=None):
-		"""Execute list of query strings. On error, rollback."""
+		"""
+		Execute list of query strings. On error, rollback.
+		
+		On success, the calling code must commit (if/when appropriate).
+		"""
 		try:
 			cc = cursor if cursor else self.cursor()
 			qn=0
@@ -319,47 +356,51 @@ class Database(object):
 	
 	
 	# OPQ - Op Query
-	def opq (self, qname, *args):
+	def opq (self, qname, *a):
 		"""
 		Pass query name as defined in config in the 'op' section, and 
 		any arguments required by the query; Executes the query and 
 		returns a cursor.
+		
+		On success, your code must do the commit (if/when appropriate).
 		"""
-		return self.query(self.__op[qname], *args)
+		return self.query(self.__op[qname], *a)
 	
 	
 	# OPS - Op Query List
-	def ops (self, qname, *args):
+	def ops (self, qname, *a):
 		"""
 		Execute a list of queries specified by an op name. This only 
 		applies to op values that are lists of queries to execute.
 		On error, rollback.
+		
+		On success, your code must do the commit (if/when appropriate).
 		"""
 		#
-		# I THINK THERE'S A PROBLEM HERE...
-		#  - The transaction should start before the for-loop and should
-		#    rollback on an exception!
-		#  - I need to think about this when I'm not so sleepy. Soon! 
+		# Transaction opening is automatic so if there's an exception,
+		# self.query() will do the rollback for all.
 		#
-		#  - REM: For this, I need to use execute() rather than query()
+		# I guess it's best to stick to the principle that the caller 
+		# always does the commit. I need to document that and post some
+		# reminders in comments everywhere it's necessary.
 		#
 		try:
 			xq = len(self.__op[qname])
-			xa = len(args)
+			xa = len(a)
 			xsql = self.__op[qname]
 			for i in range(0, xq):
 				sql = xsql[i]
-				if (i<xa) and (args[i]):
-					self.query(sql, args[i])
+				if (i<xa) and (a[i]):
+					self.query(sql, a[i])
 				else:
 					self.query(sql)
 		except:
-			raise Exception(self.xdata(qname=qname, qargs=args))
+			raise Exception(self.xdata(qname=qname, args=a))
 	
 	
 	def xdata(self, **k):
 		"""Return a dict containing debug information."""
-		d = dict(module=self.__modname, active=self.active)
+		d = dict(dbmodule=self.__modname, dbactive=self.active)
 		if self.path:
 			d['path'] = self.path
 		return xdata(d, **k)
