@@ -64,10 +64,26 @@ class pq(Wrap):
 		try:
 			while True:
 				c.fetch()
-				fn(c.fetch.param, **k)
+				fn(c.fetch.param, *a, **k)
 		except StopIteration:
 			pass
 		return self
+	
+	
+	def select(self, fn, *a, **k):
+		"""
+		Passes a data Param to executable `fn` for each item. Stores a
+		list of results and returns that list wrapped as a pq object.
+		"""
+		c = Cursor(self.o)
+		try:
+			r = []
+			while True:
+				c.fetch()
+				r.append(fn(c.fetch.param, *a, **k))
+		except StopIteration:
+			pass
+		return pq(r)
 	
 	
 	def update(self, fn, *a, **k):
