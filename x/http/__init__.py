@@ -41,7 +41,6 @@ class HttpUI(Server):
 		"""
 		Start the HTTP UI on a random unused port on 127.0.0.1.
 		"""
-		
 		Server.__init__(self, host="127.0.0.1", port=0, 
 				nhandler='net.handler.hhttp.HandleHttp'
 			)

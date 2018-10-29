@@ -6,9 +6,10 @@
 
 from time import gmtime, strftime
 
+from trix.net.handler import *
 from trix.util import text
-from trix.x.hhttp import *
-from trix.net.httpreq import *
+
+from trix.x.http.httpreq import *
 
 
 #
@@ -29,7 +30,7 @@ class HandleHttp(Handler):
 		#
 		k.setdefault('Connection', 'close')
 		k.setdefault('Server', 'trix/%s' % str(VERSION))
-		k.setdefault('docroot', trix.path().path)
+		k.setdefault('docroot', trix.innerfpath("x/content/")
 		
 		#
 		# YIKES...
