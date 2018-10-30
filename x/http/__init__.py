@@ -7,9 +7,10 @@
 # UNDER CONSTRUCTION - JUST GETTING STARTED
 
 import os, getpass
+from trix.net.server      import *
+from trix.x.http.httpreq  import * # <-- notice the import from x...
+from trix.x.http.hhttp    import * # <-- change when moved to net/app
 
-from trix.net.server import *
-from trix.net.httpreq import *
 
 class HttpUI(Server):
 	"""
@@ -19,19 +20,19 @@ class HttpUI(Server):
 	as authentication to operate as (and with the same access as) the 
 	current (real) user. 
 	
-	This should be relatively safe for the typical user who does not
-	have remote access enabled.
+	This should be perfectly safe for the typical user who does not
+	have remote access enabled (and does not have any other security
+	holes).
 	
 	HOWEVER:
-	Using this interface on a system to which other users might connect
-	simultaneously poses a rather significant risk, because a network
-	sniffer could easily extract the key from transactions and then
-	impersonate the valid user - a serious threat to your privacy,
-	data, and system integrity.
-	
-	NOTE ALSO:
 	Altering or overriding this class to allow network access outside 
-	of localhost would result in the same risk.
+	of your own localhost could carry some significant risks.
+	
+	Using this interface on a system to which other users might connect
+	simultaneously would open you up to surveillance by a network
+	sniffer, which could easily extract the transaction key for use to 
+	impersonate the valid user - a potentially serious threat to your 
+	privacy, data, and system integrity.
 	"""
 	
 	#__UserKeys = {}
@@ -41,9 +42,10 @@ class HttpUI(Server):
 		"""
 		Start the HTTP UI on a random unused port on 127.0.0.1.
 		"""
-		Server.__init__(self, host="127.0.0.1", port=0, 
-				nhandler='net.handler.hhttp.HandleHttp'
-			)
+		
+		# Force all arguments to work exactly as this class must...
+		# On localhost, on a random port, and with a HandleUI handler.
+		Server.__init__(self, host="127.0.0.1", port=0, handler=HandleUI)
 	
 	def __del__(self):
 		try:
@@ -66,5 +68,10 @@ class HttpUI(Server):
 			raise Exception("err-auth-fail", xdata(
 					reason="key-match-fail"
 				))
+
+
+
+class HandleUI(HandleHttp):
+	pass
 
 
