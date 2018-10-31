@@ -23,12 +23,17 @@ class HandleHttp(Handler):
 	def __init__(self, sock, **k):
 		Handler.__init__(self, sock, **k)
 		
-		# path to the example content files
-		exampleDir = trix.innerfpath("net/handler/hhttp/example/")
+		# make root dir configurable
+		rootdir = k.get('rootdir')
+		
+		# set default path to the example content files (if necessary)
+		if not rootdir:
+			rootdir = trix.innerfpath("net/handler/hhttp/example/")
 		
 		# webroot is an fs.Path object
-		self.webroot = trix.path(exampleDir)
-			
+		self.webroot = trix.path(rootdir)
+		
+		# configurable header items
 		self.Server = k.get("Server", "trix/%s" % str(VERSION))
 		self.Connection = k.get("Connection", "keep-alive")
 	
