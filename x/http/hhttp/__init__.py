@@ -46,8 +46,8 @@ class HandleHttp(Handler):
 			self.uquery = self.uinfo.query
 			self.reqpath = trix.path(self.uinfo.path) # keep this Path
 			
-			trix.display(dict(uinfo=self.uinfo, uquery=self.uinfo.query,
-				reqpath=self.reqpath.path))
+			#trix.display(dict(uinfo=self.uinfo, uquery=self.uinfo.query,
+			#	reqpath=self.reqpath.path))
 			
 			#3 Check file path - apply default 'index.html' if necessary
 			if self.webroot.isdir():
@@ -55,16 +55,16 @@ class HandleHttp(Handler):
 			else:
 				filepath = self.webroot.merge(self.reqinfo.path)
 			
-			print ('handledata - filepath', filepath)
+			#print ('handledata - filepath', filepath)
 			
 			#4 Check mime type
 			self.contentType = mime.Mime(filepath).mimetype
 			
-			print ('handledata - contentType', self.contentType)
+			#print ('handledata - contentType', self.contentType)
 			
 			#5 Load File Content
 			content = trix.path(filepath).reader(encoding='utf8').read()
-			print ('handledata - content', content)
+			#print ('handledata - content', content)
 			
 			#6 Generate Headers
 			clength = len(content.encode('utf_8'))
@@ -75,24 +75,12 @@ class HandleHttp(Handler):
 			#7 Write the response header and
 			gmt = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 			head = self.head('200', clength)
-			"""
-			head = "\r\n".join([
-				"HTTP/1.1 200 OK", 
-				"Date: %s"           % (gmt),
-				"Connection: %s"     % (self.__options['Connection']),
-				"Server: %s"         % (self.__options['Server']),
-				"Accept-Ranges: bytes",
-				"Content-Type: %s"   % self.__options['Content-Type'],
-				"Content-Length: %i" % (clength),
-				"Last-Modified: %s"  % (gmt)
-			])
-			"""
 			
 			#7 Send End Bytes
 			self.write(head + "\r\n\r\n" + content + "\r\n\r\n")
 			
 		except BaseException as ex:
-			trix.display (["ERROR", ex, xdata()])
+			#trix.display (["ERROR", ex, xdata()])
 			self.writeError("500", xdata())
 			raise
 	
