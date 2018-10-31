@@ -12,7 +12,7 @@ from trix.x.http.httpreq  import * # <-- notice the import from x...
 from trix.x.http.hhttp    import * # <-- change when moved to net/app
 
 
-class HttpUI(Server):
+class HttpUI(HandleHttp):
 	"""
 	This HTTP User Interface is intended only for use on localhost, and
 	on a single-user (that is, one user at a time) system. It checks 
@@ -20,19 +20,18 @@ class HttpUI(Server):
 	as authentication to operate as (and with the same access as) the 
 	current (real) user. 
 	
-	This should be perfectly safe for the typical user who does not
-	have remote access enabled (and does not have any other security
-	holes).
+	This should present no security problems for the typical user who 
+	does not have any sort of remote access enabled.
 	
 	HOWEVER:
 	Altering or overriding this class to allow network access outside 
 	of your own localhost could carry some significant risks.
 	
 	Using this interface on a system to which other users might connect
-	simultaneously would open you up to surveillance by a network
-	sniffer, which could easily extract the transaction key for use to 
-	impersonate the valid user - a potentially serious threat to your 
-	privacy, data, and system integrity.
+	simultaneously could allow surveillance by network "sniffer"
+	software, which could easily extract the transaction key, which
+	could be used to impersonate the valid user - a potentially serious
+	threat to your privacy, data, and system integrity.
 	"""
 	
 	#__UserKeys = {}
@@ -68,10 +67,3 @@ class HttpUI(Server):
 			raise Exception("err-auth-fail", xdata(
 					reason="key-match-fail"
 				))
-
-
-
-class HandleUI(HandleHttp):
-	pass
-
-

@@ -11,8 +11,12 @@ from ..util.mime import *
 #
 class httpreq(object):
 	def __init__(self, requestBytes):
-		self.__bytes = requestBytes
-		self.__text = requestBytes.decode('utf_8')
+		try:
+			self.__bytes = requestBytes
+			self.__text = requestBytes.decode('utf_8')
+		except AttributeError:
+			self.__text = requestBytes
+			self.__bytes = requestBytes.encode('utf_8')
 		
 		# array of request lines
 		self.__lines = L = self.__text.splitlines()
