@@ -5,11 +5,9 @@
 #
 
 from time import gmtime, strftime
-from trix.net.handler import *
-from trix.x.http.httpreq import *
 from trix.util import urlinfo, mime
-
-HHTTP_NDEFAULTS = 'x.http.hhttp.conf'
+from trix.net.handler import *
+from trix.net.httpreq import *
 
 
 #
@@ -26,10 +24,13 @@ class HandleHttp(Handler):
 		Handler.__init__(self, sock, **k)
 		
 		# path to the example content files
-		exampleDir = trix.innerfpath("x/http/hhttp/example/") #<-- PATH!
+		exampleDir = trix.innerfpath("net/handler/hhttp/example/")
 		
 		# webroot is an fs.Path object
 		self.webroot = trix.path(exampleDir)
+			
+		self.Server = k.get("Server", "trix/%s" % str(VERSION))
+		self.Connection = k.get("Connection", "keep-alive")
 	
 	
 	#
@@ -46,41 +47,29 @@ class HandleHttp(Handler):
 			self.uquery = self.uinfo.query
 			self.reqpath = trix.path(self.uinfo.path) # keep this Path
 			
-			#trix.display(dict(uinfo=self.uinfo, uquery=self.uinfo.query,
-			#	reqpath=self.reqpath.path))
-			
 			#3 Check file path - apply default 'index.html' if necessary
 			if self.webroot.isdir():
-				filepath = self.webroot.merge('index.html')
+				filepath = self.webroot.merge("index.html")
 			else:
 				filepath = self.webroot.merge(self.reqinfo.path)
-			
-			#print ('handledata - filepath', filepath)
 			
 			#4 Check mime type
 			self.contentType = mime.Mime(filepath).mimetype
 			
-			#print ('handledata - contentType', self.contentType)
-			
 			#5 Load File Content
-			content = trix.path(filepath).reader(encoding='utf8').read()
-			#print ('handledata - content', content)
+			content = trix.path(filepath).reader(encoding="utf_8").read()
 			
 			#6 Generate Headers
 			clength = len(content.encode('utf_8'))
-			
-			self.Server = 'trix/%s' % str(VERSION)
-			self.Connection = 'keep-alive'
 			
 			#7 Write the response header and
 			gmt = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 			head = self.head('200', clength)
 			
-			#7 Send End Bytes
+			#8 Send End Bytes
 			self.write(head + "\r\n\r\n" + content + "\r\n\r\n")
 			
 		except BaseException as ex:
-			#trix.display (["ERROR", ex, xdata()])
 			self.writeError("500", xdata())
 			raise
 	
@@ -135,4 +124,5 @@ class HandleHttp(Handler):
 		
 		# read the response from the Buffer, b
 		self.socket.write(b.read())
-		
+
+

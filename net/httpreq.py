@@ -4,19 +4,17 @@
 # the terms of the GNU Affero General Public License.
 #
 
-from ..util.mime import *
 
 #
 # HTTP (REQUEST PARSER)
 #
 class httpreq(object):
+	"""Simple HTTP request parser."""
+	
 	def __init__(self, requestBytes):
-		try:
-			self.__bytes = requestBytes
-			self.__text = requestBytes.decode('utf_8')
-		except AttributeError:
-			self.__text = requestBytes
-			self.__bytes = requestBytes.encode('utf_8')
+		"""Receives requestBytes; loads properties with values."""
+		self.__bytes = requestBytes
+		self.__text = requestBytes.decode('utf_8')
 		
 		# array of request lines
 		self.__lines = L = self.__text.splitlines()
