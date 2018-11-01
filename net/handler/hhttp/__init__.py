@@ -19,19 +19,22 @@ class HandleHttp(Handler):
 	this class and how to customize it to suit your needs.
 	"""
 	
+	WebContent = "net/handler/hhttp/example/"
+	
 	# INIT
 	def __init__(self, sock, **k):
-		Handler.__init__(self, sock, **k)
 		
 		# make root dir configurable
-		rootdir = k.get('rootdir')
+		self.rootdir = k.get('rootdir', self.WebContent)
 		
 		# set default path to the example content files (if necessary)
-		if not rootdir:
-			rootdir = trix.innerfpath("net/handler/hhttp/example/")
+		if not self.rootdir:
+			self.rootdir = trix.innerfpath(self.WebContent)
+		
+		Handler.__init__(self, sock, **k)
 		
 		# webroot is an fs.Path object
-		self.webroot = trix.path(rootdir)
+		self.webroot = trix.path(self.rootdir)
 		
 		# configurable header items
 		self.Server = k.get("Server", "trix/%s" % str(VERSION))
@@ -63,7 +66,6 @@ class HandleHttp(Handler):
 			# apply default file (index.html)
 			if self.reqpath.isdir():
 				reqpath = self.reqpath.merge('index.html')
-			
 			
 			#4 Check mime type
 			self.contentType = mime.Mime(reqpath).mimetype
@@ -104,9 +106,11 @@ class HandleHttp(Handler):
 			"Last-Modified: %s"  % (gmt) # this should be the file mod date
 		])
 		return head
-		
 	
 	
+	#
+	# WRITE-ERROR - Writes error page to client.
+	#
 	def writeError(self, errcode, xdata=None):
 		"""
 		Write an error response given `errcode` and optional `xdata`.
