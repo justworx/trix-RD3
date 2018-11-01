@@ -1,7 +1,7 @@
 #
 # Copyright 2018 justworx
-# This file is part of the trix project, distributed under the terms 
-# of the GNU Affero General Public License.
+# This file is part of the trix project, distributed under 
+# the terms of the GNU Affero General Public License.
 #
 
 import socket
@@ -181,12 +181,20 @@ class urlinfo(object):
 		return self.__dict.get('path')
 	
 	@property
+	def fragment(self):
+		return self.__dict.get('fragment')
+	
+	@property
 	def query(self):
 		return self.__dict.get('query')
 	
 	@property
-	def fragment(self):
-		return self.__dict.get('fragment')
+	def qdict(self):
+		try:
+			return self.__qdict
+		except:
+			self.__qdict = urlparse.parse_qs(self.query)
+			return self.__qdict
 	
 	
 	
