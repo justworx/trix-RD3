@@ -23,7 +23,6 @@ class Host(object):
 		self.__fqdn = socket.getfqdn(self.__host)
 		self.__dbg = []
 		
-		
 		# hostx
 		try:
 			self.__hostx = socket.gethostbyname_ex(self.__host)
@@ -37,13 +36,11 @@ class Host(object):
 			self.__alias = None
 			self.__addrs = None
 		
-		
 		# get ip address
 		try:
 			self.__ip = self.__hostx[2]
 		except Exception as ex:
 			self.__ip = ''
-		
 		
 		# split hostname by dots (eg, laptop.local, www.somesuch.com)
 		try:
@@ -51,25 +48,14 @@ class Host(object):
 		except Exception as ex:
 			self.__parts = []
 		
-		
 		# check parts
 		check = []
-		#if len(parts) == 1:
 		try:
 			selflocal = "%s.local" % self.__host
 			self.__local = socket.gethostbyname_ex(selflocal)
 		except Exception as ex:
-			#print("self-local error", ex)
 			self.__local = None
-		
-		"""
-		# <host>.local
-		hostlocal = "%s.local" % self.__host
-		try:
-			self.__local = socket.gethostbyname_ex(self.__host)
-		except:
-			self.__local = None
-		"""
+	
 	
 	# STATUS
 	def status(self):
@@ -139,10 +125,6 @@ class Host(object):
 		return self.__local
 	
 	@property
-	def selflocal(self):
-		return self.__local
-	
-	@property
 	def name(self):
 		return self.__name
 	
@@ -153,109 +135,3 @@ class Host(object):
 	@property
 	def addrs(self):
 		return self.__addrs
-	
-	"""
-	def addri(self):
-		pass
-		#return self.__local
-	"""
-	
-
-class portscan(object):
-	
-	#
-	# Play with these values (making them come out to 65536).
-	# Might find a faster set of values.
-	#
-	REP = 32   # 256 | 4     512 1024 2048 4096 8192 | 16   32   64   128
-	PER = 2048 # 256 | 16384 128 64   32   16   8    | 4096 2048 1024 512
-	
-	def __init__(self, host=None):
-		self.__host = host or "localhost"
-		self.__qresults = queue.Queue()
-		self.__qerrors = queue.Queue()
-		self.__started = 0
-		self.__finished = 0
-		self.__scanning = False
-		self.__starttime = None
-		self.__endtime = None
-	
-	def __del__(self):
-		del(self.__qresults)
-		del(self.__qerrors)
-	
-	@property
-	def results(self):
-		"""Wait for results from worker threads."""
-		try:
-			return self.__results
-		except:
-			self.wait()
-			self.__results = sorted(self.__readqueue(self.__qresults))
-			return self.__results
-	
-	@property
-	def scantime(self):
-		try:
-			return self.__scantime
-		except:
-			if not self.__endtime:
-				self.wait()
-			self.__scantime = self.__endtime - self.__starttime
-			return self.__scantime
-	
-	@property
-	def errors(self):
-		try:
-			return self._errors
-		except:
-			self.wait()
-			self.__errors = self.__readqueue(self.__qresults)
-			return self.__errors
-	
-	
-	def scan(self):
-		"""Start scanning ports."""
-		if self.__starttime != None:
-			raise Exception ("err-already-scanned")
-		
-		self.__starttime = time.time()
-		self.__scanning = True
-		for i in range(0, self.REP):
-			self.__started += 1
-			trix.start(self.__scanrange, i, self.__qresults)
-	
-	
-	def wait(self):
-		"""Wait for scanning to complete."""
-		while self.__finished < self.__started:
-			time.sleep(0.1)
-		self.__endtime = time.time()
-
-	
-	def __scanrange(self, i, q):
-		
-		host = self.__host
-		start = i*self.PER
-		end = start+self.PER
-		#print (i, start, end)
-		for p in range(start, end):
-			try:
-				socket.socket().connect(('localhost',p))
-				q.put(p)
-			except (OSError, socket.error) as ex:
-				pass
-			except Exception as ex:
-				self.__qerrors.put([type(ex), ex.args])
-		
-		self.__finished += 1
-	
-	
-	def __readqueue(self, q):
-			r = []
-			try:
-				while True:
-					r.append(q.get_nowait())
-			except queue.Empty:
-				pass
-			return r
