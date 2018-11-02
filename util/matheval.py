@@ -4,7 +4,9 @@
 # the terms of the GNU Affero General Public License.
 #
 
+from .. import *
 import ast, math, operator
+
 
 #
 # EVAL
