@@ -25,7 +25,7 @@ class HandleHttp(Handler):
 	def __init__(self, sock, **k):
 		
 		# make root dir configurable
-		self.rootdir = k.get('rootdir', self.WebContent)
+		self.rootdir = k.get('rootdir')
 		
 		# set default path to the example content files (if necessary)
 		if not self.rootdir:
