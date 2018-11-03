@@ -78,7 +78,7 @@ class Plugin(EncodingHelper):
 	
 	
 	#
-	# INIT
+	# REPLY
 	#
 	def reply(self, e, data):
 		"""Set event object's `e.reply` to the given `data` value."""
@@ -101,9 +101,27 @@ class Plugin(EncodingHelper):
 	
 	
 	#
+	# ERROR
+	#
+	def error(self, e, *a, **k):
+		"""
+		Set the error response indicating that active processing of an
+		event - one expected by the processing object to complete the 
+		job - has resulted in an unresolvable error which should likely
+		be reported to the user.
+		
+		Pass any number of args and kwargs; xdata() is automatically
+		appended.
+		"""
+		e.error = [a, k, xdata()]
+		
+	
+	
+	#
 	# DEBUG
 	#
 	def debug(self, *a, **k):
+		"""Prints a line-debug message."""
 		if self.debugging:
 			linedbg().dbg(*a, **k)
 	
