@@ -21,6 +21,7 @@ def matheval(expr, vvars={}, fn={}):
 	"""
 	 
 	r = __eval(ast.parse(expr, mode='eval'), vvars, fn)
+	return r
 	try:
 		if r == int(r):
 			return int(r)
