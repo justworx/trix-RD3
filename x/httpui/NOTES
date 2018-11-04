@@ -22,4 +22,12 @@ we'll need a cline handler that does the following:
     sure there are no holes in my logic.
 
 
+# -----------------
 
+python3
+import webbrowser
+from trix.x.httpui import *
+s = HttpUI().starts()
+webbrowser.open_new_tab("http://localhost:%i" % s.port)
+
+# -----------------

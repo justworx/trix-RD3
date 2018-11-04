@@ -47,13 +47,15 @@ App.prototype.start = function() {
 			this.getpanel('Home').done(function() {
 				this.firstpage();
 				
+				/*
 				// add more default panels here
 				this.getpanel('Service').done(function() {
 					this.getpanel('Command').done(function() {
 						this.getpanel('Data')	
 					});
 				});
-	
+				*/
+				
 				// Create/start the update interval object
 				if (!this.__update) {
 					var update = this.update.bind(this);
@@ -97,10 +99,18 @@ App.prototype.request = function (req) {
 
 // COMMAND
 App.prototype.command = function (cmd) {
+	
+	// make sure `cmd` is a string
 	if (typeof cmd == 'object')
 		cmd = cmd.join(' ')
+	
+	// send the command as a request to the server
 	return this.request({c:cmd})
+	
+		// handle the response
 		.done(function(data) {
+			
+			// check whether the  response is an error message
 			e = app.on_error(data);
 			if (e) {
 				e = (typeof e == 'object') ? e.join(' ') : e;

@@ -13,9 +13,10 @@
 
 
 import os, getpass
+from trix.app.event import *
 from trix.net.server import *
 from trix.net.handler.hhttp import *
-
+from trix.fmt import JCompact
 
 
 class HttpUI(Server):
@@ -69,8 +70,11 @@ class HandleUI(HandleHttp):
 	
 	def __init__(self, sock, **k):
 		
+		self.__username = getpass.getuser()
+		
 		rootdir = trix.innerfpath(self.WebContent)
 		k['rootdir'] = rootdir
+		
 		HandleHttp.__init__(self, sock, **k)
 	
 	
@@ -84,7 +88,7 @@ class HandleUI(HandleHttp):
 	
 	def getkey(self):
 		"""Add a key for the current user."""
-		username = getpass.getuser()
+		username = self.__username
 		if not (username in self.UserKeys):
 			self.UserKeys[username] = os.urandom(64) 
 		return self.UserKeys[username]
@@ -92,15 +96,29 @@ class HandleUI(HandleHttp):
 	
 	def matchkey(self, key):
 		"""Check this on every request to make sure the user is valid."""
-		if not self.UserKeys[getpass.getuser()] != key:
+		if not self.UserKeys[self.__username] != key:
 			raise Exception("err-auth-fail", xdata(
 					reason="key-match-fail"
 				))
 	
 	
-	#
-	#def handledata(self, data, **k):
-	#	HandleHttp
-	#
+	
+	def handledata(self, data, **k):
+		
+		if data:
+			# handle incoming javascript requests
+			data = data.strip()
+			if data == 'auth whoami':
+				self.send(self.__username)
+			elif data == 'state':
+				self.send(JCompact().format({
+						"server" : "trix/httpui", "revision" : "0.0 (rd3)",
+						"title" : "trix!"
+					}))
+			
+			else:
+				# send content from httpui/content directory
+				HandleHttp.handledata(self, data, **k)
+	
 	
 
