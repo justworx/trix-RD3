@@ -86,6 +86,9 @@ class Console(EncodingHelper):
 		self.__help     = config.get('help'    , {}       )
 		self.__messages = config.get('messages', {}       )
 		
+		# DEBUG
+		self.__debug    = config.get('debug'   , self.Debug)
+		
 		# WRAPPERS - For "sub-prompts".
 		self.__wrappers = config.get('wrappers', {})
 		
@@ -213,6 +216,18 @@ class Console(EncodingHelper):
 		"""A dict of wrappers available for use by this console."""
 		return self.__wrappers
 	
+	@property
+	def debug(self):
+		"""
+		True if debugging is enabled; causes extensive messages on error.
+		"""
+		return self.__debug	
+	
+	@debug.setter
+	def debug(self, b):
+		self.__debug = bool(b)
+	
+	
 	#
 	# WRAPPER
 	#
@@ -234,7 +249,9 @@ class Console(EncodingHelper):
 		return Wrapper(wconf)
 	
 	
+	#
 	# CONSOLE - Start the console.
+	#
 	def console(self):
 		"""Call this method to start a console session."""
 		
@@ -254,7 +271,7 @@ class Console(EncodingHelper):
 						self.handle_input(evt)
 				
 				except EOFError:
-					# Ctrl-C exits this prompt
+					# Ctrl-C exits this prompt with EOFError; end the session.
 					self.__active = False
 				
 				except Exception as ex:
@@ -263,19 +280,28 @@ class Console(EncodingHelper):
 					#
 					print('') # get off the "input" line
 					event_dict = evt.dict if evt else None
-					linedbg().dbg(self, args=ex.args, edict=event_dict)
+					if self.debug:
+						linedbg().dbg(self, args=ex.args, edict=event_dict)
+					else:
+						self.handle_error(str(ex))
 				
 		except KeyboardInterrupt:
 			print('')
 		
 		except BaseException:
-			linedbg().dbg(self, "Fatal Exception. %s\n" % self.closing)
-			raise
+			if self.debug:
+				linedbg().dbg(self, "Fatal Exception. %s\n" % self.closing)
+			else:
+				raise
 		
 		# close banner
 		print("%s\n" % self.closing)
 	
 	
+	
+	#
+	# CREATE EVENT
+	#
 	def create_event(self, commandLineText):
 		"""Returns a TextEvent."""
 		return LineEvent(commandLineText)
@@ -339,17 +365,35 @@ class Console(EncodingHelper):
 					self.lines.output ("%s\n" % str(e.reply))
 					return
 			
+			#
 			# handle valid commands...
-			if e.argvl[0] == 'help':
+			#
+			if e.argvl[0] == 'debug':
+				# get/set self.debug value
+				if e.argc > 1:
+					self.debug = bool(e.argv[1])
+				else:
+					print("debugging:", str(self.debug))
+			
+			elif e.argvl[0] == 'help':
+				# print help message for the given command (e.argv[1])
 				self.handle_help(e)
+			
 			elif e.argvl[0] == 'plugins':
+				# list plugin names
 				self.lines.output(" ".join(self.plugins.keys()))
+			
 			elif e.argvl[0] == 'wrappers':
+				# list available wrappers
 				self.lines.output(" ".join(self.wrappers.keys()))
+			
 			elif e.argvl[0] == 'exit':
+				# leave the console session
 				self.__active = False
 			
-			# create and run a Wrapper object's console
+			# 
+			# CHECK TO SEE WHETHER THERE'S A MATCHING WRAPPER
+			#
 			elif e.argv[0] in self.wrappers:
 				#
 				# Generate a new Wrapper each time; this wrapper object 
@@ -373,7 +417,7 @@ class Console(EncodingHelper):
 			#    command, so complain.
 			#
 			elif e.argvl[0]:
-				if self.Debug:
+				if self.debug:
 					raise Exception(
 							xdata(error="unknown-command", args=e.argv)
 						)
@@ -423,6 +467,10 @@ class Wrapper(Console):
 	#
 	def __init__(self, config, *a, **k):
 		
+		self.__wrapped = None
+		self.__wrap = None
+		self.__obj = None
+		
 		conf = None
 		try:
 			# Load this wrapper's config file
@@ -431,21 +479,25 @@ class Wrapper(Console):
 			else:
 				conf = trix.nconfig(config['nconfig'])
 			
+			# INIT CONSTRUCTOR
+			Console.__init__(self, conf, **k)
+			
 			# get the wrapped object's config
 			if 'ncreate' in conf:
-				self.__wrapped = trix.ncreate(conf['ncreate'], *a)
+				self.__wrapped = trix.ncreate(
+						conf['ncreate'], *a, affirm='touch'
+					)
 			else:
-				self.__wrapped = trix.create(conf['create'], *a)
+				self.__wrapped = trix.create(
+						conf['create'], *a, affirm='touch'
+					)
+			
 			self.__obj = self.__wrapped.obj
 			
 			# create the wrapped object, passing args received on the
 			# command line.
 			self.__wrap = Wrap(self.__wrapped)
 			
-			
-			
-			# INIT CONSTRUCTOR
-			Console.__init__(self, conf, **k)
 			
 			# ADD A DEBUG VARIABLE
 			Console.dv["Wrapper"] = self           # DEBUG VAR
@@ -456,11 +508,14 @@ class Wrapper(Console):
 		
 		# ...but this one shows way to much stuff...
 		except Exception as ex:
-			try:
-				o = str(self.__wrapped.obj)
-			except:
-				o = None
-			raise ConsoleError(str(ex), xdata(a=a, o=o))
+			if self.debug:
+				try:
+					o = str(self.__wrapped.obj)
+				except:
+					o = None
+				linedbg().dbg(self, "Error Wrapping Object", conf)
+			
+			raise
 	
 	
 	
@@ -486,29 +541,6 @@ class Wrapper(Console):
 		
 		if e.argc and e.argv[0] not in ['', None]:
 			r = self.wrap(*e.argv)
-			if r:
+			if r != None:
 				trix.display(r)
 	
-	
-	def resultformat(self, r):
-		#print (" - r in:", r)
-		if r:
-			if isinstance(r, (str,int,float,bool)):
-				return str(r)
-			else:
-				try: # is it dict-like?
-					return trix.formatter(f='JDisplay').format(dict(r))
-				except Exception as ex:
-					pass
-				
-				try: # list-like?
-					return trix.formatter(f='JSON').format(list(r))
-				except Exception as ex:
-					pass
-				
-				try: # if all else fails, convert to string
-					return str(r)
-				except Exception as ex:
-					pass
-		#print (" - r out:", r)
-		return r

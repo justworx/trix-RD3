@@ -107,9 +107,14 @@ class Calc(Plugin):
 			#  - This wasn't handled above because the first part of the
 			#    equation is a string (eg, a variable or math function).
 			#
+			"""
+			#
+			# I need to figure a way to do this passive stuff without
+			# breaking everything.
+			#
 			if not e.reply:
 				self.reply(e, self.__calc(e))
-		
+			"""
 				
 		except Exception as ex:
 			
@@ -124,7 +129,7 @@ class Calc(Plugin):
 			msg = "%s: %s" % (str(typ), err)
 			self.reply(e, msg)
 			
-			raise
+			#raise
 	
 	
 	
