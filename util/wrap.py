@@ -59,7 +59,11 @@ class Wrap(object):
 	
 	def __repr__(self):
 		"""Pass an object or module as the `o` argument."""
-		return "<Wrap type=%s>" % type(self.o).__name__
+		Tself = type(self)
+		return "<%s type=%s%s>" % (
+				Tself.__name__, type(self.o).__name__,
+				" (wrapper)" if Tself!=Wrap else ''
+			)
 	
 	def __call__(self, key, *a, **k):
 		"""

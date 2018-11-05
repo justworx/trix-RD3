@@ -19,7 +19,7 @@ class pq(Wrap):
 	>>> from trix.x.pq import *
 	>>> q = pq([1,2,3,4,5])
 	
-	# use wrapped dict functions to affect the object
+	# use wrapped list functions to affect the object
 	>>> q.append(9)
 	
 	# use the `o` property to access the object directly
@@ -42,6 +42,7 @@ class pq(Wrap):
 		[3, 2, 1]
 		"""
 		return pq(fn(self.o, *a, **k))
+	
 	
 	
 	
