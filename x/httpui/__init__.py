@@ -46,9 +46,6 @@ class HttpUI(Server):
 		"""
 		Start the HTTP UI on a random unused port on 127.0.0.1.
 		"""
-		
-		# Force all arguments to work exactly as this class must...
-		# On localhost, on a random port, and with a HandleUI handler.
 		Server.__init__(self, host="127.0.0.1", port=0, handler=HandleUI)
 
 
@@ -106,13 +103,15 @@ class HandleUI(HandleHttp):
 	def handledata(self, data, **k):
 		
 		if data:
+			#print ("handledata:", data)
+			
 			# handle incoming javascript requests
 			data = data.strip()
 			if data == 'auth whoami':
 				self.send(self.__username)
 			elif data == 'state':
 				self.send(JCompact().format({
-						"server" : "trix/httpui", "revision" : "0.0 (rd3)",
+						"server" : "trix/httpui", "revision" : "rd3",
 						"title" : "trix!"
 					}))
 			
