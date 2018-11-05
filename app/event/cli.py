@@ -61,12 +61,3 @@ class LineEvent(Event):
 		except Exception as ex:
 			raise type(ex)(xdata(line=commandline, args=a, r=r))
 
-
-
-#
-# Deprecated
-#  - I just don't like the name `CLIEvent`.
-#
-class CLIEvent(LineEvent):
-	pass
-
