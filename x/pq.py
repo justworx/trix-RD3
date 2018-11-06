@@ -111,4 +111,78 @@ class pq(Wrap):
 			raise type(ex)(xdata(p=p.iv, a=a, k=k))
 
 
+#
+# UNDER CONSTRUCTION
+#  - The following code is NOT in use - it's just an idea I'm keeping
+#    here until i decide whether to pursue it (and, if so, how to
+#    proceed with it).
+#
+class PQ_Select(object):
+	"""Helper class for pq"""
+	
+	def __init__(self, pq, *a, **k):
+		"""Pass the `pq` object."""
+		
+		self.__pq = pq
+		self.__a = a
+		self.__k = k
+		
+	def __call__(self, xx, *a, **k):
+		try:
+			# if cmd is an executable object...
+			c = Cursor(self.o)
+			try:
+				fn = xx
+				r = []
+				while True:
+					c.fetch()
+					r.append(fn(c.fetch.param, *a, **k))
+			except StopIteration:
+				pass
+			return pq(r)
+		
+		except:
+			# alternately, args could be a string such as one accepted
+			# by trix.util.dq (data query), but with string substitutions
+			# such as '*' asterisk for "any value"... not sure how this
+			# will turn out - let's see!
+			
+			if isinstance(xx, list):
+				query = xx
+			
+			elif a:
+				# if *a exists, there's more than one argument, so it's
+				# not a 0-delimited string...
+				query = [xx]
+				for arg in a:
+					query.append(arg)
+				
+			# check for delimited beginning (splitting on  first char)
+			elif isinstance(xx, str) and xx:
+				query = xx[1:].split(xx[0])
+			
+			else:
+				raise ValueError("invalid-params", xdata(cmd=xx, args=a))
+			
+			n = trix.ncreate('x.nav.Nav')
+			c = type(self.o) # create new instance of the type this
+			for item in query:
+				if item=='*':
+					for d in n.s:
+						# .... Ohhhh... this is bad; I'll need a way to do
+						#      do recursion through multiple query items...
+						#      Don't wanna make people type /*/*/*/*/something;
+						#      Or is that the right way to do it?
+						#
+						# Maybe that *is* the right way to do it... surely a
+						# query would be more precice that way. NO.... we can
+						# use /*/A/*/B to find /x/y/A/foo/bar/B, or
+						#                      /1/A/2/B if for more precision
+						#
+						# I'm going to have to think hard about this one :-/
+						#
+				
+
+
+
 
