@@ -43,6 +43,7 @@ class sockconf(object):
 	
 	@property
 	def config(self):
+		"""Object configuration, for reference."""
 		return self.__config
 
 	@property
