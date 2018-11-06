@@ -20,15 +20,19 @@ class Runner(EncodingHelper):
 		self.__running = False
 		self.__csock = None
 		self.__cport = None
-		
-		
+		self.__threaded = False
+				
 		#
 		# THIS NEEDS SOME ATTENTION
 		#  - The lineq object should not be created unless there's a 
 		#    cport, right?
 		#  - Think about this...
 		#
-		self.__lineq = trix.ncreate('util.lineq.LineQueue')
+		# ... OK - moving this to `if "CPORT" in config:`
+		#self.__lineq = trix.ncreate('util.lineq.LineQueue')
+		#
+		self.__lineq = None
+		
 		
 		try:
 			#
@@ -78,6 +82,13 @@ class Runner(EncodingHelper):
 		
 		# connect to calling process
 		if "CPORT" in config:
+			
+			#
+			# moved here 20181106 (from above)
+			#
+			self.__lineq = trix.ncreate('util.lineq.LineQueue')
+			
+			
 			self.__cport = p = config["CPORT"]
 			self.__csock = trix.ncreate('util.sock.sockcon.sockcon', p)
 			try:
@@ -143,6 +154,7 @@ class Runner(EncodingHelper):
 
 	@property
 	def csock(self):
+		"""Used internally when opened with trix.process()."""
 		try:
 			return self.__csock
 		except:
@@ -151,11 +163,17 @@ class Runner(EncodingHelper):
 	
 	@property
 	def config(self):
+		"""The configuration dict - for reference."""
 		try:
 			return self.__config
 		except:
 			self.__config = {}
 			return self.__config
+	
+	@property
+	def active(self):
+		"""True if open() has been called; False after close()."""
+		return self.__active
 	
 	@property
 	def running(self):
@@ -165,6 +183,11 @@ class Runner(EncodingHelper):
 		except:
 			self.__running = None
 			return self.__running
+	
+	@property
+	def threaded(self):
+		"""True if running in a thead after call to self.start()."""
+		return self.__threaded
 	
 	@property
 	def sleep(self):
@@ -182,27 +205,30 @@ class Runner(EncodingHelper):
 	
 	
 	# START
-	def starts(self):
-		"""Run in a new thread; returns self."""
-		self.start()
-		return self
-	
 	def start(self):
 		"""Run in a new thread."""
 		try:
 			self.__run_begin()
 			trix.start(self.__callio.callio)
+			self.__threaded = True
 		except ReferenceError:
 			self.stop()
 		except Exception as ex:
 			msg = "err-runner-except;"
 			trix.log(msg, str(ex), ex.args, type=type(self), xdata=xdata())
+			self.stop()
 			raise
+			
+	def starts(self):
+		"""Run in a new thread; returns self."""
+		self.start()
+		return self
+	
 	
 	
 	# OPEN
 	def open(self):
-		"""This placeholder is called before each run()."""
+		"""Called by run() if self.active is False."""
 		self.__active = True
 	
 	
@@ -215,9 +241,6 @@ class Runner(EncodingHelper):
 		"""
 		self.__active = False
 	
-	@property
-	def active(self):
-		return self.__active
 	
 	#
 	# RUN
@@ -280,6 +303,7 @@ class Runner(EncodingHelper):
 
 	# QUERY
 	def query(self, q):
+		"""Answer a query from a controlling process."""
 		if q:
 			q = q.strip()
 			if q == 'ping':
@@ -298,14 +322,17 @@ class Runner(EncodingHelper):
 		"""Stop the run loop."""
 		trix.log("runner stop")
 		self.__running = False
+		self.__threaded = False
 		self.__proxy = None
 	
 	# STATUS
 	def status(self):
+		"""Return a status dict."""
 		return dict(
 			ek = self.ek,
 			active = self.active,
 			running = self.running,
+			threaded= self.threaded,
 			sleep   = self.sleep,
 			config  = self.config,
 			cport   = self.__cport
@@ -325,6 +352,7 @@ class Runner(EncodingHelper):
 	
 	# DISPLAY
 	def display(self):
+		"""Print status."""
 		trix.display(self.status())
 
 
