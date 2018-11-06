@@ -16,9 +16,11 @@ class Runner(EncodingHelper):
 		"""Pass config and/or kwargs."""
 		
 		self.__jformat = trix.ncreate('fmt.JCompact')
+		self.__active = False
 		self.__running = False
 		self.__csock = None
 		self.__cport = None
+		
 		
 		#
 		# THIS NEEDS SOME ATTENTION
@@ -116,6 +118,9 @@ class Runner(EncodingHelper):
 							"err-runner-csock", "shutdown-fail", ex=str(ex), 
 							args=ex.args, xdata=xdata()
 						)
+			
+			if self.active:
+				self.close()
 		
 		except BaseException as ex:
 			trix.log("err-delete-ex", "shutdown-fail", ex=str(ex), 
@@ -194,7 +199,26 @@ class Runner(EncodingHelper):
 			trix.log(msg, str(ex), ex.args, type=type(self), xdata=xdata())
 			raise
 	
-		
+	
+	# OPEN
+	def open(self):
+		"""This placeholder is called before each run()."""
+		self.__active = True
+	
+	
+	# CLOSE
+	def close(self):
+		"""
+		This placeholder is called on object deletion. It may be called
+		anytime manually, but you should probably call .stop() first if
+		the object is running. Some classes may call .close() in .stop().
+		"""
+		self.__active = False
+	
+	@property
+	def active(self):
+		return self.__active
+	
 	#
 	# RUN
 	#
@@ -216,6 +240,8 @@ class Runner(EncodingHelper):
 			self.__run_end()
 	
 	def __run_begin(self):
+		if not self.active:
+			self.open()
 		if self.running:
 			raise Exception('already-running')
 		self.__running = True
@@ -278,11 +304,24 @@ class Runner(EncodingHelper):
 	def status(self):
 		return dict(
 			ek = self.ek,
+			active = self.active,
 			running = self.running,
 			sleep   = self.sleep,
 			config  = self.config,
 			cport   = self.__cport
 		)
+	
+	# SHUTDOWN
+	def shutdown(self):
+		"""Stop and close."""
+		with thread.allocate_lock():
+			try:
+				self.close()
+				self.stop()
+			except Exception as ex:
+				msg = "Runner.shutdown error;"
+				trix.log(msg, str(ex), ex.args, type=type(self))
+				raise
 	
 	# DISPLAY
 	def display(self):
