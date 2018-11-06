@@ -145,13 +145,6 @@ class Client(Runner):
 				
 				except Exception as ex:
 					self.handlex(connid, type(ex), ex.args, xdata())
-			
-			#
-			# Handle any graceful connection removals that occurred
-			# during... wait - do we need to do this twice in a row?
-			#
-			#if rmvlist:
-			#	self.remove(rmvlist)
 	
 	
 	# STOP
