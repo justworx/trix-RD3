@@ -4,6 +4,8 @@
 # of the GNU Affero General Public License.
 #
 
+import fnmatch
+
 from trix.data.cursor import *
 from trix.util.wrap import *
 
@@ -126,63 +128,87 @@ class PQ_Select(object):
 		self.__pq = pq
 		self.__a = a
 		self.__k = k
-		
+	
+	
 	def __call__(self, xx, *a, **k):
+		pass
+	
+	
+	def exec_f(self, fn, *a, **k):
+		# if cmd is ans executable object...
 		try:
-			# if cmd is an executable object...
-			c = Cursor(self.o)
-			try:
-				fn = xx
-				r = []
-				while True:
-					c.fetch()
-					r.append(fn(c.fetch.param, *a, **k))
-			except StopIteration:
-				pass
-			return pq(r)
+			fn = xx
+			r = []
+			while True:
+				c.fetch()
+				r.append(fn(c.fetch.param, *a, **k))
+		except StopIteration:
+			pass
+		return pq(r)
+	
+	
+	def exec_q(self, xx, *a, **k):
+		# prepare to search data
+		c = Cursor(self.o)
 		
-		except:
-			# alternately, args could be a string such as one accepted
-			# by trix.util.dq (data query), but with string substitutions
-			# such as '*' asterisk for "any value"... not sure how this
-			# will turn out - let's see!
+	
+	def get_qspec(self, string_spec):
+		"""
+		Pass a string starting with a delimiter such as / forward-slash,
+		and separate each path element with that same delimiter. Path
+		elements should start with dict key strings (which will match
+		regardless of type).
+		
+		When a path element is "*", the remainder of the search applies
+		within all the current element's keys. (It's pretty much as you'd
+		expect from fnmatch, but in a loop.)
+		"""
+		d = string_spec[0]
+		return string_spec[1:].split(d)
+	
+	
+	
+	
+	
+	
+	"""
+	def alternate_possibilities(self):
+		# alternately, args could be a string such as one accepted
+		# by trix.util.dq (data query), but with string substitutions
+		# such as '*' asterisk for "any value".
+		
+		if isinstance(xx, list):
+			query = xx
+		
+		elif a:
+			# if *a exists, there's more than one argument, so it's
+			# not a 0-delimited string...
+			query = [xx]
+			query.extend(a)
 			
-			if isinstance(xx, list):
-				query = xx
-			
-			elif a:
-				# if *a exists, there's more than one argument, so it's
-				# not a 0-delimited string...
-				query = [xx]
-				for arg in a:
-					query.append(arg)
-				
-			# check for delimited beginning (splitting on  first char)
-			elif isinstance(xx, str) and xx:
-				query = xx[1:].split(xx[0])
-			
-			else:
-				raise ValueError("invalid-params", xdata(cmd=xx, args=a))
-			
+		# check for delimited beginning (splitting on  first char)
+		elif isinstance(xx, str) and xx:
+			query = xx[1:].split(xx[0])
+		
+		else:
+			raise ValueError("invalid-params", xdata(cmd=xx, args=a))
+		
+		return query
+	"""
+	
+	
+	"""
+	def other_weirdness:
 			n = trix.ncreate('x.nav.Nav')
-			c = type(self.o) # create new instance of the type this
+			c = type(self.o) # create new instance of the type self.o
 			for item in query:
 				if item=='*':
 					for d in n.s:
-						# .... Ohhhh... this is bad; I'll need a way to do
-						#      do recursion through multiple query items...
-						#      Don't wanna make people type /*/*/*/*/something;
-						#      Or is that the right way to do it?
-						#
-						# Maybe that *is* the right way to do it... surely a
-						# query would be more precice that way. NO.... we can
-						# use /*/A/*/B to find /x/y/A/foo/bar/B, or
-						#                      /1/A/2/B if for more precision
-						#
-						# I'm going to have to think hard about this one :-/
-						#
-				
-
+						# for now, all begining path elements must be covered
+						
+	def xoxo(self, xx, *a):
+		pass
+	"""
 
 
 
