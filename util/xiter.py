@@ -4,19 +4,21 @@
 # the terms of the GNU Affero General Public License.
 #
 
+
 from .. import *
+
 
 class xiter(object):
 	"""Cross-version iterator support."""
 	
 	def __init__(self, iteratable):
-		self.__iter = iteratable
+		self.__iteratable = iteratable
 	
 	def __iter__(self):
-		return iter(self.__iter)
+		return iter(self.__iteratable)
 	
 	def __next__(self):
-		return next(self.__iter)
+		return next(self.__iteratable)
 	
 	def next(self):
 		try:
@@ -29,11 +31,11 @@ class xiter(object):
 			except AttributeError:
 				xd2 = xdata()
 				try:
-					self.__next = self.__iter.next
+					self.__next = self.__iteratable.next
 					return self.__next()
 				except:
 					raise Exception('err-iter-fail', xdata(
-							iterable=self.__iter, T=type(self.__iter),
+							iterable=self.__iteratable, T=type(self.__iteratable),
 							xd1=xd1, xd2=xd2
 						))
 
