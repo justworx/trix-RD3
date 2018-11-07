@@ -6,7 +6,42 @@
 
 from trix import *
 from trix.util.dq import *
+from trix.util.xiter import *
 
+class xnaviter(xiter):
+	"""Recursive dict/list iterator."""
+	
+	def __init__(self, nav):
+		"""Pass the nav object."""
+		
+		xiter.__init__(self, nav)
+		pass
+		# omg i'm so lost
+		#  - xnaviter must return some kind of node - I'd thought the 
+		#    Nav object itself, on its current selection; that may be
+		#    right...
+		#  - charinfo was easy because it iterated through a simple list
+		#    of characters (that is, a string) and wrapped each char in
+		#    itself to provide access to methods related to that char.
+		#  - i'd thought that xnaviter could return itself as charinfo
+		#    does, but now it seems that - because of the various ways
+		#    paths can be followed - it must also, somehow, handle the
+		#    direction of iteration: horizontally (rightward) to the leaf 
+		#    of each dict/list node, or vertically (downward).
+		#  * Well in the current case, it's definitely horizontal
+		#    navigation I'm interested in. The iterator must return only
+		#    scalar values (wrapped in a nav node, of course) starting
+		#    with the first/top, continuing through any scalars (and
+		#    following any non-scalar items rightward... and backing out
+		#    one level at a time, drilling into non-scalar nodes... rinse
+		#    and repeat... 
+		#  * Maybe it's that each node returns Nav.. check `scalar` if
+		#    the leaf is what you want, but still have access to the 
+		#    whole deal...
+		#  ! Well, that's a place to start. Let's see what happens.
+		#
+	
+	
 
 class Nav(object):
 	"""Navigate through large dict structures."""
@@ -19,6 +54,39 @@ class Nav(object):
 		self._f = trix.ncreate("fmt.JCompact")
 	
 	
+	def __iter__(self):
+		try:
+			return iter(self.s.keys())++
+		except:
+			return range(0, len(self.s))
+	
+	def __next__(self):
+		return self
+	
+	
+	def navgen(self):
+		yield (self)            # yield self on current self.s
+		for ki in self.s:       # loop through self.s keys
+			print ("> ", ki)
+			try:
+				self.select(ki)     # select the next key
+				print (" >", ki)
+				yield (self)
+			except StopIteration:
+				self.back()
+		
+	
+	
+	@property
+	def scalar(self):
+		return is_scalar(self.s)
+	
+	@property
+	def kk(self):
+		"""Return list of keys."""
+		return list(self.keys())
+	
+	
 	def dq (self, pathlist, *a):
 		"""
 		Query data at any path.
@@ -27,15 +95,6 @@ class Nav(object):
 		individual argument.
 		"""
 		return dq(self.o, pathlist, *a)
-	
-	
-	def path(self):
-		"""Print the path to the current selection."""
-		r = []
-		for item in self.p:
-			ijson = self._f.format(item)
-			r.append(ijson)
-		print ("/%s : %s"%('/'.join(r),type(self.dq(self.p)).__name__))
 	
 	
 	def keys(self):
@@ -69,6 +128,34 @@ class Nav(object):
 		"""Set selection to root object."""
 		self.s = self.o
 	
+	
+	# ---- info/display -----
+	
+	def display(self):
+		"""Print the path to the current selection."""
+		r = []
+		for item in self.p:
+			ijson = self._f.format(item)
+			r.append(ijson)
+		print ("/%s : %s"%('/'.join(r),type(self.dq(self.p)).__name__))
+	
 
 
+
+
+
+
+
+
+
+
+def is_scalar(x):
+	"""Return true if `x` is scalar (including strings)."""
+	if isinstance(x, basestring):
+		return True
+	try:
+		iter(x)
+		return False
+	except TypeError:
+		return True
 
