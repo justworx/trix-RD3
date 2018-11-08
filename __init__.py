@@ -12,7 +12,8 @@ except:
 
 
 AUTO_DEBUG = True
-DEF_CONFIG = "~/.config/%s"
+DEF_CONFIG = "~/.config/trix"
+DEF_CACHE  = "~/.cache/trix"
 DEF_LOGLET = "./loglet"
 DEF_ENCODE = 'utf_8'
 DEF_INDENT = 2
