@@ -54,6 +54,7 @@ class sockcon(sockurl, sockwrap):
 	
 	@property
 	def buflen(self):
+		"""Return the configured buffer length."""
 		try:
 			return self.__buflen
 		except:

@@ -13,6 +13,7 @@ class sockurl(sockconf):
 	"""Properties of a socket related to a given url."""
 	
 	def __init__(self, config=None, **k):
+		"""Pass args as expected by `trix.util.urlinfo`."""
 		
 		# STEP 1 - process config.
 		try:
@@ -46,8 +47,10 @@ class sockurl(sockconf):
 	
 	@property
 	def url(self):
+		"""The urlinfo object."""
 		return self.__urlinfo
 	
 	# ADDR-INFO
 	def addrinfo(self, **k):
+		"""Address info object, from urlinfo."""
 		return self.__urlinfo.addrinfo(**k)

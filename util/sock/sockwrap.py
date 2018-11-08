@@ -90,10 +90,12 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 	
 	@property
 	def buflen(self):
+		"""Buffer length, as given to init. Default: DEF_BUFFER (4096)"""
 		return self.__buflen
 	
 	@property
 	def newl(self):
+		"""New-line character set; Eg, '\n', '\r', '\r\n'."""
 		return self.__newl
 	
 	
@@ -108,6 +110,7 @@ class sockwrap(sockconf, EncodingHelper, sockprop):
 	
 	# WRITELINE
 	def writeline(self, text, **k):
+		"""Write text, appending `self.newl` line ending."""
 		self.write("%s%s" % (text, self.newl), **k)
 	
 	# READ
