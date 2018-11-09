@@ -1,6 +1,8 @@
+#
 # Copyright 2018 justworx
 # This file is part of the trix project, distributed under the terms 
 # of the GNU Affero General Public License.
+#
 
 from .connect import Connect
 from ..util.runner import *  								# trix
@@ -38,6 +40,17 @@ class Client(Runner):
 			self.handleio(data)
 	
 	
+	@property
+	def connections(self):
+		"""Return list of of connections."""
+		return self.__connections
+	
+	@property
+	def conlist(self):
+		"""Return list of of connection names."""
+		return list(self.__connections.keys())
+	
+	
 	# CONTAINS
 	def __contains__(self, connid):
 		"""Return True if connid in this Client's connection list."""
@@ -50,15 +63,10 @@ class Client(Runner):
 		return self.__connections[connid]
 	
 	
-	@property
-	def conlist(self):
-		"""Return list of of connection names."""
-		return list(self.__connections.keys())
-	
-	
 	
 	# DISCONNECT
 	def disconnect(self, **connid):
+		"""Pass one or more `connid` connection names for removal."""
 		self.remove(connid)
 	
 	
@@ -115,6 +123,7 @@ class Client(Runner):
 	# IO
 	def io(self):
 		"""Check for (and handle) input for each connection."""
+		
 		condict = self.__connections
 		if condict:
 			
@@ -149,6 +158,7 @@ class Client(Runner):
 	
 	# STOP
 	def stop(self):
+		"""Stop the client. Remove/shutdown all connections."""
 		Runner.stop(self)
 		self.remove(list(self.__connections.keys()))
 
