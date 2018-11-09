@@ -21,11 +21,22 @@ class IRCConnect(Connect):
 	server. The functionality is limited to connecting and replying to
 	PING lines from the server and management of plugins. All other 
 	activity is handled by plugins themselves.
+	
+	This is a supporting class for Bot. Though it actually can be used
+	"stand-alone", it's intended purpose is to be stored in and used by
+	Bot (or, potentially, a client object like the (now-deprecated)
+	irc_client. Creating and using an IRCConnect object without the 
+	enclosing structure of a Bot or other client (eg, creating an irc
+	connection in the python interpreter) would require some fast 
+	typing to manually reply to pings and other input required by the 
+	irc server to which you connect.
 	"""
 	
-	cache = "~/.cache/trix"
 	
 	def __init__(self, config=None, **k):
+		"""
+		Pass a config dict.
+		"""
 			
 		# read config
 		config = config or {}
@@ -46,10 +57,6 @@ class IRCConnect(Connect):
 		# display/debug
 		self.show = None
 		self.debug = k.get('debug', IRC_DEBUG)
-		
-		# if debugging at all, display config in terminal
-		#if self.debug > 0:
-		#	trix.display(config)
 		
 		# config
 		host = config['host']
@@ -122,10 +129,20 @@ class IRCConnect(Connect):
 		# plugin management - runtime add/remove
 		self.pm_add = []
 		self.pm_rmv = []
+		
+		# PREP FOR NEW FEATURE - NOT YET IMPLIMENTED
+		self.__paused = False
+	
+	
+	@property
+	def paused(self):
+		"""Not yet implemented."""
+		return self.__paused
 	
 	
 	@property
 	def botname(self):
+		"""Return the name of this bot as stored in config."""
 		return self.__botname
 	
 	
@@ -400,15 +417,28 @@ class IRCConnect(Connect):
 	#
 	# ----------------------------------------------------------------
 	
-	def status(self):
-		return self.config
-	
 	def ping(self, x=None):
 		x = x or time.time()
 		self.writeline("PING :%s" % x)
 	
 	def shutdown(self, msg='QUIT'):
+		"""
+		Send a QUIT message and shutdown the connection.
+		"""
 		self.writeline("QUIT %s" % msg)
+		
+		# this falls through to the Runner.shutdown() method
 		Connect.shutdown(self)
 
+	
+	def status(self):
+		"""
+		UNDER CONSTRUCTION
+		
+		Status should be something other than self.config, but for now
+		that's all that's here.
+		
+		Check for changes - sooner or later.
+		"""
+		return self.config
 
