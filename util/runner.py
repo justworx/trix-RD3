@@ -21,16 +21,6 @@ class Runner(EncodingHelper):
 		self.__csock = None
 		self.__cport = None
 		self.__threaded = False
-				
-		#
-		# THIS NEEDS SOME ATTENTION
-		#  - The lineq object should not be created unless there's a 
-		#    cport, right?
-		#  - Think about this...
-		#
-		# ... OK - moving this to `if "CPORT" in config:`
-		#self.__lineq = trix.ncreate('util.lineq.LineQueue')
-		#
 		self.__lineq = None
 		
 		
@@ -303,7 +293,13 @@ class Runner(EncodingHelper):
 
 	# QUERY
 	def query(self, q):
-		"""Answer a query from a controlling process."""
+		"""
+		Answer a query from a controlling process. Responses are always
+		sent as JSON dict strings.
+		
+		Override this method in subclasses that can run in an external
+		process, adding commands your class should respond to.
+		"""
 		if q:
 			q = q.strip()
 			if q == 'ping':
@@ -343,8 +339,8 @@ class Runner(EncodingHelper):
 		"""Stop and close."""
 		with thread.allocate_lock():
 			try:
-				self.close()
 				self.stop()
+				self.close()
 			except Exception as ex:
 				msg = "Runner.shutdown error;"
 				trix.log(msg, str(ex), ex.args, type=type(self))
