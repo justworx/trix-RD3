@@ -21,7 +21,7 @@ class Bot(Client):
 	"""An irc bot object, containing zero or more irc connections."""
 	
 	# the type for new connection objects
-	DefType = trix.nvalue("net.irc.irc_connect", "IRCConnect")
+	DefType = IRCConnect
 	
 	# debugging
 	Debugging = False
@@ -123,11 +123,8 @@ class Bot(Client):
 	# --------- override methods -----------------
 	#
 	
-	#	START
-	def start(self):
-		"""
-		Start running all connections for this Bot.
-		"""
+	#	OPEN
+	def open(self):
 		try:
 			# for except clause, in case it doesn't get far enough to 
 			# define one of these...
@@ -154,15 +151,24 @@ class Bot(Client):
 				#
 				self.connect(connid, config)
 				
-			#
-			# FINALLY - The connections are added to client.conlist and
-			#           it's time for the Bot (Client) to start calling
-			#           its io() method.
-			#
-			Client.start(self)
+				Client.open(self)
 		
 		except Exception as ex:
-			self.stop()
+			Client.close(self)
+			raise type(ex)("err-bot-fail", xdata(detail="bot-open-fail",
+					connid=connid, conntype=self.DefType, config=config
+				))
+	
+	
+	#	RUN
+	def run(self):
+		"""
+		Start running all connections for this Bot.
+		"""
+		try:
+			Client.run(self)
+		except Exception as ex:
+			self.shutdown()
 			raise type(ex)("err-bot-fail", xdata(detail="bot-start-fail",
 					connid=connid, conntype=self.DefType, config=config
 				))
