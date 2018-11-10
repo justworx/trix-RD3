@@ -33,11 +33,11 @@ class Client(Runner):
 	
 	
 	# CALL
-	def __call__(self, connid):
-		"""Read `connid` and handle any received data."""
-		data = self.__connections[connid].read()
-		if data:
-			self.handleio(data)
+	#def __call__(self, connid):
+		#"""Read `connid` and handle any received data."""
+		#data = self.__connections[connid].read()
+		#if data:
+			#self.handleio(data)
 	
 	
 	@property
