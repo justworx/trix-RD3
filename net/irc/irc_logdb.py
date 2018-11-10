@@ -37,6 +37,26 @@ class IRCLogDB(Database):
 	def addbot(self, botname):
 		self.opq("addbot", (botname,))
 		self.commit()
+	
+	def getbot(self, botname):
+		self.opq("getbot", (botname,))
+		self.commit()
+	
+	def getbotid(self, botid):
+		self.opq("getbotid", (botid,))
+		self.commit()
+	
+	def getbots(self):
+		c = self.opq("getbots")
+	
+	
+	def addnet(self, network):
+		self.opq("addnet", (network,))
+		self.commit()
+	
+	def addnick(self, nick):
+		self.opq("addnick", (nick,))
+		self.commit()
 		
 		"""
 			"addbot" : "insert into bot (botname) values (?)",
