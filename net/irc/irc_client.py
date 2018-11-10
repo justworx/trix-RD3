@@ -4,6 +4,13 @@
 # of the GNU Affero General Public License.
 #
 
+#
+# DEPRECATED!
+#  - Do NOT use this package; it's absolutely 100% deprecated (except
+#    for having been removed, which it soon will be). 
+#  - Use `trix.net.irc.bot.Bot` instead.
+#
+
 
 from trix.net.client import *
 from .irc_connect import *
