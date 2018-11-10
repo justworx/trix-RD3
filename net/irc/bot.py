@@ -265,6 +265,28 @@ class Bot(Client):
 	# --------- UNDER CONSTRUCTION -----------------
 	#
 	
+	def pause(self):
+		"""
+		UNDER CONSTRUCTION - NOT YET FULLY IMPLEMENTED
+		
+		Pause all active connections; this prevents them from displaying
+		any text, but allows them to respond to PING and other commands.
+		"""
+		for c in self.connections:
+			self.connections[c].pause()
+	
+	def resume(self):
+		"""
+		UNDER CONSTRUCTION - NOT YET FULLY IMPLEMENTED
+		
+		Print any saved messages repressed during the previous pause, 
+		and continue showing new messages. (This assumes debug is set to
+		a value greater than zero.)
+		"""
+		for c in self.connections:
+			self.connections[c].resume()
+	
+	
 	# CONSOLE - UNDER CONSTRUCTION
 	def console(self):
 		"""
