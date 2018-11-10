@@ -135,15 +135,45 @@ class IRCConnect(Connect):
 	
 	
 	@property
+	def botname(self):
+		"""Return the name of this bot as stored in config."""
+		return self.__botname
+	
+	
+	@property
 	def paused(self):
 		"""Not yet implemented."""
 		return self.__paused
 	
+	#
+	# PAUSE/RESUME - UNDER CONSTRUCTION - NOT YET IMPLEMENTED
+	#
+	def pause(self):
+		"""Pause display of received lines."""
+		self.__paused = True
+		self.__pbuffer = trix.ncreate(
+				'util.stream.buffer.Buffer', **self.ek
+			)
+	
+	def resume(self):
+		"""
+		Print any lines received while paused, the resume the previous
+		mode of display.
+		"""
+		if self.show or self.debug:
+			lines = self.__pbuffer.read().split()
+			for line in lines:
+				print(line)
+		
+		self.__paused = False
+		self.__pbuffer = None
+	
 	
 	@property
-	def botname(self):
-		"""Return the name of this bot as stored in config."""
-		return self.__botname
+	def pbuffer(self):
+		"""Not yet implemented."""
+		return self.__pbuffer
+	
 	
 	
 	
@@ -303,14 +333,9 @@ class IRCConnect(Connect):
 			
 			# ...and handle each line.
 			for line in inlines:
-				
 				if line[0:4] == 'PING':
-					if self.debug > 1:
-						print ("# ping")
 					RESP = line.split()[1] # handle PING
 					self.writeline('PONG ' + RESP)
-					if self.debug > 7:
-						print ("# pong")
 				else:
 					self.on_message(line)  # handle everything besides PINGs
 		
@@ -396,8 +421,9 @@ class IRCConnect(Connect):
 		e = IRCEvent(line)
 		
 		# showing text
-		if self.show or self.debug:
-			print (e.line)
+		if not self.__paused:    # PAUSE/RESUME 
+			if self.show or self.debug:
+				print (e.line)
 		
 		# HANDLE! Let each plugin handle each event (but not PINGs)
 		for pname in self.plugins:
