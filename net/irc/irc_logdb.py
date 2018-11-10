@@ -11,9 +11,12 @@
 #  - There are almost certainly bugs.
 #
 
+
 from ...data.database import *
 
+
 IRC_LOGDB_NCONFIG = "net/irc/config/logdb.conf"
+
 
 class IRCLogDB(Database):
 	"""Manages the IRC Log Database."""
@@ -28,11 +31,15 @@ class IRCLogDB(Database):
 		>>> ircdb.addbot("mybot")
 		"""
 		
+		confpath = k.get('configpath', IRC_LOGDB_NCONFIG)
+		
 		# load the config file path
-		config = trix.nconfig(IRC_LOGDB_NCONFIG, *a, **k)
+		config = trix.nconfig(confpath)
 		
 		# init the superclass (Database)
-		Database.__init__(self, config, *a, **k)
+		if not a:
+			a = [config]
+		Database.__init__(self, *a, **k)
 		
 
 	#	
@@ -104,7 +111,7 @@ class IRCLogDB(Database):
 		self.opq("addchan", (channel,))
 		self.commit()
 	
-	def getchan(self, chan):
+	def getchan(self, channel):
 		"""Return chan record (cursor) given chan name."""
 		return self.opq("getchan", (channel,))
 	
@@ -181,11 +188,39 @@ class IRCLogDB(Database):
 	# ID
 	#
 	def addid(self, netid, nickid, userid, maskid, nameid=''):
-		self.opq("addid", (netid, nickid, userid, maskid, nameid,))
+		"""
+		
+		 THIS METHOD IS UNDER CONSTRUCTION!
+		IT WILL PROBABLY CHANGE DRASTICALLY!
+		   DANGER WILL ROBINSON! DANGER!
+		
+		#
+		# MAYBE....
+		# This should be getid() and it should automatically add the
+		# relevant details if that combination doesn't yet exist.
+		#
+		# ALSO....
+		# I'm not too sure what to do about nameid yet... might need
+		# to rethink some of this.
+		#
+		"""
+		self.open_addid(self, netid, nickid, userid, maskid, nameid)
+		self.commit()
+	
+	
+	def open_addid(self, netid, nickid, userid, maskid, nameid=''):
+		"""Call this once if gathering WHO info... commit afterward!"""
+		self.opq("addid", (
+				netid, nickid, userid, maskid, nameid, time.time()
+			))
+	
 	
 	#
 	# CHAT
 	#
+	def addchat(self, can_i_pass_an_event_here_qm):
+		pass
+	
 	"""
 		"addid"   : "insert into identity values (?,?,?,?,?,?)",
 		"addchat" : "insert into chatlog values (?,?,?,?,?)",
@@ -196,3 +231,123 @@ class IRCLogDB(Database):
 		"userid" : "select userid from username where username = ?",
 		"maskid" : "select maskid from hostmask where hostmask = ?"
 	"""
+	
+
+
+
+#
+# ----- TEST SCRIPT ------------------------------------------------
+# 
+
+if __name__ == '__main__':
+
+	from trix.fs import *
+	
+	db = IRCLogDB(path="~/dev/trix/net/irc/test.sqlite3")
+	try:
+		FileBase(db.path).remove()
+	except FileNotFoundError:
+		pass
+	
+	db.open()
+	
+	print ("path:", db.path)
+	
+	
+	#	
+	# BOT
+	#	
+	db.addbot('trixie')
+	if not db.getbot('trixie').fetchall() == [(1, 'trixie')]:
+		raise Exception('getbot', xdata())
+	if not db.getbotid(1).fetchall() == [(1, 'trixie')]:
+		raise Exception ('getbotid', xdata())
+	if not db.getbots().fetchall() == [(1, 'trixie')]:
+		raise Exception ('getbots', xdata())
+	print ("bot: OK")
+	
+	#	
+	# NETWORK
+	#	
+	db.addnet("somenet")
+	if not db.getnet('somenet').fetchall() == [(1, 'somenet')]:
+		raise Exception('getnet', xdata())
+	if not db.getnetid(1).fetchall() == [(1, 'somenet')]:
+		raise Exception ('getnetid', xdata())
+	if not db.getnets().fetchall() == [(1, 'somenet')]:
+		raise Exception ('getnets', xdata())
+	print ("net: OK")
+	
+	
+	#	
+	# NICK
+	#	
+	db.addnick('nickname')
+	if not db.getnick('nickname').fetchall() == [(1, 'nickname')]:
+		raise Exception('getnick', xdata())
+	if not db.getnickid(1).fetchall() == [(1, 'nickname')]:
+		raise Exception ('getnickid', xdata())
+	if not db.getnicks().fetchall() == [(1, 'nickname')]:
+		raise Exception ('getnicks', xdata())
+	print ("nick: OK")
+	
+	
+	#	
+	# CHAN
+	#	
+	db.addchan('channel')
+	if not db.getchan('channel').fetchall() == [(1, 'channel')]:
+		raise Exception('getchan', xdata())
+	if not db.getchanid(1).fetchall() == [(1, 'channel')]:
+		raise Exception ('getchanid', xdata())
+	if not db.getchans().fetchall() == [(1, 'channel')]:
+		raise Exception ('getchans', xdata())
+	print ("chan: OK")
+	
+	
+	#	
+	# USER
+	#	
+	db.adduser("someuser")
+	if not db.getuser('someuser').fetchall() == [(1, 'someuser')]:
+		raise Exception('getuser', xdata())
+	if not db.getuserid(1).fetchall() == [(1, 'someuser')]:
+		raise Exception ('getuserid', xdata())
+	if not db.getusers().fetchall() == [(1, 'someuser')]:
+		raise Exception ('getusers', xdata())
+	print ("user: OK")
+	
+	
+	#
+	# MASK
+	#
+	db.addmask("somemask")
+	if not db.getmask('somemask').fetchall() == [(1, 'somemask')]:
+		raise Exception('getmask', xdata())
+	if not db.getmaskid(1).fetchall() == [(1, 'somemask')]:
+		raise Exception ('getmaskid', xdata())
+	if not db.getmasks().fetchall() == [(1, 'somemask')]:
+		raise Exception ('getmasks', xdata())
+	print ("mask: OK")
+	
+	
+	#
+	# NAME
+	#
+	db.addname("somename")
+	if not db.getname('somename').fetchall() == [(1, 'somename')]:
+		raise Exception('getname', xdata())
+	if not db.getnameid(1).fetchall() == [(1, 'somename')]:
+		raise Exception ('getnameid', xdata())
+	if not db.getnames().fetchall() == [(1, 'somename')]:
+		raise Exception ('getnames', xdata())
+	print ("name: OK")
+	
+	
+	#
+	# Can't add ID and CHAT until i figure out how to actually *do*
+	# ID and CHAT.
+	#
+
+
+
