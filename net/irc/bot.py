@@ -311,38 +311,46 @@ class Bot(Client):
 	def resume(self):
 		"""
 		Print any saved messages repressed during the previous pause, 
-		and continue showing new messages. (This assumes debug is set to
-		a value greater than zero.)
+		and continue showing new messages. (This assumes show is True
+		or debug is set to a value greater than zero.)
 		"""
 		for c in self.connections:
 			self.connections[c].resume()
 	
+	"""
+	#
+	# NOTES:
+	# 1 - when runnning the bot, the console holds control for as long 
+	#     as its open, preventing a containing thread from responding
+	#     to pings, etc...
+	# 2 - when threaded, it does work. 
+	# 3 - I think I'll put this off for a while - maybe a solution 
+	#     will come to me.
+	#
 	
 	# ON INTERRUPT
 	def on_interrupt(self):
+		# this only works when bot.running()
 		self.console()
-	
 	
 	# CONSOLE - UNDER CONSTRUCTION
 	def console(self):
-		"""
-		UNDER CONSTRUCTION!
-		
-		This doesn't really work yet, and it's probably not a good idea
-		to use it at the moment since there's nothing preventing received
-		irc lines from appearing intermingled with the Console output.
-		"""
+		#
+		#UNDER CONSTRUCTION!
+		#
+		#This doesn't really work yet, and it's probably not a good idea
+		#to use it at the moment since there's nothing preventing received
+		#irc lines from appearing intermingled with the Console output.
+		#
 		self.pause()
 		trix.ncreate("app.console.Console").console()
 		self.resume()
 		
-		
-		"""
-		try:
-			self.__console.console()
-		except:
-			self.__console = trix.ncreate(
-				"net.irc.bot_console.BotConsole", self
-			)
-			self.__console.console()
-		"""
+		#try:
+		#	self.__console.console()
+		#except:
+		#	self.__console = trix.ncreate(
+		#		"net.irc.bot_console.BotConsole", self
+		#	)
+		#	self.__console.console()
+	"""
