@@ -346,6 +346,11 @@ class Runner(EncodingHelper):
 				trix.log(msg, str(ex), ex.args, type=type(self))
 				raise
 	
+	
+	def on_interrupt(self):
+		pass
+	
+	
 	# DISPLAY
 	def display(self):
 		"""Print status."""
@@ -370,8 +375,12 @@ class CallIO(object):
 	def callio(self):
 		try:
 			while self.__runner.running:
-				self.__runner.io()
-				time.sleep(self.__runner.sleep)
+				try:
+					self.__runner.io()
+					time.sleep(self.__runner.sleep)
+				except KeyboardInterrupt:
+					self.__runner.on_interrupt()
+		
 		except ReferenceError:
 			pass
 
