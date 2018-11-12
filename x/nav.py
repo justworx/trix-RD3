@@ -4,9 +4,31 @@
 # of the GNU Affero General Public License.
 #
 
+
 from trix import *
 from trix.util.dq import *
 from trix.util.xiter import *
+
+
+"""
+#
+# THIS FAILS - HERE FOR DEBUGGING
+#
+python3
+
+d = {
+	"abc" : "abcdefg!",                   #test scalar first
+	"li"  : [1, 2, {"bucklemy": "shoe"}], #test list, dict-in-list
+}
+
+from trix.x.nav import * 
+n = Nav(d)
+g = iter(n.navgen())
+
+x = next(g)
+x.path()
+"""		
+
 
 class xnaviter(xiter):
 	"""Recursive dict/list iterator."""
@@ -56,7 +78,7 @@ class Nav(object):
 	
 	def __iter__(self):
 		try:
-			return iter(self.s.keys())++
+			return iter(self.s.keys())
 		except:
 			return range(0, len(self.s))
 	
@@ -65,15 +87,36 @@ class Nav(object):
 	
 	
 	def navgen(self):
-		yield (self)            # yield self on current self.s
-		for ki in self.s:       # loop through self.s keys
-			print ("> ", ki)
+		# yield self on current self.s
+		yield (self)            
+		
+		# loop through self.s keys, yielding the items
+		while True:
+			print ("#", ki) # key/int offsets for dict/list
+			
 			try:
-				self.select(ki)     # select the next key
-				print (" >", ki)
+				# select/jield the next key
+				
+				#
+				# This throws an error when moving inward to the contained
+				# dict or list. For dict, the key `ki` probably doesn't exist
+				# here, and even if it did, we're still iterating through the
+				# containing dict, which thows everything off.
+				#
+				# I'll need to come up with something really spectacular to 
+				# pull this one off :-/
+				#
+				self.select(ki)
+				
+				
+				print ("#", ki)
+				
 				yield (self)
+			
 			except StopIteration:
+				# once a leaf node is reached, 
 				self.back()
+				
 		
 	
 	
