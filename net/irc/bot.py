@@ -76,6 +76,17 @@ class Bot(Client):
 		Client.__init__(self, self.config)
 	
 	
+	def __del__(self):
+		try:
+			if self.active and self.running:
+				self.shutdown()
+			else:
+				if self.running:
+					self.stop()
+				if self.active:
+					self.close()
+		except:
+			pass # maybe try trix.log here
 	
 	
 	@property
@@ -174,6 +185,20 @@ class Bot(Client):
 				))
 	
 	
+	#
+	# TESTING - UNDER CONSTRUCTION
+	#  - I want to use Ctrl-c to pause all bots and switch to the bot
+	#    console. For now I'll just use the app.Console because the bot
+	#    one probably doesn't work.
+	#
+	def run(self):
+		try:
+			Client.run(self)
+		except KeyboardInterrupt:
+			self.pause()
+			Console().console()
+	
+	
 	# HANDLE-DATA
 	def handleio(self, conn):
 		if conn.debug:
@@ -181,10 +206,23 @@ class Bot(Client):
 			# text may be handled.
 			conn.io()
 	
+	
 	# HANDLE-X (Exception)
 	def handlex(self, connid, xtype, xargs, xdata):
 		if connid in self.conlist:
 			conn = self[connid]
+			if xtype == SockFatal:
+				#
+				# don't raise the exception if we just quit normally
+				# WHY IS THIS NOT WORKING?
+				#
+				if self.running:
+					irc.debug("irc_client.handlex", xtype, xargs)
+			elif xtype == KeyboardInterrupt:
+				self.pause()
+				Console().console()
+				
+		else:
 			irc.debug("irc_client.handlex", xtype, xargs)
 
 	
@@ -259,32 +297,30 @@ class Bot(Client):
 		return self.jconfig.obj
 	
 	
-	
-	
-	#
-	# --------- UNDER CONSTRUCTION -----------------
-	#
-	
+	# PAUSE
 	def pause(self):
 		"""
-		UNDER CONSTRUCTION - NOT YET FULLY IMPLEMENTED
-		
 		Pause all active connections; this prevents them from displaying
 		any text, but allows them to respond to PING and other commands.
 		"""
 		for c in self.connections:
 			self.connections[c].pause()
 	
+	
+	# RESUME
 	def resume(self):
 		"""
-		UNDER CONSTRUCTION - NOT YET FULLY IMPLEMENTED
-		
 		Print any saved messages repressed during the previous pause, 
 		and continue showing new messages. (This assumes debug is set to
 		a value greater than zero.)
 		"""
 		for c in self.connections:
 			self.connections[c].resume()
+	
+	
+	# ON INTERRUPT
+	def on_interrupt(self):
+		self.console()
 	
 	
 	# CONSOLE - UNDER CONSTRUCTION
@@ -296,6 +332,12 @@ class Bot(Client):
 		to use it at the moment since there's nothing preventing received
 		irc lines from appearing intermingled with the Console output.
 		"""
+		self.pause()
+		trix.ncreate("app.console.Console").console()
+		self.resume()
+		
+		
+		"""
 		try:
 			self.__console.console()
 		except:
@@ -303,3 +345,4 @@ class Bot(Client):
 				"net.irc.bot_console.BotConsole", self
 			)
 			self.__console.console()
+		"""

@@ -52,17 +52,7 @@ class BotConsole(Console):
 				Console.handle_input(self, e)
 			
 			#
-			# now i need to:
-			#  * get a 'pause' feature going in the bot so that it can
-			#    continue receiving and responding to at very least pings
-			#    while the console is running.
-			#
-			#  * MAYBE the Console should be based on Runner so that it
-			#    can be started... but output from the Bot would still
-			#    need to be silenced while the console's operating.
-			#
-			#  ADDITIONALLY....
-			#
+			# NOTES
 			#   * Quit is fine for killing all connections and ending the
 			#     bot and its client, but we also need a command to end
 			#     single connections. I guess `close` is the command...

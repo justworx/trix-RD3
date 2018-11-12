@@ -7,7 +7,7 @@
 
 # import
 from . import *
-from .plugin import *    # <-- reload IRCPlugin before other plugins
+from .plugin import *
 from .irc_event import *
 from ..connect import *
 
@@ -132,47 +132,45 @@ class IRCConnect(Connect):
 		
 		# PREP FOR NEW FEATURE - NOT YET IMPLIMENTED
 		self.__paused = False
+		self.__lineq = trix.ncreate('util.lineq.LineQueue')
+	
 	
 	
 	@property
 	def botname(self):
 		"""Return the name of this bot as stored in config."""
 		return self.__botname
-	
-	
+
 	@property
 	def paused(self):
 		"""Not yet implemented."""
 		return self.__paused
 	
-	#
-	# PAUSE/RESUME - UNDER CONSTRUCTION - NOT YET IMPLEMENTED
-	#
+	
 	def pause(self):
 		"""Pause display of received lines."""
 		self.__paused = True
 		self.__pbuffer = trix.ncreate(
 				'util.stream.buffer.Buffer', **self.ek
 			)
+		self.__pwriter = self.__pbuffer.writer()
+	
 	
 	def resume(self):
 		"""
 		Print any lines received while paused, the resume the previous
 		mode of display.
 		"""
-		if self.show or self.debug:
-			lines = self.__pbuffer.read().split()
-			for line in lines:
-				print(line)
-		
-		self.__paused = False
-		self.__pbuffer = None
+		try:
+			if self.show or self.debug:
+				lines = self.__pbuffer.read().splitlines()
+				for line in lines:
+					print(line)
+		finally:
+			self.__paused = False
+			self.__pbuffer = None
+			self.__pwriter = None
 	
-	
-	@property
-	def pbuffer(self):
-		"""Not yet implemented."""
-		return self.__pbuffer
 	
 	
 	
@@ -288,11 +286,24 @@ class IRCConnect(Connect):
 			raise
 		except BaseException as e:
 			intext = ''
+			
+			#
+			#
+			#
+			#
+			#
+			# Could this be where ctrl-c (to console) is getting caught?
+			#
+			#
+			#
+			#
+			#
+			
 			irc.debug(
-				"# READ ERROR (WARNING)",
-				"# -type: %s" % type(e),
-				"# -err : %s" % str(e),
-				"# -time: %s" % str(time.time())
+				"READ ERROR (WARNING)",
+				" - type: %s" % type(e),
+				" - err : %s" % str(e),
+				" - time: %s" % str(time.time())
 			)
 		
 		#
@@ -329,15 +340,20 @@ class IRCConnect(Connect):
 		
 		try:
 			# split them...
-			inlines = intext.splitlines()
+			#inlines = intext.splitlines()
+			
+			# No, don't split them... pass them through lineq
+			self.__lineq.feed(intext)
 			
 			# ...and handle each line.
-			for line in inlines:
+			for line in self.__lineq.lines:
 				if line[0:4] == 'PING':
 					RESP = line.split()[1] # handle PING
 					self.writeline('PONG ' + RESP)
 				else:
 					self.on_message(line)  # handle everything besides PINGs
+			
+			#
 		
 		except Exception as ex:
 			irc.debug (str(type(ex)), str(ex))
@@ -420,9 +436,11 @@ class IRCConnect(Connect):
 		
 		e = IRCEvent(line)
 		
-		# showing text
-		if not self.__paused:    # PAUSE/RESUME 
-			if self.show or self.debug:
+		# if showing text (not paused)
+		if self.show or self.debug:
+			if self.__paused:
+				self.__pwriter.write(e.line + "\r\n")
+			else:
 				print (e.line)
 		
 		# HANDLE! Let each plugin handle each event (but not PINGs)
@@ -443,28 +461,35 @@ class IRCConnect(Connect):
 	#
 	# ----------------------------------------------------------------
 	
+	# PING
 	def ping(self, x=None):
+		"""Manually send a ping (x, or current time) to the server."""
 		x = x or time.time()
 		self.writeline("PING :%s" % x)
 	
+	
+	# SHUTDOWN
 	def shutdown(self, msg='QUIT'):
 		"""
 		Send a QUIT message and shutdown the connection.
 		"""
-		self.writeline("QUIT %s" % msg)
-		
-		# this falls through to the Runner.shutdown() method
-		Connect.shutdown(self)
-
+		try:
+			self.writeline("QUIT %s" % msg)
+			
+			# this falls through to the Runner.shutdown() method
+			Connect.shutdown(self)
+		except SockFatal:
+			pass
 	
+
+	# STATUS
 	def status(self):
-		"""
-		UNDER CONSTRUCTION
-		
-		Status should be something other than self.config, but for now
-		that's all that's here.
-		
-		Check for changes - sooner or later.
-		"""
-		return self.config
+		"""Return status dict."""
+		return {
+			'botname': self.__botname,
+			'runner' : Runner.status(self),
+			'config' : self.config,
+			'plugins': list(self.plugins.keys()),
+			'paused' : self.__paused
+			}
 
