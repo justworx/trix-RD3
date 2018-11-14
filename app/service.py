@@ -11,7 +11,7 @@ from ...util.wrap import *
 from ...app.event import *
 
 
-SERVICES_NCONFIG = "app/service/service.conf"
+SERVICES_NCONFIG = "app/config/service/en.service.conf"
 
 
 #
@@ -23,6 +23,11 @@ class Services(Runner):
 	
 	Services warp a single object and make use of it to perform 
 	actions and return results.
+	
+	from trix.app.service import *
+	s = Services()
+	c = connect('irclog')
+	c.request('addnet', 'irc.quake.net')
 	"""
 	
 	# INIT
@@ -38,19 +43,40 @@ class Services(Runner):
 		
 		serviceConfDict = config['services']
 		for sid in serviceConfDict:
-			s = serviceConfDict[sid]
 			
-			# get the object config and create the object
-			sconfig = s.get('nconfig')
-			screate = s['ncreate']
+			# get the service config dict
+			sconfig = serviceConfDict[sid]
 			
-			# create the Service object's contained object
-			sobject = trix.ncreate(screate, sconfig)
+			# prep for potential errors
+			n_create = n_config = o_create = o_config = realconf = None
+			
+			# get config and create the object
+			if "ncreate" in sconfig:
+				n_create = sconfig['ncreate']
+				n_config = sconfig.get('nconfig')
+				realconf = [trix.nconfig(n_config)]
+			elif "ncreate" in sconfig:
+				o_create = sconfig['create']
+				o_config = sconfig.get('config')
+				realconf = [trix.config(o_config)]
+			else:
+				realconf = [serviceConfDict]
+			
+			# Create the object.
+			try:
+				sobject = trix.ncreate(n_create, *realconf)
+			except Exception as ex:
+				raise type(ex)(xdata(
+					n_create=n_create, n_config=n_config, o_create=o_create,
+					o_config=o_config, realconf=realconf, sid=sid
+				))
 			
 			# create, store, and start the service object
 			self.__services[sid] = Service(sid, sobject)
 		
+		#
 		# Start running the Services io loop (in a thread!)
+		#
 		self.start()
 		
 	
@@ -168,6 +194,7 @@ class Service(ServiceIO):
 				self.__qpairs.remove(queues)
 			except Exception:
 				e.error = xdata(qin=qin,qout=qout,e=e.dict)
+				qout.put(e) # report the error!
 	
 	
 	# SERVICE - HANDLE REQUEST
@@ -198,6 +225,10 @@ class ServiceConnect(ServiceIO):
 	"""Client connection to a single Service object."""
 	
 	def __init__(self, serviceid, queues):
+		"""
+		ServiceConnect must always be created by calling the 
+		`Service.connect()` method.
+		"""
 		ServiceIO.__init__(self)
 		
 		#
@@ -210,6 +241,7 @@ class ServiceConnect(ServiceIO):
 	
 	@property
 	def serviceid(self):
+		"""Return this connection's service id."""
 		return self.__sid
 	
 	
@@ -240,3 +272,13 @@ class ServiceConnect(ServiceIO):
 		except Empty:
 			pass
 		return r
+	
+	
+	#
+	# No... this would still be happening in the caller's thread...
+	#
+	def execute(self, e, x_callable):
+		"""Pass Event e to callable `x_callable`; return result."""
+		return x_callable(e)
+
+
