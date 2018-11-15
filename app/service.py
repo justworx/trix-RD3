@@ -299,11 +299,13 @@ class ServiceConnect(ServiceIO):
 		"""
 		Return an object that will call `name` method via `__call__()`.
 		This allows `ServiceConnect` to wrap cross-thread calls to the
-		object wrapped by `Service()`.
+		object wrapped by `Service()` when they're given in the manner
+		of a typical python method call.
 		
+		>>> from trix.app.service import *
 		>>> ss = Services()
 		>>> db = ss.connect('irclog')
-		>>> db.addnet("irc.undernet.us")
+		>>> db.addnet("irc.undernet.eu")
 		>>> ev = db.getnets()
 		>>> ev.reply
 		"""
