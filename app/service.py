@@ -5,10 +5,10 @@
 #
 
 
-from ...util.runner import *
-from ...util.xqueue import *
-from ...util.wrap import *
-from ...app.event import *
+from ..util.runner import *
+from ..util.xqueue import *
+from ..util.wrap import *
+from .event import *
 
 
 SERVICES_NCONFIG = "app/config/service/en.service.conf"
@@ -95,6 +95,14 @@ class Services(Runner):
 	
 	# SERVICES - CONNECT
 	def connect(self, serviceid):
+		"""
+		Pass `serviceid` string. Returns a new ServiceConnect object that 
+		gives access to the service's features.
+		
+		Pass an event object to ServiceConnect using the `request` method
+		and poll `replies` to receive events in the same order as they
+		were given. Check `Event.reply` (or Event.error) for the result.
+		"""
 		#
 		# all you have to do is add a queue pair to the id'd service
 		# and send the same queue pair to the connection object, then,
@@ -157,10 +165,20 @@ class Service(ServiceIO):
 	
 	@property
 	def serviceid(self):
+		"""
+		Return the service identifier value; the key for this object's
+		value in the services configuration dict. 
+		"""
 		return self.__serviceid
 	
 	@property
+	def servicetype(self):
+		"""Return the type of this services' wrapped object."""
+		return type(self.__object)
+	
+	@property
 	def uptime(self):
+		"""Time in seconds (float) since this services' creation."""
 		return time.time() - self.__starttime
 	
 	
@@ -199,14 +217,24 @@ class Service(ServiceIO):
 	
 	# SERVICE - HANDLE REQUEST
 	def handle_request(self, e):
+		"""Internal use only. Calls the wrapper, returns a value."""
 		
-		# if there's no command, return a somewhat random info dict
+		#
+		# If there's no command, return a dict with information and, 
+		# potentially, debugging data.
+		#
 		if not e.argc:
 			return dict(
 					service=self.serviceid, uptime=self.uptime, 
 					target=repr(self.__object)
 				)
+				# TODO: Add wrapped object's attrs to this dict.
 		
+		#
+		# Call the wrapped object; Return the result, or raise any
+		# exceptions (to be caught in the calling method and placed in
+		# the Event object's "error" property).
+		#
 		try:
 			return self.__wrapper(*e.argv, **e.kwargs)
 		except Exception as ex:
@@ -224,6 +252,8 @@ class Service(ServiceIO):
 class ServiceConnect(ServiceIO):
 	"""Client connection to a single Service object."""
 	
+	CallTimeout = 9
+	
 	def __init__(self, serviceid, queues):
 		"""
 		ServiceConnect must always be created by calling the 
@@ -239,46 +269,59 @@ class ServiceConnect(ServiceIO):
 		self.__qout, self.__qin = queues
 		self.__sid = serviceid
 	
-	@property
-	def serviceid(self):
-		"""Return this connection's service id."""
-		return self.__sid
 	
-	
-	# SERVICE-CONNECT - REQUEST
-	def request(self, command, *a, **k):
+	def __call__(self, cmd, *a, **k):
 		"""
-		Send a request to the Service object. Retrieve results from 
-		command.reply;
+		Create and pass an event to the Service. Wait for and return the
+		reply. Raise if there's an exception.
 		"""
-		#
-		# queue an event whose result will eventually be set by a call
-		# to Service.handle_io; the result can be retrieved by calling
-		# self.replies.
-		#
-		c = Event(command, *a, **k)
+		c = Event(cmd, *a, **k)
 		self.__qout.put(c)
+		
+		# don't let this block the program forever. Default: 9 sec
+		tout = k.get('service_connect_timeout', self.CallTimeout)
+		tin = time.time()
+		
+		# loop until result (or timeout)
+		r = None
+		while not r:
+			try:
+				r = self.__qin.get_nowait()
+				if r:
+					return r
+				time.sleep(0.01)
+			except Empty:
+				if time.time() - tin > tout:
+					raise Exception("ServiceConnect Timeout", tout)
 	
 	
-	# SERVICE-CONNECT - REPLIES
-	def replies(self):
+	def __getattr__(self, name):
 		"""
-		Return a list of event objects; Check their reply for results.
+		Return an object that will call `name` method via `__call__()`.
+		This allows `ServiceConnect` to wrap cross-thread calls to the
+		object wrapped by `Service()`.
+		
+		>>> ss = Services()
+		>>> db = ss.connect('irclog')
+		>>> db.addnet("irc.undernet.us")
+		>>> ev = db.getnets()
+		>>> ev.reply
 		"""
-		r = []
-		try:
-			while True:
-				r.append(self.__qin.get_nowait())
-		except Empty:
-			pass
-		return r
+		return SCCaller(self, name)
 	
+
+
+#
+# Utility
+#
+class SCCaller(object):
+
+	def __init__(self, scobject, name):
+		self.__obj = scobject
+		self.__name = name
 	
-	#
-	# No... this would still be happening in the caller's thread...
-	#
-	def execute(self, e, x_callable):
-		"""Pass Event e to callable `x_callable`; return result."""
-		return x_callable(e)
+	def __call__(self, *a, **k):
+		return self.__obj(self.__name, *a, **k)
+
 
 
