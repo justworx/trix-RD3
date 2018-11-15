@@ -11,6 +11,24 @@ from .. import *
 class Database(object):
 	"""Wrapper for DB-API 2.0 database access."""
 	
+	
+	@classmethod
+	def fetchn(cls, cursor, n=None):
+		"""
+		This classmethod returns a list of `n` number of rows from 
+		`cursor`, starting at its current position. If value is None, 
+		all rows are returned.
+		"""
+		if n == None:
+			return cursor.fetchall()
+		else:
+			r = []
+			while n > 0:
+				r.append(cursor.fetchone())
+			return r
+	
+	
+	
 	def __init__(self, conf=None, *a, **k):
 		"""
 		Pass config dict `conf` and/or kwargs with keys:
@@ -57,7 +75,7 @@ class Database(object):
 		
 		except AttributeError:
 			# if config is not a dict, it must be a db file path
-			path = config
+			path = conf
 			conf = {}
 			conf.update(k)
 		
