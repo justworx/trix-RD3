@@ -5,7 +5,7 @@
 #
 
 from .connect import Connect
-from ..util.runner import *  								# trix
+from ..util.runner import *
 from ..util.sock.sockwrap import SockFatal, SockError
 
 class Client(Runner):
@@ -32,23 +32,21 @@ class Client(Runner):
 			pass
 	
 	
-	# CALL
-	#def __call__(self, connid):
-		#"""Read `connid` and handle any received data."""
-		#data = self.__connections[connid].read()
-		#if data:
-			#self.handleio(data)
-	
-	
-	@property
-	def connections(self):
-		"""Return list of of connections."""
-		return self.__connections
 	
 	@property
 	def conlist(self):
 		"""Return list of of connection names."""
 		return list(self.__connections.keys())
+	
+	@property
+	def connections(self):
+		"""Return dict containing connection objects."""
+		return self.__connections
+	
+	@property
+	def keepalive(self):
+		"""Return 'keepalive' value provided to constructor."""
+		return self.__keepalive
 	
 	
 	# CONTAINS
@@ -165,6 +163,14 @@ class Client(Runner):
 	
 	# REMOVE (connections)
 	def remove(self, rmvlist):
+		"""
+		Remove any connections with `connid` matching an item in rmvlist.
+		Connection `shutdown()` method is called, then deleted from the
+		list. Any exceptions are ignored.
+		
+		When the list is empty, this Client will stop running unless the
+		`self.keepalive` property is True.
+		"""
 		for cname in rmvlist:
 			conn = self.__connections.get(cname)
 			if conn:
@@ -179,15 +185,22 @@ class Client(Runner):
 				except:
 					pass
 		
-		if not self.__keepalive:
-			if not self.__connections:
-				Runner.stop(self)
+		# should we stop running?
+		if (not self.__connections) and (not self.__keepalive):
+			Runner.stop(self)
 	
 	
 	# --- override these to handle input and exceptions ---
 	
 	# HANDLE-DATA
 	def handleio(self, conn):
+		"""
+		Default handling of input/output. Reads received content into a
+		buffer and then prints it in the terminal window.
+		
+		Subclasses should override this method to deal with received 
+		data in whatever way is appropriate to their purpose.
+		"""
 		try:
 			x = conn.read()
 			if x:
@@ -198,6 +211,14 @@ class Client(Runner):
 	
 	# HANDLE-X (Exception)
 	def handlex(self, connid, xtype, xargs, xdata):
+		"""
+		Default handling of errors. Displays exception and "xdata" in 
+		the terminal window.
+		
+		Subclasses should override this method to deal with exceptions 
+		in whatever way is appropriate to the context in which they're
+		running.
+		"""
 		print ("\nEXCEPTION! %s: %s(%s)" % (connid, xtype, xargs))
 		if xdata:
 			trix.display(xdata)
