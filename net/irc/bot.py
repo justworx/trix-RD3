@@ -44,6 +44,9 @@ class Bot(Client):
 		   <botname> is the `botname` string given to the constructor.
 		"""
 		
+		# debug level zero
+		self.__debug = 0
+		
 		#
 		# BOT ID 
 		# Users give a name to each of their bots.
@@ -52,14 +55,18 @@ class Bot(Client):
 		#
 		self.__botname = str(botname).lower()
 		
+		
+		#
+		# CONFIGURATION
+		#  - I want to make it so that changes to self.config can be
+		#    storied by calling jconfig.save().
+		#
+		
 		#
 		# Use the `trix.app.jconfig` class to manage the config file.
 		#	Load the config file at '~/.config/trix/irc/bots/<BOTID>.json'
 		#
 		self.__pconfig = BOT_CONFIG + "%s.json" % self.__botname
-		
-		# debug level zero
-		self.__debug = 0
 		
 		#
 		# LOAD CONFIG
@@ -72,8 +79,11 @@ class Bot(Client):
 		except KeyboardInterrupt:
 			raise Exception("Bot configuration was canceled.")
 		
+		#
 		# Finally, init the superclass
+		#
 		Client.__init__(self, self.config)
+	
 	
 	
 	def __del__(self):
@@ -185,20 +195,6 @@ class Bot(Client):
 				))
 	
 	
-	#
-	# TESTING - UNDER CONSTRUCTION
-	#  - I want to use Ctrl-c to pause all bots and switch to the bot
-	#    console. For now I'll just use the app.Console because the bot
-	#    one probably doesn't work.
-	#
-	def run(self):
-		try:
-			Client.run(self)
-		except KeyboardInterrupt:
-			self.pause()
-			Console().console()
-	
-	
 	# HANDLE-DATA
 	def handleio(self, conn):
 		if conn.debug:
@@ -224,8 +220,17 @@ class Bot(Client):
 				
 		else:
 			irc.debug("irc_client.handlex", xtype, xargs)
-
 	
+	
+	# ADD CONFIG
+	def addconfig(self):
+		"""
+		Add an additional connection configuration for this bot.
+		Note that this will cause input from multiple servers to be
+		displayed in the same terminal session if self.show is True
+		or if self.debug is enabled.
+		"""
+		self.__addconfig(self.botname)
 	
 	
 	#
@@ -317,6 +322,7 @@ class Bot(Client):
 		for c in self.connections:
 			self.connections[c].resume()
 	
+	
 	"""
 	#
 	# NOTES:
@@ -332,6 +338,7 @@ class Bot(Client):
 	def on_interrupt(self):
 		# this only works when bot.running()
 		self.console()
+	
 	
 	# CONSOLE - UNDER CONSTRUCTION
 	def console(self):
@@ -353,4 +360,21 @@ class Bot(Client):
 		#		"net.irc.bot_console.BotConsole", self
 		#	)
 		#	self.__console.console()
+	
+	
+	#
+	# TESTING - UNDER CONSTRUCTION
+	#  - I want to use Ctrl-c to pause all bots and switch to the bot
+	#    console. For now I'll just use the app.Console because the bot
+	#    one probably doesn't work.
+	#
+	def run(self):
+		try:
+			Client.run(self)
+		except KeyboardInterrupt:
+			self.pause()
+			Console().console()
+	
 	"""
+
+
