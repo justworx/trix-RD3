@@ -48,6 +48,9 @@ class IRCConnect(Connect):
 		# is also the bot's id.
 		self.__botname = config.get('connid')
 		
+		# store network for reference
+		self.__network = config.get('network')
+		
 		# store config for plugin load/unload
 		self.pconfig = config.get('plugins', {})
 		
@@ -86,10 +89,11 @@ class IRCConnect(Connect):
 		if 'plugins' in config:
 			# loop through each name in the pconf dict
 			for pname in self.pconfig:
-				self.ginfo[pname] = {}
-				pi = self.__plugin_load(pname)
-				if pi:
-					self.plugins[pname] = pi
+				if self.pconfig[pname].get('active', True):
+					self.ginfo[pname] = {}
+					pi = self.__plugin_load(pname)
+					if pi:
+						self.plugins[pname] = pi
 		
 		#
 		# initialize superclass
@@ -110,8 +114,15 @@ class IRCConnect(Connect):
 		self.writeline(user_line)
 		self.writeline(nick_line)
 		
+		# maybe this isn't such a great idea...
+		LOGS = "None"
 		logplugin = self.plugins.get('irclog')
-		LOGS = logplugin.logfile or "None"
+		if logplugin:
+			LOGS = logplugin.logfile
+		else:
+			rawlogplugin = self.plugins.get('rawlog')
+			if logplugin:
+				LOGS = rawlogplugin.logfile
 		
 		if self.debug:
 			irc.debug(
@@ -140,7 +151,12 @@ class IRCConnect(Connect):
 	def botname(self):
 		"""Return the name of this bot as stored in config."""
 		return self.__botname
-
+	
+	@property
+	def network(self):
+		"""Return the name of this network, as stored in config."""
+		return self.__network
+	
 	@property
 	def paused(self):
 		"""Not yet implemented."""
@@ -285,20 +301,11 @@ class IRCConnect(Connect):
 		except SockFatal:
 			raise
 		except BaseException as e:
+			#
+			# This section may be extraneous now; SockFatal probably
+			# sorts any possible case that could bring us here.
+			#
 			intext = ''
-			
-			#
-			#
-			#
-			#
-			#
-			# Could this be where ctrl-c (to console) is getting caught?
-			#
-			#
-			#
-			#
-			#
-			
 			irc.debug(
 				"READ ERROR (WARNING)",
 				" - type: %s" % type(e),
@@ -352,8 +359,6 @@ class IRCConnect(Connect):
 					self.writeline('PONG ' + RESP)
 				else:
 					self.on_message(line)  # handle everything besides PINGs
-			
-			#
 		
 		except Exception as ex:
 			irc.debug (str(type(ex)), str(ex))
