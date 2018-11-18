@@ -24,10 +24,9 @@ class Services(Runner):
 	Services warp a single object and make use of it to perform 
 	actions and return results.
 	
+	# start services...
 	from trix.app.service import *
 	s = Services()
-	c = connect('irclog')
-	c.request('addnet', 'irc.quake.net')
 	"""
 	
 	# INIT
@@ -152,6 +151,15 @@ class ServiceIO(object):
 class Service(ServiceIO):
 	"""
 	A single service object, which handles requests.
+	
+	Service objects are always started by and contained by the Services
+	object. There's never a reason (or a practical use) for creating a
+	Service object by calling Service(...) directly. There's no need 
+	and no way to access Service objects directly. They work in the 
+	background and are always accessed to a ServiceConnect object that
+	is obtained by calling the `Services.connect()` method.
+	
+	See the ServiceConnect help for usage notes/examples.
 	"""
 	def __init__(self, serviceid, sobject):
 		ServiceIO.__init__(self)
@@ -250,7 +258,38 @@ class Service(ServiceIO):
 # --------- SERVICE CONNECT -----------------
 #
 class ServiceConnect(ServiceIO):
-	"""Client connection to a single Service object."""
+	"""
+	Client connection to a single Service object.
+	
+	ServiceConnect objects communicate with Service objects by passing
+	Event objects through a system of queues. Each ServiceConnect has
+	its own set of queues by which requests are sent and results 
+	received (as Event objects).
+	
+	ServiceConnect objects are obtained by calling `Services.connect`.
+	There's never a reason (nor a practical use) for creating a
+	ServiceConnect object directly.
+	
+	# EXAMPLE
+	from trix.app.service import *
+	s = Services()                    # Services starts automatically
+	c = s.connect('irclog')           # get a service connection
+	e = c.open()                      # don't forget to open the db
+	e = c('addnet', "irc.Quake.net")  # two ways to call methods
+	e = c.addnet("irc.undernet.org")
+	e = c.getnets()                   # retrieve all network records
+	e.dict                            # notice cursor in reply
+	
+	e = c.fetchn(e.reply)             # pass the cursor to fetchn()
+	e.reply                           # get the result
+	
+	NOTES:
+	 * ServiceConnect requests time out after 9 seconds. This default 
+	   value may be changed by setting ServiceConnect.CallTimeout to
+	   a different value. It may be changed per request by passing
+	   keyword argument "service_connect_timeout" as a float - the 
+	   number of seconds to wait before timeout.
+	"""
 	
 	CallTimeout = 9
 	
@@ -279,7 +318,8 @@ class ServiceConnect(ServiceIO):
 		self.__qout.put(c)
 		
 		# don't let this block the program forever. Default: 9 sec
-		tout = k.get('service_connect_timeout', self.CallTimeout)
+		tout = trix.kpop(k, 'service_connect_timeout')
+		tout = tout.get('service_connect_timeout', self.CallTimeout)
 		tin = time.time()
 		
 		# loop until result (or timeout)
