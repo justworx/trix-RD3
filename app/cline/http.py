@@ -9,11 +9,11 @@ from ...util.urlinfo import *
 
 class http(cline):
 	"""
-	Launch a test web server. Use Ctrl-c to stop.
+	Run a test web server. Use Ctrl-c to stop.
 	
-	Using this command will launch a temporary Server object. The 
+	This command will create and run a temporary Server object. The 
 	`net.handler.hhttp.HandleHttp` handler is the default, but any
-	object that Handles http requests may be substituted setting the
+	object that handles http requests may be substituted setting the
 	--handler or --nhandler keyword arguments.
 	
 	Example - Using nhandler:
