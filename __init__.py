@@ -11,15 +11,58 @@ except:
 	import _thread as thread
 
 
+
+#
+# VERSION
+#  - The official version of the `trix` package is currently
+#    "Version: zero; rough draft three; under construction".
+#
+VERSION = 0.0000
+
+#
+# AUTO_DEBUG
+#  - Controls the formatting of raised Exceptions.
+#  - The trix package is very complex, making it really hard to
+#    track down bugs. This formatting of exceptions really helps.
+#  - If you want exceptions the old-fashioned way, set it False.
+#
 AUTO_DEBUG = True
+
+#
+# DEF_ENCODE
+#  - The default encoding for the trix package is UTF_8. It's the
+#    value trix will use when no other value is available for 
+#    encoding/decoding bytes.
+#
+DEF_ENCODE = 'utf_8'
+
+#
+# CONFIG / CACHE
+#  - Default root directory for storage of config and cache files.
+#  - These are the defaults for many *nix systems, and should work
+#    for Windows. I'm hoping, though, that I'll learn of better
+#    values for Windows before too much longer. 
+#
 DEF_CONFIG = "~/.config/trix"
 DEF_CACHE  = "~/.cache/trix"
-DEF_LOGLET = "./loglet"
-DEF_ENCODE = 'utf_8'
+
+#
+# DEFAULT INDENTATION
+#  - Number of spaces to use when indenting formatted text, tab
+#    replacement, etc...
+#
 DEF_INDENT = 2
-VERSION    = 0.0000
+
+#
+# LOGLET FILE PATH/NAME
+#
+DEF_LOGLET = "./loglet"
 
 
+
+#
+# TRIX CLASS
+#
 class trix(object):
 	"""Utility, debug, import; object, thread, and process creation."""
 	

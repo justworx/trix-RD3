@@ -1,0 +1,34 @@
+
+
+This x.irc will replace trix.net.irc.
+
+It's pretty much the same, but hopefully less confusing/jumbled. I'm
+not really sure how to do it except to make objects more descrete
+and improve the inter-object communication.
+
+I really need to develope an overall vision - net.irc was pretty much
+just thrown together. A lot of new ideas kept popping in and things
+got confused. Now I lrr[ typing to avoid coming up with that vision. 
+I guess we'll see what happens. Hopefully tomorrow :)
+
+
+
+
+NOW:
+ - IrcConnect still holds unique set of plugins/config
+
+
+
+
+I THINK...
+ - I might want IrcConnect to be based on Runner as well as Connect;
+   Client might have been a really bad idea.
+ - Then again, Client reduces the number of threads in use... Isn't
+   that a good thing?
+
+ * I may be distracting myself. The purpose here is to clean up the
+   code and make the irc package operation more clear.
+ * Then again, threading IrcConnect might really serve that purpose.
+
+
+ 

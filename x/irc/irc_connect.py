@@ -4,17 +4,12 @@
 # the terms of the GNU Affero General Public License.
 #
 
-
 from . import *
-from ..connect import *
-from .irc_connect import *
-from .irc_event import *
 
 
-class IRCConnect(Connect):
-	"""An IRC Connection."""
-	
-	debug = True
+# Connect
+class IrcConnect(Connect):
+	"""The IRC Connection."""
 	
 	def __init__(self, config=None, **k):
 		"""Pass a config dict."""
@@ -25,7 +20,7 @@ class IRCConnect(Connect):
 		config.setdefault('errors', "replace")
 		
 		self.__config = config
-		self.__pconfig = config.get('plugins', {})
+		self.__pconfig = config.get('pconfig', {})
 		
 		# required config
 		self.__network = config['network']
@@ -35,25 +30,15 @@ class IRCConnect(Connect):
 		self.__nick    = config['nick']
 		
 		# config that defaults to nick
-		self.__user     = config.get('user', self.__nick.lower())
-		self.__realname = config.get('ident', self.__nick.lower())
+		self.__user     = config('user', self.__nick.lower())
+		self.__realname = config('ident', self.__nick.lower())
 		
 		# connection objects/info
 		self.__paused    = False
 		self.__plugins   = {}
 		self.__ginfo     = {}
 		self.__chantypes = '#'
-		self.__lineq     = trix.ncreate('util.lineq.LineQueue')
-		self.__show      = config.get('show', self.debug) # print lines
-
-		# runtime values
-		self.pi_update = time.time()
-		self.pi_interval = config.get('pi_interval', PLUG_UPDT)
-		
-		# plugin management - runtime add/remove
-		self.pm_add = []
-		self.pm_rmv = []
-		
+	
 		# load plugins, if any
 		for pname in self.__pconfig:
 			if self.__pconfig[pname].get('active', True):
@@ -67,13 +52,10 @@ class IRCConnect(Connect):
 		#  - Connect opens a connection to the server immediately.
 		#  - At this point, we must be ready to handle input.
 		#
-		Connect.__init__(self, (self.__host, self.__port),
+		Connect.__init__(self, (host, port),
 				encoding = config.get('encoding', 'utf_8'),
 				errors   = config.get('errors', 'replace')
 			)
-		
-		# register the connection
-		self.register()
 	
 	
 	
@@ -86,16 +68,16 @@ class IRCConnect(Connect):
 		return self.__config
 	
 	@property
+	def pconfig(self):
+		return self.__pconfig
+	
+	@property
 	def network(self):
 		return self.__network
 	
 	@property
-	def host(self):
-		return self.__host
-	
-	@property
-	def port(self):
-		return self.__port
+	def owner(self):
+		return self.__owner
 	
 	@property
 	def nick(self):
@@ -113,69 +95,6 @@ class IRCConnect(Connect):
 	def paused(self):
 		return self.__paused
 	
-	@property
-	def pconfig(self):
-		return self.__pconfig
-	
-	@property
-	def plugins(self):
-		return self.__plugins
-	
-	@property
-	def ginfo(self):
-		return self.__ginfo
-	
-	@property
-	def chantypes(self):
-		return self.__chantypes
-	
-	@property
-	def owner(self):
-		return self.__owner
-	
-	@property
-	def show(self):
-		return self.__show
-	
-	@show.setter
-	def show(self, b):
-		self.__show = bool(b)
-	
-	
-	#
-	# register connection
-	#
-	def register(self):
-		"""Register connection with the irc server."""
-		
-		nick = self.nick
-		user = self.user
-		host = self.host
-		user_line = "USER "+nick+' '+user+' '+host+' :'+self.realname
-		nick_line = "NICK "+nick
-		
-		self.writeline(user_line)
-		self.writeline(nick_line)
-		
-		# maybe this isn't such a great idea...
-		LOGS = "None"
-		logplugin = self.plugins.get('irclog')
-		if logplugin:
-			LOGS = logplugin.logfile
-		else:
-			rawlogplugin = self.plugins.get('rawlog')
-			if logplugin:
-				LOGS = rawlogplugin.logfile
-		
-		if self.debug:
-			irc.debug(
-				"#\n# CONNECTING:",
-				"#       HOST: %s" % host,
-				"#       USER: %s" % user_line,
-				"#       NICK: %s" % nick_line,
-				"#       LOGS: %s" % LOGS
-			)
-		
 	
 	
 	
@@ -249,6 +168,7 @@ class IRCConnect(Connect):
 	def status(self):
 		"""Return status dict."""
 		return {
+			'botname': self.__botname,
 			'runner' : Runner.status(self),
 			'config' : self.config,
 			'plugins': list(self.plugins.keys()),
@@ -384,7 +304,7 @@ class IRCConnect(Connect):
 		"""Load plugin `pname` immediately."""
 		try:
 			if not (pname in self.__plugins):
-				pi = self.__plugin_create(pname)
+				pi = self.plugin_create(pname)
 				if not pi:
 					raise Exception ("plugin-create-fail", xdata(pname=pname))
 				self.plugins[pname] = pi

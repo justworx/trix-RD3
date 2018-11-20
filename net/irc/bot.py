@@ -4,21 +4,16 @@
 # of the GNU Affero General Public License.
 #
 
-
-
 from . import *
-from .irc_connect import *
 from ..client import *
-
-
+from .irc_connect import *
 
 BOT_CONFIG = "~/.config/trix/irc/bots/" # real config files
 BOT_NCONFIG = "net/irc/config"          # conf templates
 
 
-
 class Bot(Client):
-	"""An irc bot object, containing zero or more irc connections."""
+	"""An irc bot object, containing one or more irc connections."""
 	
 	# the type for new connection objects
 	DefType = IRCConnect
@@ -197,6 +192,10 @@ class Bot(Client):
 	
 	# HANDLE-DATA
 	def handleio(self, conn):
+		"""
+		This method is called when `trix.net.client.Client` receives
+		input from the IRC server.
+		"""
 		if conn.debug:
 			# Call the connection object's `io()` method so that received
 			# text may be handled.

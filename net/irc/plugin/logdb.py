@@ -51,4 +51,9 @@ class LogDB(IRCPlugin):
 	
 	
 	def handle(self, e):
-		pass
+		
+		cmd = e.argvl[0]
+		if cmd == 'test':
+			self.reply(e, "Pass")
+		
+	
