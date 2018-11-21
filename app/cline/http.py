@@ -72,7 +72,7 @@ class http(cline):
 		# These are here to make the displayed url look (and work) right
 		# even if they were not explicitly specifically given.
 		config.setdefault('scheme', 'http')
-		config.setdefault('handler', 'trix.net.handler.hhttp.HandleHttp')
+		config.setdefault('nhandler', 'net.handler.hhttp.HandleHttp')
 		
 		# create the server
 		s = trix.ncreate('net.server.Server', config)
@@ -83,7 +83,8 @@ class http(cline):
 			print ("Use Ctrl-c to stop.")
 			s.run()
 		except KeyboardInterrupt:
-			print ("Server stopped.")
+			s.shutdown()
+			print ("Server shutdown.")
 		
 		# display debug messages after server stops
 		if ('d' in self.flags):
