@@ -50,9 +50,10 @@ class JConfig(EncodingHelper):
 		 * The object loads both json and ast, but can only write JSON.
 		 * The default file is never written to by this class.
 		
-		ALSO:
+		IMPORTANT:
 		 * Be sure to pass affirm='touch' for new config files.
-		
+		 * If the file or default file is not utf8, pass it's encoding
+		   as a keyword argument.
 		"""
 		
 		k.setdefault('encoding', DEF_ENCODE)
@@ -249,30 +250,28 @@ class JConfig(EncodingHelper):
 	#
 	# LOAD (on init)
 	#
-	def __load(self, default=None, **k):
+
+	def __load(self, **k):
 		
 		TXT = None
 		try:
-		
 			#
-			# If constructor kwarg 'default' is given, read from that.
-			# File will always be stored and saved at path `self.path`.
+			# Full kwargs are passed the first time because a non-utf8
+			# encoding may be supplied for the default file. On potential
+			# subsequent calls (via `self.reload`) the file at self.path 
+			# will be populated and will have been written in utf8, so 
+			# there's no need for kwarg 'affirm' since the real target 
+			# file already exists.
 			#
-			fpath = k.get('default', self.path)
+			k = k or {'encoding':'utf_8'}
 			
-			# In first call to load (from constructor), keyword arguments
-			# are passed. If encoding and default are specified in kwargs,
-			# they are used here. After the first call, `self.reload()`
-			# may be used to restore self.obj to it's last-saved condition,
-			# but it will have been previously saved in utf8 encoding and
-			# the default (if it existed) will not be needed as it's been 
-			# written to a newly created version of the config. 
-			k = k or self.ek
+			# auto-affirm if default exists
+			if self.default:
+				k.setdefault('affirm', 'touch') 
 			
-			# make sure there's a file at the target location.
-			k.setdefault('affirm', 'touch')
+			#print("jconfig-DEFAULT (k):", self.default, k)
 			
-			# 1 - read `path` file text; 'touch', if no such file.
+			# 1 - read file at `self.path`
 			TXT = Path(self.path, **k).reader(**k).read()
 			
 			# 2 - now there's a `path` file, but it may be empty
@@ -286,23 +285,37 @@ class JConfig(EncodingHelper):
 					outf = File(self.path, encoding="utf_8", affirm='touch')
 					outf.write("{}")
 					self.__object = {}
-					return {}
 				
 				else:
-					# A) read the default file's contents.
-					TXT = File(self.default, encoding="utf_8").read()
+					#
+					# If there *is* a default file, we have to be careful
+					# since (despite that it can *read* ast) is only supposed
+					# to write JSON. So...
+					#
 					
-					# B) write the default config to the file
+					# A) read the default file's contents.
+					TXT = File(self.default, **k).read()
+					
+					#
+					# B) Get the object and reformat as json so that only the 
+					#    JSON content will be included, no comments, etc...
+					#
+					OBJ = self.__parse(TXT)
+					TXT = trix.formatter(f='JDisplay').format(OBJ)
+					
+					# C) write the default config to the file
 					outf = File(self.path, encoding="utf_8", affirm='touch')
 					outf.write(TXT)
 					
+					# store the object in self.__object
+					self.__object = OBJ
+			
+			#		
 			# 3 - load json to the data object, `self.__object`
 			# try with ast (in case loading a default given in ast).
-			try:
-				self.__object = ast.literal_eval(TXT)
-			except:
-				compile(TXT, fpath, 'eval') #try to get a line number
-				raise
+			#
+			else:
+				self.__object = self.__parse(TXT)
 		
 		except FileNotFoundError as ex:
 			raise type(ex)(xdata(
@@ -315,16 +328,25 @@ class JConfig(EncodingHelper):
 				fpath=fpath, k=k, txt=TXT, path=self.path, 
 				dfile=self.default
 			))
+	
+	
+	def __parse(self, txt):
+		try:
+			try:
+				return ast.literal_eval(txt)
+			except:
+				# this should cause a exception that gives a line number
+				compile(txt, fpath, 'eval')
+				raise # if not, raise anyway
 		
 		except BaseException as ast_ex:
-			# fallback on json, which will work for both "default" and
-			# for config files passed as the constructor argument.
+			# ast failed - try json
 			try:
-				self.__object = json.loads(TXT)
+				return json.loads(txt)
 			except BaseException as json_ex:
 				raise Exception ("config-read-error", xdata(
-					path = fpath, pathk = k, txt=TXT, 
+					path = fpath, pathk=k, txt=txt, 
 					json = {"type" : type(json_ex), "args" : json_ex.args},
-					ast = {"type" : type(ast_ex), "args" : ast_ex.args}
+					ast  = {"type" : type(ast_ex),  "args" : ast_ex.args}
 				))
 

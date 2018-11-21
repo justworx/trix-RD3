@@ -418,20 +418,35 @@ class trix(object):
 	def jconfig(cls, filepath, **k):
 		"""
 		Pass string `filepath` to a JSON (or ast-parsable) config file. 
-		A `JConfig` object is returned.
+		Optional `default` kwarg identies file path containing default 
+		contents for a new config file in case no file exists at 
+		`filepath`. Use `ndefault` kwarg instead for the internal path
+		(within the trix directory) to a default file.
+		
+		An `app.JConfig` object is returned.
 		
 		NOTES:
-		 * Pass a `default` filepath string using keyword arguments.
-		   The default path should point to a static default config file
+		 * The default path should point to a static default config file
 		   (in ast or json format).
-		 * Be careful that your `default` filepath is not unintentionally
-		   set to the same path as the `filepath` argument, or the `save`
-		   method will overwrite the default config. 
+		 * If default path is given, affirm defaults to "touch".
+		 * Be careful that your default filepath is not unintentionally
+		   set to the same path as the `filepath` argument, or your
+		   original default file may be overwritten.
 		
-		>>> # note: this file is currently only an empty dict
 		>>> jc = trix.jconfig("trix/app/config/app.conf")
 		>>> print (jc.config)
 		"""
+		default = k.get('default', cls.npath(k.get('ndefault')).path)
+		k['default'] = default
+		
+		#trix.display({"trix-DEFAULT:":default,'filepath':filepath,'k':k})
+		
+		# This should protect against most (if not all) unintentional
+		# overwriting of the default file.
+		if default and (default == filepath):
+			raise ValueError("Matching target and default paths.", xdata(
+					default=default, filepath=filepath, k=k
+				))
 		m = cls.nmodule("app.jconfig")
 		return m.JConfig(filepath, **k)
 	
